@@ -31,3 +31,4 @@ public:
 
 
 void SetupSummaryPage(wxNotebook* notebook);
+void SetupRacePage(wxNotebook* notebook);

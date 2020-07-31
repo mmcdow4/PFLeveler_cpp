@@ -1,6 +1,15 @@
 #include "cMain.h"
 
+#include <exception>
+#include <typeinfo>
+#include <stdexcept>
+#include <map>
+#include <wx/window.h>
+#include <wx/stattext.h>
 #include <wx/notebook.h>
+
+#include <pf_include/PFTable.h>
+#include <pf_include/Race.h>
 
 /* create a table to handle events for class cMain based on class wxFrame */
 wxBEGIN_EVENT_TABLE(cMain, wxFrame)
@@ -27,11 +36,12 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "char_generator", wxPoint(30, 30), w
   wxBoxSizer* box1 = new wxBoxSizer(wxHORIZONTAL);
   wxNotebook* notebook = new wxNotebook(panel1, wxID_ANY);
 
-  
+
   SetupSummaryPage(notebook);
 
   notebook->AddPage(new wxNotebookPage(notebook, -1), L"Ability Scores");
-  notebook->AddPage(new wxNotebookPage(notebook, -1), L"Race");
+  SetupRacePage(notebook);
+  //notebook->AddPage(new wxNotebookPage(notebook, -1), L"Race");
   notebook->AddPage(new wxNotebookPage(notebook, -1), L"Class");
   notebook->AddPage(new wxNotebookPage(notebook, -1), L"Skills");
   notebook->AddPage(new wxNotebookPage(notebook, -1), L"Spells");
@@ -102,6 +112,151 @@ void SetupSummaryPage(wxNotebook* notebook)
   vbox4->Add(skillList, 1, wxEXPAND, 0);
 
   hbox1->Add(vbox4, 1, wxEXPAND, 0);
+
+  panel->SetSizer(hbox1);
+}
+
+void SetupRacePage(wxNotebook* notebook)
+{
+  wxPanel* panel = new wxPanel(notebook);
+  notebook->AddPage(panel, L"Race");
+
+  wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL);/* will contain the veritcal boxes below */
+  wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* will hold race dropdown and stats */
+  wxBoxSizer* vbox2 = new wxBoxSizer(wxVERTICAL); /* will hold the list of racials */
+
+  /* create entry boxes for race attributes: */
+  wxBoxSizer* hbox_name = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText* nameLabel = new wxStaticText(panel, wxID_ANY, wxT("Race:"));
+  hbox_name->Add(nameLabel, 0, wxRIGHT, 8);
+  int Nraces = Pathfinder::PFTable::get_num_races();
+  wxChoice* raceDropDown = new wxChoice(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
+  for (int raceIdx = 0; raceIdx < Nraces; raceIdx++)
+  {
+    try
+    {
+      raceDropDown->Append(Pathfinder::PFTable::get_race(raceIdx).raceName());
+    }
+    catch (const std::invalid_argument& e)
+    {
+      wxMessageBox(e.what());
+    }
+  }
+  raceDropDown->SetSelection(0);
+  hbox_name->Add(raceDropDown, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
+
+  Pathfinder::Race chosenRace = Pathfinder::PFTable::get_race(raceDropDown->GetSelection());
+  /* TODO: add a select button */
+
+  vbox1->Add(hbox_name);
+
+  wxBoxSizer* hbox_text = new wxBoxSizer(wxHORIZONTAL);
+  wxString raceText;
+  raceText += "Size: " + chosenRace.charSize();
+  raceText += "\nSpeed: " + std::to_string(chosenRace.speed());
+  raceText += "\nAbilty Score Offsets:";
+  for (int ii = 0; ii < Pathfinder::NUMBER_ABILITY_SCORES + 1; ii++)
+  {
+    char buff[128];
+    int offset = chosenRace.abilityOffset(static_cast<Pathfinder::abilityScoreMarker>(ii));
+
+    if (offset != 0)
+    {
+      sprintf(buff, "\n  %+d to %s", offset, Pathfinder::ABILITY_SCORE_NAMES[ii]);
+      raceText += std::string(buff);
+    }
+  }
+
+
+  raceText += "\nLangauges known: ";
+  for (int langIdx = 0; langIdx < chosenRace.numLanguages(); langIdx++)
+  {
+    std::string langName;
+    try
+    {
+      langName = Pathfinder::PFTable::get_language(chosenRace.getLang(langIdx));
+    }
+    catch (const std::invalid_argument& e)
+    {
+      wxMessageBox(e.what());
+      continue;
+    }
+    if (langIdx > 0)
+    {
+      raceText += ", ";
+    }
+    raceText += langName;
+  }
+
+  raceText += "\nLangauges Available: ";
+  for (int langIdx = 0; langIdx < chosenRace.numAvailLanguages(); langIdx++)
+  {
+    std::string langName;
+    try
+    {
+      langName = Pathfinder::PFTable::get_language(chosenRace.getAvailLang(langIdx));
+    }
+    catch (const std::invalid_argument& e)
+    {
+      wxMessageBox(e.what());
+      continue;
+    }
+    if (langIdx > 0)
+    {
+      raceText += ", ";
+    }
+    raceText += langName;
+  }
+
+  wxStaticText* raceTextbox = new wxStaticText(panel, wxID_ANY, raceText);
+  raceTextbox->Wrap(raceTextbox->GetClientSize().GetWidth());
+  hbox_text->Add(raceTextbox, 0, wxEXPAND, 0);
+
+  vbox1->Add(hbox_text);
+
+  wxBoxSizer* vbox_blank = new wxBoxSizer(wxVERTICAL);
+  wxBoxSizer* hbox_btn = new wxBoxSizer(wxHORIZONTAL);
+  wxButton* selectBtn = new wxButton(panel, wxID_ANY, wxT("Lock Race Selection"));
+  hbox_btn->Add(selectBtn, 0, wxALIGN_RIGHT | wxRIGHT | wxBOTTOM, 10);
+
+  vbox_blank->Add(new wxPanel(panel, wxID_ANY));
+  vbox1->Add(vbox_blank, 1, wxEXPAND);
+  vbox1->Add(hbox_btn, 0, wxALIGN_BOTTOM | wxALIGN_RIGHT);
+
+  hbox1->Add(vbox1, 1, wxEXPAND | wxRIGHT, 10);
+  /* On the right of the screen show a list of all abilities above and description */
+
+  wxStaticText* raceAbilitiesListLabel = new wxStaticText(panel, wxID_ANY, wxT("Racial Bonuses:"));
+  vbox2->Add(raceAbilitiesListLabel, 0, 0, 0);
+
+  /* fill out the race ability list here */
+  wxListBox* raceAbilityList = new wxListBox(panel, wxID_ANY);
+  for (int racialIdx = 0; racialIdx < chosenRace.numRacials(); racialIdx++)
+  {
+    try
+    {
+      Pathfinder::RacialAbility racial = chosenRace.getRacial(racialIdx);
+      raceAbilityList->AppendString(racial.name());
+    }
+    catch (const std::invalid_argument& e)
+    {
+      wxMessageBox(e.what());
+      continue;
+    }
+  }
+  
+  vbox2->Add(raceAbilityList, 2, wxEXPAND, 0);
+
+
+  wxStaticText* raceAbilitiesDescLabel = new wxStaticText(panel, wxID_ANY, wxT("Description:"));
+  vbox2->Add(raceAbilitiesDescLabel, 0, 0, 0);
+
+  wxStaticText* raceAbilityDesc = new wxStaticText(panel, wxID_ANY, wxT("And here's where the description would be... IF I HAD ONE!"));
+  raceAbilityDesc->Wrap(raceAbilityDesc->GetClientSize().GetWidth());
+  
+  vbox2->Add(raceAbilityDesc, 0, 0, 0);
+
+  hbox1->Add(vbox2, 1, wxEXPAND | wxLEFT, 10);
 
   panel->SetSizer(hbox1);
 }
