@@ -1,7 +1,9 @@
 #pragma once
 
-#include "wx/wx.h"
+#include <wx/wx.h>
 #include <wx/notebook.h>
+
+#include <pf_include/Character.h>
 
 #define DEFAULT_WINDOW_SIZE_X 1000
 #define DEFAULT_WINDOW_SIZE_Y 600
@@ -90,7 +92,14 @@ public:
 
   void OnButtonClicked(wxCommandEvent& evt);
   void OnRaceSelected(wxCommandEvent& evt);
+  void OnRacialSelected(wxCommandEvent& evt);
+  void OnRaceLocked(wxCommandEvent& evt);
+  void OnCharLocked(wxCommandEvent& evt);
 
   wxDECLARE_EVENT_TABLE();
+
+private:
+  Pathfinder::Character* currChar_ = NULL;
+  int mode_;
 };
 
