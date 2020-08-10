@@ -1,4 +1,3 @@
-
 /* local includes*/
 #include "cMain.h"
 
@@ -137,6 +136,7 @@ void cMain::SetupRacePage()
 
   panel->Layout();
 }
+
 void cMain::OnRaceSelected(wxCommandEvent& evt)
 {
   int raceIdx = evt.GetSelection();

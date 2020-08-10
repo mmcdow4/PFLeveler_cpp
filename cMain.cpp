@@ -102,16 +102,6 @@ void cMain::setupNotebook()
 
 
 
-void cMain::InitializeAbilityScoresPage()
-{
-  wxPanel* panel = new wxPanel(notebook_);
-  notebook_->AddPage(panel, L"Ability Scores");
-
-  wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
-
-  panel->SetSizerAndFit(hbox1);
-}
-
 void cMain::InitializeClassPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
