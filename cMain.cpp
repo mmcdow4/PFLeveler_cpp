@@ -87,12 +87,37 @@ void cMain::InitializeNotebook()
   InitializeSkillsPage();
   InitializeSpellsPage();
   InitializeFeatsPage();
+  //InitializeBorderPage();
+}
+
+//A test to get borders working - does not work at all, breaks sizers for all other pages when used.
+void cMain::InitializeBorderPage()
+{
+  wxColour col1, col2;
+  col1.Set(wxT("#4f5049"));
+  col1.Set(wxT("#ededed"));
+
+  wxPanel* page = new wxPanel(this, wxID_ANY);
+  notebook_->AddPage(page, L"Border Test");
+  wxBoxSizer* hbox = new wxBoxSizer(wxHORIZONTAL);
+  wxPanel* panel = new wxPanel(page, wxID_ANY);
+  panel->SetBackgroundColour(col1);
+  wxBoxSizer* vbox = new wxBoxSizer(wxVERTICAL);
+
+  wxPanel* midPan = new wxPanel(panel, wxID_ANY);
+  midPan->SetBackgroundColour(col2);
+
+  vbox->Add(midPan, 1, wxEXPAND | wxALL, 20);
+  panel->SetSizer(vbox);
+
+  page->SetSizer(hbox);
+  Centre();
 }
 
 void cMain::setupNotebook()
 {
   SetupSummaryPage();
-  //setupAbilityScoresPage();
+  SetupAbilityScoresPage();
   SetupRacePage();
   //setupClassPage();
   //setupSkillsPage();
@@ -105,6 +130,7 @@ void cMain::setupNotebook()
 void cMain::InitializeClassPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
+  panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Class");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
@@ -115,6 +141,7 @@ void cMain::InitializeClassPage()
 void cMain::InitializeSkillsPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
+  panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Skills");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
@@ -125,6 +152,7 @@ void cMain::InitializeSkillsPage()
 void cMain::InitializeSpellsPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
+  panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Spells");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
@@ -135,6 +163,7 @@ void cMain::InitializeSpellsPage()
 void cMain::InitializeFeatsPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
+  panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Feats");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */

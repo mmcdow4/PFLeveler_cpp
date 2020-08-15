@@ -20,6 +20,7 @@
 void cMain::InitializeSummaryPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
+  panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Summary");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */

@@ -14,6 +14,7 @@
 #define ABSCR_MODE_DICEPOOL 3
 #define ABSCR_MODE_PURCHASE 4
 
+#define BACKGROUND_COLOR 0xE5E5E5
 /* File Menu IDs */
 #define FILE_IMPORT_ID 100
 #define FILE_EXPORT_ID 101
@@ -142,9 +143,11 @@ public:
   void InitializeSkillsPage();
   void InitializeSpellsPage();
   void InitializeFeatsPage();
+  void InitializeBorderPage();
 
   void SetupSummaryPage();
   void SetupRacePage();
+  void SetupAbilityScoresPage();
 
   void OnButtonClicked(wxCommandEvent& evt);
   void OnRaceSelected(wxCommandEvent& evt);

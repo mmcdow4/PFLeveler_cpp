@@ -25,6 +25,7 @@ void populateRacialTable(wxListBox* racialAbilityList, Pathfinder::Race raceObj)
 void cMain::InitializeRacePage()
 {
   wxPanel* panel = new wxPanel(notebook_);
+  panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Race");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL);/* will contain the veritcal boxes below */

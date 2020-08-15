@@ -23,12 +23,14 @@ void populate_score_pool(int modeIdx);
 void cMain::InitializeAbilityScoresPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
+  panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Ability Scores");
 
   wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* will contain the various vertical sizers */
   wxBoxSizer* hboxOverview = new wxBoxSizer(wxHORIZONTAL);
 
   wxStaticText* methodDropdownLabel = new wxStaticText(panel, ABSCR_METHOD_DROPDOWN_LABEL_ID, wxT("Choose a Method: "));
+  methodDropdownLabel->Hide();
   hboxOverview->Add(methodDropdownLabel);
 
   wxChoice* methodDropdown = new wxChoice(panel, ABSCR_METHOD_DROPDOWN_ID);
@@ -39,13 +41,17 @@ void cMain::InitializeAbilityScoresPage()
   methodDropdown->Append("Purchase");
   methodDropdown->Append("Alternate");
 
+  methodDropdown->Disable();
+  methodDropdown->Hide();
   hboxOverview->Add(methodDropdown);
 
   wxButton* methodSelectBtn = new wxButton(panel, ABSCR_METHOD_BTN_ID, wxT("Select"));
+  methodSelectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &cMain::OnAttributeModeSelected, this);
+  methodSelectBtn->Disable();
+  methodSelectBtn->Hide();
   hboxOverview->Add(methodSelectBtn);
 
-  wxStaticText* resourcePoolTxt = new wxStaticText(panel, ABSCR_SCORES_REMAINING_TEXT_ID, wxT("Remaining unassigned rolls: "));
-  resourcePoolTxt->Hide();
+  wxStaticText* resourcePoolTxt = new wxStaticText(panel, ABSCR_SCORES_REMAINING_TEXT_ID, wxT(" "));
   hboxOverview->Add(resourcePoolTxt);
   
   vbox1->Add(hboxOverview, 1, wxEXPAND);
@@ -77,16 +83,16 @@ void cMain::InitializeAbilityScoresPage()
     scoresGrid->Add(new wxStaticText(panel, ABSCR_ATTRIBUTE_TOTALS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
     scoresGrid->Add(new wxStaticText(panel, ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
 
-    //wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Disable();
-    //wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
-    //wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
-    //wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
-    //wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
-    //wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
 
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx)->SetBackgroundColour(*wxLIGHT_GREY);
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx)->SetBackgroundColour(*wxLIGHT_GREY);
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx)->SetBackgroundColour(*wxLIGHT_GREY);
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   }
   vbox1->Add(scoresGrid, 1, wxEXPAND);
   
@@ -111,14 +117,14 @@ void cMain::InitializeAbilityScoresPage()
   ACGrid->Add(new wxStaticText(panel, ABSCR_AC_MISC_BONUS, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
 
-  wxWindow::FindWindowById(ABSCR_AC_TOTAL)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_AC_ARMOR_VAL)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_AC_SHIELD_VAL)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_AC_DEX_MOD)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_AC_SIZE_MOD)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_AC_NATURAL_ARMOR)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_AC_DEFLECT_MOD)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_AC_MISC_BONUS)->SetBackgroundColour(*wxLIGHT_GREY);
+  wxWindow::FindWindowById(ABSCR_AC_TOTAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_AC_ARMOR_VAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_AC_SHIELD_VAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_AC_DEX_MOD)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_AC_SIZE_MOD)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_AC_NATURAL_ARMOR)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_AC_DEFLECT_MOD)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_AC_MISC_BONUS)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   for (int ii = 0; ii < 18; ii++)
   {
     ACGrid->AddGrowableCol(ii, 1);
@@ -159,11 +165,11 @@ void cMain::InitializeAbilityScoresPage()
   MiscGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
   MiscGrid->Add(new wxStaticText(panel, ABSCR_MISC_MISC_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
-  wxWindow::FindWindowById(ABSCR_MISC_TOUCH_VALUE)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_MISC_FLATFOOT_VALUE)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_MISC_INITMOD_VALUE)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_MISC_DEX_MOD)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_MISC_MISC_MOD)->SetBackgroundColour(*wxLIGHT_GREY);
+  wxWindow::FindWindowById(ABSCR_MISC_TOUCH_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_MISC_FLATFOOT_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_MISC_INITMOD_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_MISC_DEX_MOD)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_MISC_MISC_MOD)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
 
   for (int ii = 0; ii < 12; ii++)
   {
@@ -207,12 +213,12 @@ void cMain::InitializeAbilityScoresPage()
     SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_TEMP_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
 
-    wxWindow::FindWindowById(ABSCR_SAVES_TOTAL + saveIdx)->SetBackgroundColour(*wxLIGHT_GREY);
-    wxWindow::FindWindowById(ABSCR_SAVES_BASE + saveIdx)->SetBackgroundColour(*wxLIGHT_GREY);
-    wxWindow::FindWindowById(ABSCR_SAVES_ABILITY_MOD + saveIdx)->SetBackgroundColour(*wxLIGHT_GREY);
-    wxWindow::FindWindowById(ABSCR_SAVES_MAGIC_MOD + saveIdx)->SetBackgroundColour(*wxLIGHT_GREY);
-    wxWindow::FindWindowById(ABSCR_SAVES_MISC_MOD + saveIdx)->SetBackgroundColour(*wxLIGHT_GREY);
-    wxWindow::FindWindowById(ABSCR_SAVES_TEMP_MOD + saveIdx)->SetBackgroundColour(*wxLIGHT_GREY);
+    wxWindow::FindWindowById(ABSCR_SAVES_TOTAL + saveIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+    wxWindow::FindWindowById(ABSCR_SAVES_BASE + saveIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+    wxWindow::FindWindowById(ABSCR_SAVES_ABILITY_MOD + saveIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+    wxWindow::FindWindowById(ABSCR_SAVES_MAGIC_MOD + saveIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+    wxWindow::FindWindowById(ABSCR_SAVES_MISC_MOD + saveIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+    wxWindow::FindWindowById(ABSCR_SAVES_TEMP_MOD + saveIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   }
 
   vbox1->Add(SavesGrid, 1, wxEXPAND);
@@ -229,10 +235,10 @@ void cMain::InitializeAbilityScoresPage()
   CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
   CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
 
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_TOTAL)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_BAB)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_STR)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_SIZE)->SetBackgroundColour(*wxLIGHT_GREY);
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_TOTAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_BAB)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_STR)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMB_SIZE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   for (int ii = 0; ii < 10; ii++)
   {
     CombatGrid->AddGrowableCol(ii, 1);
@@ -260,11 +266,11 @@ void cMain::InitializeAbilityScoresPage()
   CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
   CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMD_SIZE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_TOTAL)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_BAB)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_STR)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_DEX)->SetBackgroundColour(*wxLIGHT_GREY);
-  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_SIZE)->SetBackgroundColour(*wxLIGHT_GREY);
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_TOTAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_BAB)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_STR)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_DEX)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
+  wxWindow::FindWindowById(ABSCR_COMBAT_CMD_SIZE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
 
   CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
   CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
@@ -282,15 +288,41 @@ void cMain::InitializeAbilityScoresPage()
   panel->SetSizerAndFit(vbox1);
 }
 
-//void cMain::SetupAbililyScoresPage()
-//{
-//
-//}
+void cMain::SetupAbilityScoresPage()
+{
+  /* turn on the method dropdown, select button, and label text*/
+  wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->Show();
+  wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Enable();
+  wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Show();
+  wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Enable();
+  wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Show();
+
+  /* reset all of the ability score page text fields*/
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(" ");
+  for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
+  {
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->Clear();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
+  }
+
+  /* fix the layout */
+  static_cast<wxPanel*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->GetParent())->Layout();
+}
 
 void cMain::OnAttributeModeSelected(wxCommandEvent& evt)
 {
   int modeIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->GetCurrentSelection();
 
+  for (int ii = 0; ii < 6; ii++)
+  {
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + ii))->Clear();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + ii))->AppendString(" ");
+  }
   switch (modeIdx)
   {
   //case 0:/*standard*/
@@ -309,6 +341,18 @@ void cMain::OnAttributeModeSelected(wxCommandEvent& evt)
   case ABSCR_MODE_CLASSIC:
   case ABSCR_MODE_HEROIC:
     populate_score_pool(modeIdx);
+    for (int ii = 0; ii < 6; ii++)
+    {
+      static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + ii))->Enable();
+      static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + ii))->Show();
+    }
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID))->Hide();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->Disable();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->Hide();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID))->Disable();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID))->Hide();
+
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID))->GetParent()->Layout();
     break;
   case ABSCR_MODE_DICEPOOL:/*dice pool*/
     /* pool of 24d6 available. For each ability score, select a number of dice to roll (minimum 3).
@@ -330,7 +374,7 @@ void cMain::OnAttributeModeSelected(wxCommandEvent& evt)
 void populate_score_pool(int modeIdx)
 {
   std::vector<int> diceRolls;
-
+  std::vector<int> abilityScores;
   for(int rollIdx = 0; rollIdx < 6; rollIdx++)
   {
     std::vector<int> diceRolls;
@@ -339,15 +383,35 @@ void populate_score_pool(int modeIdx)
     diceRolls.push_back(modeIdx == ABSCR_MODE_HEROIC ? 6 : Pathfinder::rollD6()); /* if heroic, give the guaranteed 6 roll; otherwise do another roll for classic or standard*/
     diceRolls.push_back(modeIdx == ABSCR_MODE_STANDARD ? Pathfinder::rollD6() : 0); /* if standard, do the fourth dice rool; otherwise keep a 0*/
 
-    std::sort(diceRolls.begin(), diceRolls.end());
+    std::sort(diceRolls.rbegin(), diceRolls.rend());
     int scoreValue = 0;
     for (int ii = 0; ii < 3; ii++)
     {
       scoreValue += diceRolls[ii];
     }
-    for (int ii = 0; ii < 6; ii++)
+    abilityScores.push_back(scoreValue);
+  }
+  std::sort(abilityScores.begin(), abilityScores.end());
+  for (int ii = 0; ii < 6; ii++)
+  {
+    wxChoice* scoreDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + ii));
+    for (auto scoreIter = abilityScores.begin(); scoreIter != abilityScores.end(); ++scoreIter)
     {
-      static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN+ii))->Append(std::to_string(scoreValue));
+      scoreDropDown->Append(std::to_string(*scoreIter));
     }
   }
+  wxString scoreText;
+
+  scoreText += "Remaining ability scores to assign: ";
+  for (auto scoreIter = abilityScores.begin(); scoreIter != abilityScores.end(); ++scoreIter)
+  {
+    if (scoreIter != abilityScores.begin())
+    {
+      scoreText += ", ";
+    }
+    scoreText += std::to_string(*scoreIter);
+  }
+
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(scoreText);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->Show();
 }
