@@ -1,5 +1,5 @@
 /* local includes*/
-#include "cMain.h"
+#include "AbilityScorePage.h"
 
 /* stdlib includes*/
 #include <exception>
@@ -20,20 +20,18 @@
 
 void populate_score_pool(int modeIdx);
 
-void cMain::InitializeAbilityScoresPage()
+AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar)
 {
-  wxPanel* panel = new wxPanel(notebook_);
-  panel->SetBackgroundColour(BACKGROUND_COLOR);
-  notebook_->AddPage(panel, L"Ability Scores");
+  this->SetBackgroundColour(0xE5E5E5);
 
   wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* will contain the various vertical sizers */
   wxBoxSizer* hboxOverview = new wxBoxSizer(wxHORIZONTAL);
 
-  wxStaticText* methodDropdownLabel = new wxStaticText(panel, ABSCR_METHOD_DROPDOWN_LABEL_ID, wxT("Choose a Method: "));
+  wxStaticText* methodDropdownLabel = new wxStaticText(this, ABSCR_METHOD_DROPDOWN_LABEL_ID, wxT("Choose a Method: "));
   methodDropdownLabel->Hide();
   hboxOverview->Add(methodDropdownLabel);
 
-  wxChoice* methodDropdown = new wxChoice(panel, ABSCR_METHOD_DROPDOWN_ID);
+  wxChoice* methodDropdown = new wxChoice(this, ABSCR_METHOD_DROPDOWN_ID);
   methodDropdown->Append("Standard");
   methodDropdown->Append("Classic");
   methodDropdown->Append("Heroic");
@@ -45,26 +43,26 @@ void cMain::InitializeAbilityScoresPage()
   methodDropdown->Hide();
   hboxOverview->Add(methodDropdown);
 
-  wxButton* methodSelectBtn = new wxButton(panel, ABSCR_METHOD_BTN_ID, wxT("Select"));
-  methodSelectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &cMain::OnAttributeModeSelected, this);
+  wxButton* methodSelectBtn = new wxButton(this, ABSCR_METHOD_BTN_ID, wxT("Select"));
+  methodSelectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &AbilityScorePage::OnAttributeModeSelected, this);
   methodSelectBtn->Disable();
   methodSelectBtn->Hide();
   hboxOverview->Add(methodSelectBtn);
 
-  wxStaticText* resourcePoolTxt = new wxStaticText(panel, ABSCR_SCORES_REMAINING_TEXT_ID, wxT(" "));
+  wxStaticText* resourcePoolTxt = new wxStaticText(this, ABSCR_SCORES_REMAINING_TEXT_ID, wxT(" "));
   hboxOverview->Add(resourcePoolTxt);
   
   vbox1->Add(hboxOverview, 1, wxEXPAND);
 
   wxFlexGridSizer* scoresGrid = new wxFlexGridSizer(7, 7, 1, 1);
   /* add column labels */
-  scoresGrid->Add(new wxStaticText(panel, wxID_ANY, wxT("Attribute Name")), 0, wxEXPAND | wxALIGN_CENTER);
-  scoresGrid->Add(new wxStaticText(panel, wxID_ANY, wxT(" ")), 0, wxEXPAND | wxALIGN_CENTER); /* minus buttons */
-  scoresGrid->Add(new wxStaticText(panel, wxID_ANY, wxT("Raw Value")), 0, wxEXPAND | wxALIGN_CENTER);
-  scoresGrid->Add(new wxStaticText(panel, wxID_ANY, wxT(" ")), 0, wxEXPAND | wxALIGN_CENTER); /* plus buttons */
-  scoresGrid->Add(new wxStaticText(panel, wxID_ANY, wxT("Racial Bonus")), 0, wxEXPAND | wxALIGN_CENTER);
-  scoresGrid->Add(new wxStaticText(panel, wxID_ANY, wxT("Total")), 0, wxEXPAND | wxALIGN_CENTER);
-  scoresGrid->Add(new wxStaticText(panel, wxID_ANY, wxT("Modifier")), 0, wxEXPAND | wxALIGN_CENTER);
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Attribute Name")), 0, wxEXPAND | wxALIGN_CENTER);
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), 0, wxEXPAND | wxALIGN_CENTER); /* minus buttons */
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Raw Value")), 0, wxEXPAND | wxALIGN_CENTER);
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), 0, wxEXPAND | wxALIGN_CENTER); /* plus buttons */
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Racial Bonus")), 0, wxEXPAND | wxALIGN_CENTER);
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Total")), 0, wxEXPAND | wxALIGN_CENTER);
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Modifier")), 0, wxEXPAND | wxALIGN_CENTER);
 
   scoresGrid->AddGrowableCol(0, 1);
   scoresGrid->AddGrowableCol(1, 0);
@@ -75,13 +73,13 @@ void cMain::InitializeAbilityScoresPage()
   scoresGrid->AddGrowableCol(6, 1);
   for (int abilityIdx = 0; abilityIdx < static_cast<int>(Pathfinder::NUMBER_ABILITY_SCORES); abilityIdx++)
   {
-    scoresGrid->Add(new wxStaticText(panel, ABSCR_ATTRIBUTE_LABELS + abilityIdx, (std::string(Pathfinder::ABILITY_SCORE_NAMES[abilityIdx]))), 0, wxEXPAND | wxALIGN_CENTER);
-    scoresGrid->Add(new wxButton(panel, ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx, "-"), 0, wxEXPAND | wxALIGN_CENTER);
-    scoresGrid->Add(new wxChoice(panel, ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx), 0, wxEXPAND | wxALIGN_CENTER);
-    scoresGrid->Add(new wxButton(panel, ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-    scoresGrid->Add(new wxStaticText(panel, ABSCR_ATTRIBUTE_RACIALS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
-    scoresGrid->Add(new wxStaticText(panel, ABSCR_ATTRIBUTE_TOTALS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
-    scoresGrid->Add(new wxStaticText(panel, ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxStaticText(this, ABSCR_ATTRIBUTE_LABELS + abilityIdx, (std::string(Pathfinder::ABILITY_SCORE_NAMES[abilityIdx]))), 0, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxButton(this, ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx, "-"), 0, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxChoice(this, ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx), 0, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxButton(this, ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxStaticText(this, ABSCR_ATTRIBUTE_RACIALS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxStaticText(this, ABSCR_ATTRIBUTE_TOTALS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxStaticText(this, ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx, wxT(" _ ")), 1, wxEXPAND | wxALIGN_CENTER);
 
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Disable();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
@@ -97,24 +95,24 @@ void cMain::InitializeAbilityScoresPage()
   vbox1->Add(scoresGrid, 1, wxEXPAND);
   
   wxFlexGridSizer* ACGrid = new wxFlexGridSizer(2, 18, 1, 1);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Armor Class: "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_TOTAL, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "="), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " 10 "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_ARMOR_VAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_SHIELD_VAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_DEX_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_SIZE_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_NATURAL_ARMOR, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_DEFLECT_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, ABSCR_AC_MISC_BONUS, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Armor Class: "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_TOTAL, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "="), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " 10 "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_ARMOR_VAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_SHIELD_VAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_DEX_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_SIZE_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_NATURAL_ARMOR, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_DEFLECT_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, ABSCR_AC_MISC_BONUS, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
 
   wxWindow::FindWindowById(ABSCR_AC_TOTAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
@@ -130,40 +128,40 @@ void cMain::InitializeAbilityScoresPage()
     ACGrid->AddGrowableCol(ii, 1);
   }
 
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Base"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Armor"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Shield"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Dex Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Size Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Natural Armor"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Deflection Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  ACGrid->Add(new wxStaticText(panel, wxID_ANY, "Misc."), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Base"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Armor"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Shield"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Dex Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Size Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Natural Armor"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Deflection Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  ACGrid->Add(new wxStaticText(this, wxID_ANY, "Misc."), 0, wxEXPAND | wxALIGN_CENTER);
 
   vbox1->Add(ACGrid, 1, wxEXPAND);
 
   wxFlexGridSizer* MiscGrid = new wxFlexGridSizer(1, 12, 1, 1);
-  MiscGrid->Add(new wxStaticText(panel, wxID_ANY, "Touch AC = "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, ABSCR_MISC_TOUCH_VALUE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, wxID_ANY, "Flat-Footed AC = "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, ABSCR_MISC_FLATFOOT_VALUE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, wxID_ANY, "Initiative Modifier"), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, ABSCR_MISC_INITMOD_VALUE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, wxID_ANY, "="), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, ABSCR_MISC_DEX_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(panel, ABSCR_MISC_MISC_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "Touch AC = "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_TOUCH_VALUE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "Flat-Footed AC = "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_FLATFOOT_VALUE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "Initiative Modifier"), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_INITMOD_VALUE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "="), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_DEX_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_MISC_MOD, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
   wxWindow::FindWindowById(ABSCR_MISC_TOUCH_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   wxWindow::FindWindowById(ABSCR_MISC_FLATFOOT_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
@@ -179,18 +177,18 @@ void cMain::InitializeAbilityScoresPage()
   vbox1->Add(MiscGrid, 1, wxEXPAND);
 
   wxFlexGridSizer* SavesGrid = new wxFlexGridSizer(4, 12, 1, 1);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, "Saving Throws"), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, "Base"), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, "Ability Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, "Magic Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, "Misc Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  SavesGrid->Add(new wxStaticText(panel, wxID_ANY, "Temp Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, "Saving Throws"), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, "Base"), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, "Ability Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, "Magic Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, "Misc Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  SavesGrid->Add(new wxStaticText(this, wxID_ANY, "Temp Mod"), 0, wxEXPAND | wxALIGN_CENTER);
 
   for (int ii = 0; ii < 12; ii++)
   {
@@ -199,18 +197,18 @@ void cMain::InitializeAbilityScoresPage()
 
   for (int saveIdx = 0; saveIdx < 3; saveIdx++)
   {
-    SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_NAME + saveIdx, Pathfinder::SAVING_THROW_NAMES[saveIdx]), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_TOTAL + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " = "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_BASE + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_ABILITY_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_MAGIC_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_MISC_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-    SavesGrid->Add(new wxStaticText(panel, ABSCR_SAVES_TEMP_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, ABSCR_SAVES_NAME + saveIdx, Pathfinder::SAVING_THROW_NAMES[saveIdx]), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, ABSCR_SAVES_TOTAL + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, wxID_ANY, " = "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, ABSCR_SAVES_BASE + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, ABSCR_SAVES_ABILITY_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, ABSCR_SAVES_MAGIC_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, ABSCR_SAVES_MISC_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+    SavesGrid->Add(new wxStaticText(this, ABSCR_SAVES_TEMP_MOD + saveIdx, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
 
     wxWindow::FindWindowById(ABSCR_SAVES_TOTAL + saveIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
@@ -224,16 +222,16 @@ void cMain::InitializeAbilityScoresPage()
   vbox1->Add(SavesGrid, 1, wxEXPAND);
 
   wxFlexGridSizer* CombatGrid = new wxFlexGridSizer(4, 10, 1, 1);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMB_LABEL, "Combat Maneuver Bonus"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMB_TOTAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " = "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMB_BAB, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMB_STR, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMB_SIZE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMB_LABEL, "Combat Maneuver Bonus"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMB_TOTAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " = "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMB_BAB, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMB_STR, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMB_SIZE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
 
   wxWindow::FindWindowById(ABSCR_COMBAT_CMB_TOTAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   wxWindow::FindWindowById(ABSCR_COMBAT_CMB_BAB)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
@@ -244,27 +242,27 @@ void cMain::InitializeAbilityScoresPage()
     CombatGrid->AddGrowableCol(ii, 1);
   }
 
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "Base Attack Bonus"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "STR Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "Size Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "Base Attack Bonus"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "STR Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "Size Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
 
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMD_LABEL, "Combat Maneuver Defense"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMD_TOTAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " = "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMD_BAB, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMD_STR, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMD_DEX, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, ABSCR_COMBAT_CMD_SIZE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMD_LABEL, "Combat Maneuver Defense"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMD_TOTAL, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " = "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMD_BAB, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMD_STR, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMD_DEX, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " + "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, ABSCR_COMBAT_CMD_SIZE, " _ "), 0, wxEXPAND | wxALIGN_CENTER);
 
   wxWindow::FindWindowById(ABSCR_COMBAT_CMD_TOTAL)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   wxWindow::FindWindowById(ABSCR_COMBAT_CMD_BAB)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
@@ -272,24 +270,26 @@ void cMain::InitializeAbilityScoresPage()
   wxWindow::FindWindowById(ABSCR_COMBAT_CMD_DEX)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   wxWindow::FindWindowById(ABSCR_COMBAT_CMD_SIZE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
 
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "Base Attack Bonus"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "STR Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "DEX Mod"), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  CombatGrid->Add(new wxStaticText(panel, wxID_ANY, "Size Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "Total"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "Base Attack Bonus"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "STR Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "DEX Mod"), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
+  CombatGrid->Add(new wxStaticText(this, wxID_ANY, "Size Mod"), 0, wxEXPAND | wxALIGN_CENTER);
 
   vbox1->Add(CombatGrid, 1, wxEXPAND);
 
-  panel->SetSizerAndFit(vbox1);
+  this->SetSizerAndFit(vbox1);
 }
 
-void cMain::SetupAbilityScoresPage()
+void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
 {
+  charPtr_ = currChar;
+
   /* turn on the method dropdown, select button, and label text*/
   wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->Show();
   wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Enable();
@@ -314,7 +314,7 @@ void cMain::SetupAbilityScoresPage()
   static_cast<wxPanel*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->GetParent())->Layout();
 }
 
-void cMain::OnAttributeModeSelected(wxCommandEvent& evt)
+void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
 {
   int modeIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->GetCurrentSelection();
 
@@ -368,7 +368,28 @@ void cMain::OnAttributeModeSelected(wxCommandEvent& evt)
     wxMessageBox("You must select a method for generating ability scores first");
     break;
   }
-  evt.Skip();
+}
+
+
+void AbilityScorePage::OnAbilityScoreSelected(wxCommandEvent& evt)
+{
+  int abilityIdx = evt.GetId() - ABSCR_ATTRIBUTE_VALUE_DROPDOWN;
+  int scoreIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->GetSelection();
+  if (scoreIdx == wxNOT_FOUND || scoreIdx == 0)
+  {
+    /* special logic to reset the score value here... */
+  }
+  else
+  {
+    int scoreVal = stoi(std::string(static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->GetStringSelection()));
+
+    /* save the chosen value */
+    
+    /* update all relevant text fields */
+
+    /* remove this value from the other dropdown menus and the "remaining scores" text list up top*/
+  }
+
 }
 
 void populate_score_pool(int modeIdx)

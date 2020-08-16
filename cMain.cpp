@@ -1,4 +1,5 @@
 #include "cMain.h"
+#include "RacePage.h"
 
 #include <exception>
 #include <typeinfo>
@@ -39,8 +40,8 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "char_generator", wxPoint(30, 30), w
   wxBoxSizer* box1 = new wxBoxSizer(wxHORIZONTAL);
   notebook_ = new wxNotebook(panel1, wxID_ANY);
 
-
   InitializeNotebook();
+  Bind(wxEVT_COMMAND_BUTTON_CLICKED, &cMain::OnRaceLocked, this);
 
   box1->Add(notebook_, 1, wxEXPAND, 0);
   panel1->SetSizer(box1);
@@ -66,23 +67,24 @@ void cMain::menuCallback(wxCommandEvent& evt)
       delete currChar_;
     }
     currChar_ = new Pathfinder::Character;
-    setupNotebook();
+    ResetNotebook();
     break;
   case FILE_EXIT_ID:
-    evt.Skip();
     delete this;
     break;
   default:
     wxMessageBox("Unknown file selection : " + std::to_string(origId));
     break;
   }
-  evt.Skip();
 }
 void cMain::InitializeNotebook()
 {
-  InitializeSummaryPage();
-  InitializeAbilityScoresPage();
-  InitializeRacePage();
+  summaryPage_ = new SummaryPage(notebook_, currChar_);
+  notebook_->AddPage(summaryPage_, L"Summary");
+  abilityScorePage_ = new AbilityScorePage(notebook_, currChar_);
+  notebook_->AddPage(abilityScorePage_, L"Summary");
+  racePage_ = new RacePage(notebook_, currChar_);
+  notebook_->AddPage(racePage_, L"Race");
   InitializeClassPage();
   InitializeSkillsPage();
   InitializeSpellsPage();
@@ -90,6 +92,20 @@ void cMain::InitializeNotebook()
   //InitializeBorderPage();
 }
 
+void cMain::OnRaceLocked(wxCommandEvent& evt)
+{
+  /* Update racial bonuses on the ability scores page */
+
+  /* Propagate this information to the summary page */
+  wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + currChar_->race().raceName());
+  wxListBox* todoList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_TODO_LIST_ID));
+  int todoIdx = todoList->FindString("Pick Race");
+  if (todoIdx != wxNOT_FOUND)
+  {
+    todoList->Delete(todoIdx);
+  }
+
+}
 //A test to get borders working - does not work at all, breaks sizers for all other pages when used.
 void cMain::InitializeBorderPage()
 {
@@ -114,11 +130,11 @@ void cMain::InitializeBorderPage()
   Centre();
 }
 
-void cMain::setupNotebook()
+void cMain::ResetNotebook()
 {
-  SetupSummaryPage();
-  SetupAbilityScoresPage();
-  SetupRacePage();
+  summaryPage_->ResetPage(currChar_);
+  abilityScorePage_->ResetPage(currChar_);
+  racePage_->ResetPage(currChar_);
   //setupClassPage();
   //setupSkillsPage();
   //setupSpellsPage();
@@ -285,5 +301,4 @@ void cMain::OnButtonClicked(wxCommandEvent& evt)
 
     btn[y * nFieldWidth + x]->SetLabel(std::to_string(mine_count));
   }
-  evt.Skip();
 }

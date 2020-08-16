@@ -1,5 +1,5 @@
 /* local includes*/
-#include "cMain.h"
+#include "RacePage.h"
 
 /* stdlib includes*/
 #include <exception>
@@ -22,11 +22,9 @@ wxString populateRaceText(Pathfinder::Race raceObj);
 void populateRacialTable(wxListBox* racialAbilityList, Pathfinder::Race raceObj);
 
 
-void cMain::InitializeRacePage()
+RacePage::RacePage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar)
 {
-  wxPanel* panel = new wxPanel(notebook_);
-  panel->SetBackgroundColour(BACKGROUND_COLOR);
-  notebook_->AddPage(panel, L"Race");
+  this->SetBackgroundColour(0xE5E5E5);
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL);/* will contain the veritcal boxes below */
   wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* will hold race dropdown and stats */
@@ -45,11 +43,11 @@ void cMain::InitializeRacePage()
 
 
   /* create label, drop down menu, and button for race selection: */
-  wxStaticText* nameLabel = new wxStaticText(panel, RACE_NAME_LABEL_ID, wxT("Race:"));
+  wxStaticText* nameLabel = new wxStaticText(this, RACE_NAME_LABEL_ID, wxT("Race:"));
   hbox_name->Add(nameLabel, 0, wxRIGHT, 8);
-  wxChoice* raceDropDown = new wxChoice(panel, RACE_DROPDOWN_ID, wxDefaultPosition, wxDefaultSize, 0);
+  wxChoice* raceDropDown = new wxChoice(this, RACE_DROPDOWN_ID, wxDefaultPosition, wxDefaultSize, 0);
 
-  raceDropDown->Bind(wxEVT_CHOICE, &cMain::OnRaceSelected, this);
+  raceDropDown->Bind(wxEVT_CHOICE, &RacePage::OnRaceSelected, this);
   /* Populate the race dropdown menu */
   int Nraces = Pathfinder::PFTable::get_num_races();
   for (int raceIdx = 0; raceIdx < Nraces; raceIdx++)
@@ -70,47 +68,47 @@ void cMain::InitializeRacePage()
 
   /* add a select button */
   /* first add a spacer so it will appear on the far right */
-  hbox_name->Add(new wxPanel(panel, wxID_ANY), 1, wxEXPAND);
+  hbox_name->Add(new wxPanel(this, wxID_ANY), 1, wxEXPAND);
 
-  wxButton* selectBtn = new wxButton(panel, RACE_SELECT_BTN_ID, wxT("Lock Race Selection"));
-  selectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &cMain::OnRaceLocked, this);
+  wxButton* selectBtn = new wxButton(this, RACE_SELECT_BTN_ID, wxT("Lock Race Selection"));
+  selectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &RacePage::OnRaceLocked, this);
   selectBtn->Hide();
   hbox_name->Add(selectBtn, 0, wxALIGN_RIGHT | wxRIGHT | wxBOTTOM, 10);
 
   /* Create a text box containing the race details: size, attribute bonuses, etc. */
   wxString raceText = "Size: \nSpeed: \nAbilty Score Offsets: \nLangauges known: \nLangauges Available: ";
 
-  wxStaticText* raceTextbox = new wxStaticText(panel, RACE_TEXT_ID, raceText);
+  wxStaticText* raceTextbox = new wxStaticText(this, RACE_TEXT_ID, raceText);
   //raceTextbox->Wrap(raceTextbox->GetClientSize().GetWidth());
   vbox1->Add(raceTextbox, 1, wxEXPAND, 0);
 
 
   /* On the right of the screen show a list of all abilities above and description */
 
-  wxStaticText* raceAbilitiesListLabel = new wxStaticText(panel, wxID_ANY, wxT("Racial Bonuses:"));
+  wxStaticText* raceAbilitiesListLabel = new wxStaticText(this, wxID_ANY, wxT("Racial Bonuses:"));
   vbox2->Add(raceAbilitiesListLabel, 0, 0, 0);
 
   /* fill out the race ability list here */
   wxBoxSizer* hbox_racials = new wxBoxSizer(wxHORIZONTAL);
-  wxListBox* raceAbilityList = new wxListBox(panel, RACE_RACIAL_BONUS_TABLE_ID);
-  raceAbilityList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &cMain::OnRacialSelected, this);
+  wxListBox* raceAbilityList = new wxListBox(this, RACE_RACIAL_BONUS_TABLE_ID);
+  raceAbilityList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &RacePage::OnRacialSelected, this);
 
   hbox_racials->Add(raceAbilityList, 1, wxEXPAND | wxFIXED_MINSIZE, 0);
   vbox2->Add(hbox_racials, 2, wxEXPAND | wxBOTTOM | wxFIXED_MINSIZE, 5);
   //vbox2->Add(raceAbilityList, 2, wxEXPAND, 0);
 
   wxString racialDesc = "Description:";
-  wxStaticText* raceAbilitiesDesc = new wxStaticText(panel, RACE_RACIAL_BONUS_DESC_ID, wxT("Description:"));
+  wxStaticText* raceAbilitiesDesc = new wxStaticText(this, RACE_RACIAL_BONUS_DESC_ID, wxT("Description:"));
   vbox2->Add(raceAbilitiesDesc, 1, wxEXPAND, 0);
 
   //raceAbilityDesc->Wrap(raceAbilityDesc->GetClientSize().GetWidth());
 
-  panel->SetSizerAndFit(hbox1);
+  this->SetSizerAndFit(hbox1);
 }
 
-void cMain::SetupRacePage()
+void RacePage::ResetPage(Pathfinder::Character* currChar)
 {
-  wxPanel* panel = static_cast<wxPanel*>(wxWindow::FindWindowById(RACE_NAME_LABEL_ID)->GetParent());
+  charPtr_ = currChar;
 
   /* Turn on dropdown menu and lock button */
   wxChoice* raceDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID));
@@ -135,10 +133,10 @@ void cMain::SetupRacePage()
   wxListBox* raceAbilityList = static_cast<wxListBox*>(wxWindow::FindWindowById(RACE_RACIAL_BONUS_TABLE_ID));
   populateRacialTable(raceAbilityList, chosenRace);
 
-  panel->Layout();
+  this->Layout();
 }
 
-void cMain::OnRaceSelected(wxCommandEvent& evt)
+void RacePage::OnRaceSelected(wxCommandEvent& evt)
 {
   int raceIdx = evt.GetSelection();
 
@@ -155,15 +153,14 @@ void cMain::OnRaceSelected(wxCommandEvent& evt)
   wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->SetLabel("Description:");
 
   wxWindow::FindWindowById(RACE_DROPDOWN_ID)->GetParent()->Layout();
-  evt.Skip();
 }
 
-void cMain::OnRaceLocked(wxCommandEvent& evt)
+void RacePage::OnRaceLocked(wxCommandEvent& evt)
 {
   /* Save the selected race */
   int raceIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID))->GetSelection();
   Pathfinder::Race currentRace = Pathfinder::PFTable::get_race(raceIdx);
-  currChar_->race(currentRace);
+  charPtr_->race(currentRace);
 
   /* Remove the drop down menu and button, update the race name text */
   wxWindow::FindWindowById(RACE_DROPDOWN_ID)->Disable();
@@ -172,21 +169,10 @@ void cMain::OnRaceLocked(wxCommandEvent& evt)
   wxWindow::FindWindowById(RACE_SELECT_BTN_ID)->Hide();
   wxWindow::FindWindowById(RACE_NAME_LABEL_ID)->SetLabel("Race: " + currentRace.raceName());
 
-  /* Update racial bonuses on the ability scores page */
-
-  /* Propagate this information to the summary page */
-  wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + currentRace.raceName());
-  wxListBox* todoList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_TODO_LIST_ID));
-  int todoIdx = todoList->FindString("Pick Race");
-  if (todoIdx != wxNOT_FOUND)
-  {
-    todoList->Delete(todoIdx);
-  }
-
   evt.Skip();
 }
 
-void cMain::OnRacialSelected(wxCommandEvent& evt)
+void RacePage::OnRacialSelected(wxCommandEvent& evt)
 {
   int raceId = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID))->GetSelection();
   int racialId = evt.GetSelection();
@@ -194,7 +180,6 @@ void cMain::OnRacialSelected(wxCommandEvent& evt)
   wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->SetLabel(racialTxt);
 
   wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->GetParent()->Layout();
-  evt.Skip();
 }
 
 wxString populateRaceText(Pathfinder::Race chosenRace)

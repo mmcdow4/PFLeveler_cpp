@@ -1,5 +1,5 @@
 /* local includes*/
-#include "cMain.h"
+#include "SummaryPage.h"
 
 /* stdlib includes*/
 #include <exception>
@@ -17,11 +17,9 @@
 #include <pf_include/Character.h>
 
 
-void cMain::InitializeSummaryPage()
+SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar)
 {
-  wxPanel* panel = new wxPanel(notebook_);
-  panel->SetBackgroundColour(BACKGROUND_COLOR);
-  notebook_->AddPage(panel, L"Summary");
+  this->SetBackgroundColour(0xE5E5E5);
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
   wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* character summary and todo list */
@@ -32,9 +30,9 @@ void cMain::InitializeSummaryPage()
   int summarySpacing = 1;
   /* Character Name */
   wxBoxSizer* hbox_char_name = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* charNameLabel = new wxStaticText(panel, SUMMARY_NAME_LABEL_ID, wxT("Character Name:"));
+  wxStaticText* charNameLabel = new wxStaticText(this, SUMMARY_NAME_LABEL_ID, wxT("Character Name:"));
   hbox_char_name->Add(charNameLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* charNameTxt = new wxTextCtrl(panel, SUMMARY_NAME_INPUT_ID);
+  wxTextCtrl* charNameTxt = new wxTextCtrl(this, SUMMARY_NAME_INPUT_ID);
   charNameTxt->Disable();
   charNameTxt->Hide();
   hbox_char_name->Add(charNameTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -42,9 +40,9 @@ void cMain::InitializeSummaryPage()
 
   /* Player Name */
   wxBoxSizer* hbox_player_name = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* playerNameLabel = new wxStaticText(panel, SUMMARY_PLAYER_LABEL_ID, wxT("Player Name:"));
+  wxStaticText* playerNameLabel = new wxStaticText(this, SUMMARY_PLAYER_LABEL_ID, wxT("Player Name:"));
   hbox_player_name->Add(playerNameLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* playerNameTxt = new wxTextCtrl(panel, SUMMARY_PLAYER_INPUT_ID);
+  wxTextCtrl* playerNameTxt = new wxTextCtrl(this, SUMMARY_PLAYER_INPUT_ID);
   playerNameTxt->Disable();
   playerNameTxt->Hide();
   hbox_player_name->Add(playerNameTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -52,7 +50,7 @@ void cMain::InitializeSummaryPage()
 
   /* Alignment */
   wxBoxSizer* hbox_alignment = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* alignmentLabel = new wxStaticText(panel, SUMMARY_ALIGNMENT_LABEL_ID, wxT("Alignment:"));
+  wxStaticText* alignmentLabel = new wxStaticText(this, SUMMARY_ALIGNMENT_LABEL_ID, wxT("Alignment:"));
   hbox_alignment->Add(alignmentLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
   wxArrayString alignmentStrings;
   alignmentStrings.Add("Lawful Good");
@@ -65,7 +63,7 @@ void cMain::InitializeSummaryPage()
   alignmentStrings.Add("Chaotic Neutral");
   alignmentStrings.Add("Chaotic Evil");
 
-  wxChoice* alignmentDropdown = new wxChoice(panel, SUMMARY_ALIGNMENT_DROPDOWN_ID, wxDefaultPosition, wxDefaultSize, alignmentStrings);
+  wxChoice* alignmentDropdown = new wxChoice(this, SUMMARY_ALIGNMENT_DROPDOWN_ID, wxDefaultPosition, wxDefaultSize, alignmentStrings);
   alignmentDropdown->Disable();
   alignmentDropdown->Hide();
   hbox_alignment->Add(alignmentDropdown, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -73,9 +71,9 @@ void cMain::InitializeSummaryPage()
 
   /* Height */
   wxBoxSizer* hbox_height = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* heightLabel = new wxStaticText(panel, SUMMARY_HEIGHT_LABEL_ID, wxT("Height:"));
+  wxStaticText* heightLabel = new wxStaticText(this, SUMMARY_HEIGHT_LABEL_ID, wxT("Height:"));
   hbox_height->Add(heightLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* heightTxt = new wxTextCtrl(panel, SUMMARY_HEIGHT_INPUT_ID);
+  wxTextCtrl* heightTxt = new wxTextCtrl(this, SUMMARY_HEIGHT_INPUT_ID);
   heightTxt->Disable();
   heightTxt->Hide();
   hbox_height->Add(heightTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -83,9 +81,9 @@ void cMain::InitializeSummaryPage()
 
   /* Weight */
   wxBoxSizer* hbox_weight = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* weightLabel = new wxStaticText(panel, SUMMARY_WEIGHT_LABEL_ID, wxT("Weight:"));
+  wxStaticText* weightLabel = new wxStaticText(this, SUMMARY_WEIGHT_LABEL_ID, wxT("Weight:"));
   hbox_weight->Add(weightLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* weightTxt = new wxTextCtrl(panel, SUMMARY_WEIGHT_INPUT_ID);
+  wxTextCtrl* weightTxt = new wxTextCtrl(this, SUMMARY_WEIGHT_INPUT_ID);
   weightTxt->Disable();
   weightTxt->Hide();
   hbox_weight->Add(weightTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -93,9 +91,9 @@ void cMain::InitializeSummaryPage()
 
   /* Hair color */
   wxBoxSizer* hbox_hair = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* hairLabel = new wxStaticText(panel, SUMMARY_HAIR_LABEL_ID, wxT("Hair:"));
+  wxStaticText* hairLabel = new wxStaticText(this, SUMMARY_HAIR_LABEL_ID, wxT("Hair:"));
   hbox_hair->Add(hairLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* hairTxt = new wxTextCtrl(panel, SUMMARY_HAIR_INPUT_ID);
+  wxTextCtrl* hairTxt = new wxTextCtrl(this, SUMMARY_HAIR_INPUT_ID);
   hairTxt->Disable();
   hairTxt->Hide();
   hbox_hair->Add(hairTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -103,9 +101,9 @@ void cMain::InitializeSummaryPage()
 
   /* Eyes */
   wxBoxSizer* hbox_eyes = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* eyesLabel = new wxStaticText(panel, SUMMARY_EYES_LABEL_ID, wxT("Eyes:"));
+  wxStaticText* eyesLabel = new wxStaticText(this, SUMMARY_EYES_LABEL_ID, wxT("Eyes:"));
   hbox_eyes->Add(eyesLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* eyesTxt = new wxTextCtrl(panel, SUMMARY_EYES_INPUT_ID);
+  wxTextCtrl* eyesTxt = new wxTextCtrl(this, SUMMARY_EYES_INPUT_ID);
   eyesTxt->Disable();
   eyesTxt->Hide();
   hbox_eyes->Add(eyesTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -113,9 +111,9 @@ void cMain::InitializeSummaryPage()
 
   /* Deity */
   wxBoxSizer* hbox_deity = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* deityLabel = new wxStaticText(panel, SUMMARY_DEITY_LABEL_ID, wxT("Deity:"));
+  wxStaticText* deityLabel = new wxStaticText(this, SUMMARY_DEITY_LABEL_ID, wxT("Deity:"));
   hbox_deity->Add(deityLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* deityTxt = new wxTextCtrl(panel, SUMMARY_DEITY_INPUT_ID);
+  wxTextCtrl* deityTxt = new wxTextCtrl(this, SUMMARY_DEITY_INPUT_ID);
   deityTxt->Disable();
   deityTxt->Hide();
   hbox_deity->Add(deityTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -123,9 +121,9 @@ void cMain::InitializeSummaryPage()
 
   /* Homeland */
   wxBoxSizer* hbox_homeland = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* homelandLabel = new wxStaticText(panel, SUMMARY_HOMELAND_LABEL_ID, wxT("Homeland:"));
+  wxStaticText* homelandLabel = new wxStaticText(this, SUMMARY_HOMELAND_LABEL_ID, wxT("Homeland:"));
   hbox_homeland->Add(homelandLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* homeTxt = new wxTextCtrl(panel, SUMMARY_HOMELAND_INPUT_ID);
+  wxTextCtrl* homeTxt = new wxTextCtrl(this, SUMMARY_HOMELAND_INPUT_ID);
   homeTxt->Disable();
   homeTxt->Hide();
   hbox_homeland->Add(homeTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -133,9 +131,9 @@ void cMain::InitializeSummaryPage()
 
   /* Gender */
   wxBoxSizer* hbox_gender = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* genderLabel = new wxStaticText(panel, SUMMARY_GENDER_LABEL_ID, wxT("Gender:"));
+  wxStaticText* genderLabel = new wxStaticText(this, SUMMARY_GENDER_LABEL_ID, wxT("Gender:"));
   hbox_gender->Add(genderLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* genderTxt = new wxTextCtrl(panel, SUMMARY_GENDER_INPUT_ID);
+  wxTextCtrl* genderTxt = new wxTextCtrl(this, SUMMARY_GENDER_INPUT_ID);
   genderTxt->Disable();
   genderTxt->Hide();
   hbox_gender->Add(genderTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -143,9 +141,9 @@ void cMain::InitializeSummaryPage()
 
   /* Age */
   wxBoxSizer* hbox_age = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* ageLabel = new wxStaticText(panel, SUMMARY_AGE_LABEL_ID, wxT("Age:"));
+  wxStaticText* ageLabel = new wxStaticText(this, SUMMARY_AGE_LABEL_ID, wxT("Age:"));
   hbox_age->Add(ageLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  wxTextCtrl* ageTxt = new wxTextCtrl(panel, SUMMARY_AGE_INPUT_ID);
+  wxTextCtrl* ageTxt = new wxTextCtrl(this, SUMMARY_AGE_INPUT_ID);
   ageTxt->Disable();
   ageTxt->Hide();
   hbox_age->Add(ageTxt, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
@@ -153,28 +151,28 @@ void cMain::InitializeSummaryPage()
 
   /* Race */
   wxBoxSizer* hbox_race = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* raceLabel = new wxStaticText(panel, SUMMARY_RACE_LABEL_ID, wxT("Race:"));
+  wxStaticText* raceLabel = new wxStaticText(this, SUMMARY_RACE_LABEL_ID, wxT("Race:"));
   hbox_race->Add(raceLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
   vbox1->Add(hbox_race);
 
   /* Favored Class(es) */
   wxBoxSizer* hbox_favClass = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* favClassLabel = new wxStaticText(panel, SUMMARY_FAV_CLASS_LABEL_ID, wxT("Favored Class:"));
+  wxStaticText* favClassLabel = new wxStaticText(this, SUMMARY_FAV_CLASS_LABEL_ID, wxT("Favored Class:"));
   hbox_favClass->Add(favClassLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
   vbox1->Add(hbox_favClass);
 
-  wxButton* summaryBtn = new wxButton(panel, SUMMARY_BUTTON_ID, wxT("Lock Info"));
-  summaryBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &cMain::OnCharLocked, this);
+  wxButton* summaryBtn = new wxButton(this, SUMMARY_BUTTON_ID, wxT("Lock Info"));
+  summaryBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &SummaryPage::OnCharLocked, this);
   summaryBtn->Disable();
   summaryBtn->Hide();
   vbox1->Add(summaryBtn, 0, wxALIGN_RIGHT, 0);
 
   /* To Do List */
-  wxStaticText* todoLabel = new wxStaticText(panel, SUMMARY_TODO_LABEL_ID, wxT("To Do List:"));
+  wxStaticText* todoLabel = new wxStaticText(this, SUMMARY_TODO_LABEL_ID, wxT("To Do List:"));
   todoLabel->Hide();
   vbox1->Add(todoLabel, 0, 0, 0);
 
-  wxListBox* todoList = new wxListBox(panel, SUMMARY_TODO_LIST_ID);
+  wxListBox* todoList = new wxListBox(this, SUMMARY_TODO_LIST_ID);
   todoList->Hide();
   vbox1->Add(todoList, 1, wxEXPAND, 0);
 
@@ -182,35 +180,36 @@ void cMain::InitializeSummaryPage()
   hbox1->Add(vbox1, 1, wxEXPAND | wxRIGHT, 10);
 
   /* Spell List */
-  wxStaticText* spellLabel = new wxStaticText(panel, wxID_ANY, wxT("Known Spells:"));
+  wxStaticText* spellLabel = new wxStaticText(this, wxID_ANY, wxT("Known Spells:"));
   vbox2->Add(spellLabel, 0, wxBOTTOM, 5);
-  wxListBox* spellList = new wxListBox(panel, SUMMARY_SPELL_LIST_ID);
+  wxListBox* spellList = new wxListBox(this, SUMMARY_SPELL_LIST_ID);
   vbox2->Add(spellList, 1, wxEXPAND, 0);
 
   hbox1->Add(vbox2, 1, wxEXPAND | wxRIGHT, 10);
 
   /* Feat List */
-  wxStaticText* featLabel = new wxStaticText(panel, wxID_ANY, wxT("Your Feats:"));
+  wxStaticText* featLabel = new wxStaticText(this, wxID_ANY, wxT("Your Feats:"));
   vbox3->Add(featLabel, 0, wxBOTTOM, 5);
-  wxListBox* featList = new wxListBox(panel, SUMMARY_FEAT_LIST_ID);
+  wxListBox* featList = new wxListBox(this, SUMMARY_FEAT_LIST_ID);
   vbox3->Add(featList, 1, wxEXPAND, 0);
 
   hbox1->Add(vbox3, 1, wxEXPAND | wxRIGHT, 10);
 
   /* Skill List */
-  wxStaticText* skillLabel = new wxStaticText(panel, wxID_ANY, wxT("Skills:"));
+  wxStaticText* skillLabel = new wxStaticText(this, wxID_ANY, wxT("Skills:"));
   vbox4->Add(skillLabel, 0, wxBOTTOM, 5);
-  wxListBox* skillList = new wxListBox(panel, SUMMARY_SKILL_LIST_ID);
+  wxListBox* skillList = new wxListBox(this, SUMMARY_SKILL_LIST_ID);
   //skillList->AppendString(wxString("Acrobatics: 4"));
   vbox4->Add(skillList, 1, wxEXPAND, 0);
 
   hbox1->Add(vbox4, 1, wxEXPAND, 0);
 
-  panel->SetSizer(hbox1);
+  this->SetSizer(hbox1);
 }
 
-void cMain::SetupSummaryPage()
+void SummaryPage::ResetPage(Pathfinder::Character* currChar)
 {
+  charPtr_ = currChar;
 
   /* Reset summary info text boxes, enable and show input boxes for these fields */
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID))->SetLabel(wxT("Character Name:"));
@@ -278,7 +277,7 @@ void cMain::SetupSummaryPage()
   wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID)->GetParent()->GetSizer()->Layout();
 }
 
-void cMain::OnCharLocked(wxCommandEvent& evt)
+void SummaryPage::OnCharLocked(wxCommandEvent& evt)
 {
   /* Pull the user input values from the various boxes */
   wxString name = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID))->GetValue();
@@ -298,7 +297,6 @@ void cMain::OnCharLocked(wxCommandEvent& evt)
     hair.empty() || eyes.empty() || deity.empty() || homeland.empty() || gender.empty() || ageStr.empty())
   {
     wxMessageBox("Finish filling out the character summary first.");
-    evt.Skip();
     return;
   }
 
@@ -309,18 +307,18 @@ void cMain::OnCharLocked(wxCommandEvent& evt)
   ageStr.ToLong(&age);
 
   /* Save the values to the character class */
-  currChar_->name(std::string(name.mb_str()));
-  currChar_->player(std::string(playerName.mb_str()));
-  currChar_->geAlignment(ge);
-  currChar_->lcAlignment(lc);
-  currChar_->height(std::string(height.mb_str()));
-  currChar_->weight(std::string(weight.mb_str()));
-  currChar_->hair(std::string(hair.mb_str()));
-  currChar_->hair(std::string(eyes.mb_str()));
-  currChar_->hair(std::string(deity.mb_str()));
-  currChar_->hair(std::string(homeland.mb_str()));
-  currChar_->hair(std::string(gender.mb_str()));
-  currChar_->age(age);
+  charPtr_->name(std::string(name.mb_str()));
+  charPtr_->player(std::string(playerName.mb_str()));
+  charPtr_->geAlignment(ge);
+  charPtr_->lcAlignment(lc);
+  charPtr_->height(std::string(height.mb_str()));
+  charPtr_->weight(std::string(weight.mb_str()));
+  charPtr_->hair(std::string(hair.mb_str()));
+  charPtr_->hair(std::string(eyes.mb_str()));
+  charPtr_->hair(std::string(deity.mb_str()));
+  charPtr_->hair(std::string(homeland.mb_str()));
+  charPtr_->hair(std::string(gender.mb_str()));
+  charPtr_->age(age);
 
   /* Update the text boxes */
   wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID)->SetLabel("Character Name: " + name);
@@ -391,5 +389,4 @@ void cMain::OnCharLocked(wxCommandEvent& evt)
   wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Hide();
   wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Disable();
 
-  evt.Skip();
 }
