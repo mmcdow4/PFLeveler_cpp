@@ -82,7 +82,7 @@ void cMain::InitializeNotebook()
   summaryPage_ = new SummaryPage(notebook_, currChar_);
   notebook_->AddPage(summaryPage_, L"Summary");
   abilityScorePage_ = new AbilityScorePage(notebook_, currChar_);
-  notebook_->AddPage(abilityScorePage_, L"Summary");
+  notebook_->AddPage(abilityScorePage_, L"Ability Scores");
   racePage_ = new RacePage(notebook_, currChar_);
   notebook_->AddPage(racePage_, L"Race");
   InitializeClassPage();
@@ -95,6 +95,8 @@ void cMain::InitializeNotebook()
 void cMain::OnRaceLocked(wxCommandEvent& evt)
 {
   /* Update racial bonuses on the ability scores page */
+  abilityScorePage_->ApplyRacialBonuses();
+  abilityScorePage_->UpdateFields();
 
   /* Propagate this information to the summary page */
   wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + currChar_->race().raceName());

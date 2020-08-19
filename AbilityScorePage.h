@@ -79,8 +79,14 @@ public:
   void OnAttributeModeSelected(wxCommandEvent& evt);
   void OnAbilityScoreSelected(wxCommandEvent& evt);
 
+  void ApplyRacialBonuses();
+  void UpdateFields();
+
 private:
-  std::vector<int> rolledScores;
+  void populateScorePool(int modeIdx);
+  std::vector<int> rolledScores_;
+  int prevSelections_[Pathfinder::NUMBER_ABILITY_SCORES] = { 0, 0, 0, 0, 0, 0 };
+
   Pathfinder::Character* charPtr_ = NULL;
 };
 
