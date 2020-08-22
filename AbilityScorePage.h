@@ -32,39 +32,38 @@
 #define ABSCR_ATTRIBUTE_VALUE_DROPDOWN 2016 /* range from 2016 for strength to 2021 for charisma */
 #define ABSCR_ATTRIBUTE_PLUS_BTN 2022 /* range from 2022 to 2027 */
 #define ABSCR_ATTRIBUTE_RACIALS 2028 /* range from 2028 to 2033 */
-#define ABSCR_ATTRIBUTE_TOTALS 2034 /* range from 2034 to 2039 */
-#define ABSCR_ATTRIBUTE_MODIFIERS 2040 /* range from 2040 to 2045 */
-#define ABSCR_AC_TOTAL 2046
-#define ABSCR_AC_ARMOR_VAL 2047
-#define ABSCR_AC_SHIELD_VAL 2048
-#define ABSCR_AC_DEX_MOD 2049
-#define ABSCR_AC_SIZE_MOD 2050
-#define ABSCR_AC_NATURAL_ARMOR 2051
-#define ABSCR_AC_DEFLECT_MOD 2052
-#define ABSCR_AC_MISC_BONUS 2053
-#define ABSCR_MISC_TOUCH_VALUE 2054
-#define ABSCR_MISC_FLATFOOT_VALUE 2055
-#define ABSCR_MISC_INITMOD_VALUE 2056
-#define ABSCR_MISC_DEX_MOD 2057
-#define ABSCR_MISC_MISC_MOD 2058
-#define ABSCR_SAVES_NAME 2059 /* name range from 2059 to 2061 */
-#define ABSCR_SAVES_TOTAL 2062 /* range from 2062 to 2064 */
-#define ABSCR_SAVES_BASE 2065 /* range from 2065 to 2067 */
-#define ABSCR_SAVES_ABILITY_MOD 2068 /* range from 2068 to 2070 */
-#define ABSCR_SAVES_MAGIC_MOD 2071 /* range from 2071 to 2073 */
-#define ABSCR_SAVES_MISC_MOD 2074 /* range from 2074 to 2076 */
-#define ABSCR_SAVES_TEMP_MOD 2077 /* range from 2077 to 2079 */
-#define ABSCR_COMBAT_CMB_LABEL 2080
-#define ABSCR_COMBAT_CMB_TOTAL 2081
-#define ABSCR_COMBAT_CMB_BAB 2082
-#define ABSCR_COMBAT_CMB_STR 2083
-#define ABSCR_COMBAT_CMB_SIZE 2084
-#define ABSCR_COMBAT_CMD_LABEL 2085
-#define ABSCR_COMBAT_CMD_TOTAL 2086
-#define ABSCR_COMBAT_CMD_BAB 2087
-#define ABSCR_COMBAT_CMD_STR 2088
-#define ABSCR_COMBAT_CMD_DEX 2089
-#define ABSCR_COMBAT_CMD_SIZE 2090
+#define ABSCR_ATTRIBUTE_RADIO 2034 /* range from 2034 to 2039 */
+#define ABSCR_ATTRIBUTE_TOTALS 2040 /* range from 2040 to 2045 */
+#define ABSCR_ATTRIBUTE_MODIFIERS 2046 /* range from 2046 to 2051 */
+#define ABSCR_AC_TOTAL 2052
+#define ABSCR_AC_ARMOR_VAL 2053
+#define ABSCR_AC_SHIELD_VAL 2054
+#define ABSCR_AC_DEX_MOD 2055
+#define ABSCR_AC_SIZE_MOD 2056
+#define ABSCR_AC_NATURAL_ARMOR 2057
+#define ABSCR_AC_DEFLECT_MOD 2058
+#define ABSCR_AC_MISC_BONUS 2059
+#define ABSCR_MISC_TOUCH_VALUE 2060
+#define ABSCR_MISC_FLATFOOT_VALUE 2061
+#define ABSCR_MISC_INITMOD_VALUE 2062
+#define ABSCR_SAVES_NAME 2063 /* name range from 2063 to 2065 */
+#define ABSCR_SAVES_TOTAL 2066 /* range from 2066 to 2068 */
+#define ABSCR_SAVES_BASE 2069 /* range from 2069 to 2071 */
+#define ABSCR_SAVES_ABILITY_MOD 2072 /* range from 2072 to 2074 */
+#define ABSCR_SAVES_MAGIC_MOD 2075 /* range from 2075 to 2077 */
+#define ABSCR_SAVES_MISC_MOD 2078 /* range from 2078 to 2080 */
+#define ABSCR_SAVES_TEMP_MOD 2081 /* range from 2081 to 2083 */
+#define ABSCR_COMBAT_CMB_LABEL 2084
+#define ABSCR_COMBAT_CMB_TOTAL 2085
+#define ABSCR_COMBAT_CMB_BAB 2086
+#define ABSCR_COMBAT_CMB_STR 2087
+#define ABSCR_COMBAT_CMB_SIZE 2088
+#define ABSCR_COMBAT_CMD_LABEL 2089
+#define ABSCR_COMBAT_CMD_TOTAL 2090
+#define ABSCR_COMBAT_CMD_BAB 2091
+#define ABSCR_COMBAT_CMD_STR 2092
+#define ABSCR_COMBAT_CMD_DEX 2093
+#define ABSCR_COMBAT_CMD_SIZE 2094
 
 class AbilityScorePage : public wxPanel
 {
@@ -78,6 +77,7 @@ public:
   /* ability score page functions */
   void OnAttributeModeSelected(wxCommandEvent& evt);
   void OnAbilityScoreSelected(wxCommandEvent& evt);
+  void OnRacialRadioSelected(wxCommandEvent& evt);
 
   void ApplyRacialBonuses();
   void UpdateFields();

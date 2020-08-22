@@ -51,16 +51,17 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
 
   wxStaticText* resourcePoolTxt = new wxStaticText(this, ABSCR_SCORES_REMAINING_TEXT_ID, wxT(" "));
   hboxOverview->Add(resourcePoolTxt);
-  
+
   vbox1->Add(hboxOverview, 1, wxEXPAND);
 
-  wxFlexGridSizer* scoresGrid = new wxFlexGridSizer(7, 7, 1, 1);
+  wxFlexGridSizer* scoresGrid = new wxFlexGridSizer(7, 8, 1, 1);
   /* add column labels */
   scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Attribute Name")), 0, wxEXPAND | wxALIGN_CENTER);
   scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), 0, wxEXPAND | wxALIGN_CENTER); /* minus buttons */
   scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Raw Value")), 0, wxEXPAND | wxALIGN_CENTER);
   scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), 0, wxEXPAND | wxALIGN_CENTER); /* plus buttons */
   scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Racial Bonus")), 0, wxEXPAND | wxALIGN_CENTER);
+  scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), 0, wxEXPAND | wxALIGN_CENTER); /* flexible bonus */
   scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Total")), 0, wxEXPAND | wxALIGN_CENTER);
   scoresGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Modifier")), 0, wxEXPAND | wxALIGN_CENTER);
 
@@ -78,6 +79,7 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
     scoresGrid->Add(new wxChoice(this, ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx), 0, wxEXPAND | wxALIGN_CENTER);
     scoresGrid->Add(new wxButton(this, ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx, "+"), 0, wxEXPAND | wxALIGN_CENTER);
     scoresGrid->Add(new wxStaticText(this, ABSCR_ATTRIBUTE_RACIALS + abilityIdx, wxT(" 0 ")), 1, wxEXPAND | wxALIGN_CENTER);
+    scoresGrid->Add(new wxRadioButton(this, ABSCR_ATTRIBUTE_RADIO + abilityIdx, wxT(" ")), 1, wxEXPAND | wxALIGN_CENTER);
     scoresGrid->Add(new wxStaticText(this, ABSCR_ATTRIBUTE_TOTALS + abilityIdx, wxT(" 0 ")), 1, wxEXPAND | wxALIGN_CENTER);
     scoresGrid->Add(new wxStaticText(this, ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx, wxT(" 0 ")), 1, wxEXPAND | wxALIGN_CENTER);
 
@@ -87,15 +89,18 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx)->Hide();
 
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
 
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Bind(wxEVT_CHOICE, &AbilityScorePage::OnAbilityScoreSelected, this);
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx)->Bind(wxEVT_RADIOBUTTON, &AbilityScorePage::OnRacialRadioSelected, this);
   }
   vbox1->Add(scoresGrid, 1, wxEXPAND);
-  
+
   wxFlexGridSizer* ACGrid = new wxFlexGridSizer(2, 18, 1, 1);
   ACGrid->Add(new wxStaticText(this, wxID_ANY, "Armor Class: "), 0, wxEXPAND | wxALIGN_CENTER);
   ACGrid->Add(new wxStaticText(this, ABSCR_AC_TOTAL, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
@@ -151,25 +156,19 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
 
   vbox1->Add(ACGrid, 1, wxEXPAND);
 
-  wxFlexGridSizer* MiscGrid = new wxFlexGridSizer(1, 12, 1, 1);
+  wxFlexGridSizer* MiscGrid = new wxFlexGridSizer(1, 8, 1, 1);
   MiscGrid->Add(new wxStaticText(this, wxID_ANY, "Touch AC = "), 0, wxEXPAND | wxALIGN_CENTER);
   MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_TOUCH_VALUE, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
   MiscGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
   MiscGrid->Add(new wxStaticText(this, wxID_ANY, "Flat-Footed AC = "), 0, wxEXPAND | wxALIGN_CENTER);
   MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_FLATFOOT_VALUE, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
   MiscGrid->Add(new wxStaticText(this, wxID_ANY, " "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "Initiative Modifier"), 0, wxEXPAND | wxALIGN_CENTER);
+  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "Initiative Modifier = "), 0, wxEXPAND | wxALIGN_CENTER);
   MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_INITMOD_VALUE, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "="), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_DEX_MOD, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(this, wxID_ANY, "+"), 0, wxEXPAND | wxALIGN_CENTER);
-  MiscGrid->Add(new wxStaticText(this, ABSCR_MISC_MISC_MOD, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
 
   wxWindow::FindWindowById(ABSCR_MISC_TOUCH_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   wxWindow::FindWindowById(ABSCR_MISC_FLATFOOT_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
   wxWindow::FindWindowById(ABSCR_MISC_INITMOD_VALUE)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
-  wxWindow::FindWindowById(ABSCR_MISC_DEX_MOD)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
-  wxWindow::FindWindowById(ABSCR_MISC_MISC_MOD)->SetBackgroundColour(*wxWHITE);//wxLIGHT_GREY););
 
   for (int ii = 0; ii < 12; ii++)
   {
@@ -308,9 +307,14 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
     static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->Clear();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx)->Hide();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
   }
+
+  /* fix all of the text fields */
+  UpdateFields();
 
   /* fix the layout */
   static_cast<wxPanel*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->GetParent())->Layout();
@@ -327,18 +331,18 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
   }
   switch (modeIdx)
   {
-  //case 0:/*standard*/
-  //  /* roll 4d6 discarding lowest die roll, repeat 6 times, assign scores*/
-  //  wxMessageBox("Standard ability score generation is not implemented yet, come back in rev 2.0");
-  //  break;
-  //case 1:/*classic*/
-  //  /* roll 3d6, repeat 6 times, assign scores */
-  //  wxMessageBox("Classic ability score generation is not implemented yet, come back in rev 2.0");
-  //  break;
-  //case 2:/*heroic*/
-  //  /* roll 2d6 and add 6, repeat 6 times, and assign scores*/
-  //  wxMessageBox("Heroic ability score generation is not implemented yet, come back in rev 2.0");
-  //  break;
+    //case 0:/*standard*/
+    //  /* roll 4d6 discarding lowest die roll, repeat 6 times, assign scores*/
+    //  wxMessageBox("Standard ability score generation is not implemented yet, come back in rev 2.0");
+    //  break;
+    //case 1:/*classic*/
+    //  /* roll 3d6, repeat 6 times, assign scores */
+    //  wxMessageBox("Classic ability score generation is not implemented yet, come back in rev 2.0");
+    //  break;
+    //case 2:/*heroic*/
+    //  /* roll 2d6 and add 6, repeat 6 times, and assign scores*/
+    //  wxMessageBox("Heroic ability score generation is not implemented yet, come back in rev 2.0");
+    //  break;
   case ABSCR_MODE_STANDARD:
   case ABSCR_MODE_CLASSIC:
   case ABSCR_MODE_HEROIC:
@@ -382,13 +386,14 @@ void AbilityScorePage::OnAbilityScoreSelected(wxCommandEvent& evt)
   int abilityIdx = evt.GetId() - ABSCR_ATTRIBUTE_VALUE_DROPDOWN;
   Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
   int scoreIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(evt.GetId()))->GetSelection();
-  int prevVal = (prevSelections_[abilityIdx] > 0 ? 
+  int prevVal = (prevSelections_[abilityIdx] > 0 ?
     stoi(std::string(static_cast<wxChoice*>(wxWindow::FindWindowById(evt.GetId()))->GetString(prevSelections_[abilityIdx]))) : 0);
   charPtr_->decrementAbilityScore(marker, prevVal);
-  if (scoreIdx != prevSelections_[abilityIdx])
+  if (/*scoreIdx != prevSelections_[abilityIdx] &&*/ scoreIdx > 0)
   {
     /* get the selected value */
-    int scoreVal = stoi(std::string(static_cast<wxChoice*>(wxWindow::FindWindowById(evt.GetId()))->GetStringSelection()));
+    
+    int scoreVal = stoi(std::string(evt.GetString()));
 
     /* save the chosen value */
     charPtr_->incrementAbilityScore(marker, scoreVal);
@@ -407,7 +412,7 @@ void AbilityScorePage::OnAbilityScoreSelected(wxCommandEvent& evt)
 
         charPtr_->decrementAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(tmpIdx), scoreVal);
         charPtr_->incrementAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(tmpIdx), prevVal);
-        //charPtr_->setAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(tmpIdx), prevSelections_[abilityIdx]);
+        prevSelections_[tmpIdx] = prevSelections_[abilityIdx];
       }
     }
   }
@@ -419,31 +424,52 @@ void AbilityScorePage::OnAbilityScoreSelected(wxCommandEvent& evt)
 
 void AbilityScorePage::ApplyRacialBonuses()
 {
-  if (charPtr_->race().abilityOffset(Pathfinder::NUMBER_ABILITY_SCORES) == 0)
+  bool hasFlexibleBonus = charPtr_->race().abilityOffset(Pathfinder::NUMBER_ABILITY_SCORES) > 0;
+  for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
   {
-    /* if the racial bonus isn't flexible, apply the fixed bonuses*/
-    for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
+    Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
+    int newTot = charPtr_->incrementAbilityScore(marker, charPtr_->race().abilityOffset(marker));
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx))->SetLabel(
+      " " + wxString::Format(wxT("%+i"), charPtr_->racialAbilityScoreBonus(marker)) + " ");
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx))->SetLabel(
+      " " + wxString::Format(wxT("%i"), newTot) + " ");
+    if (hasFlexibleBonus)
     {
-      Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
-      int newTot = charPtr_->incrementAbilityScore(marker, charPtr_->race().abilityOffset(marker));
-      static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx))->SetLabel(
-        " " + wxString::Format(wxT("%+i"), charPtr_->race().abilityOffset(marker)) + " ");
-      static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx))->SetLabel(
-        " " + wxString::Format(wxT("%i"), newTot) + " ");
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx)->Enable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx)->Show();
+      static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RADIO + abilityIdx))->SetValue(false);
     }
   }
-  /* TODO else: open the checkboxes, or apply that value if they are already active*/
+
+  /* update all of the fields */
+  UpdateFields();
+}
+
+void AbilityScorePage::OnRacialRadioSelected(wxCommandEvent& evt)
+{
+  Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(evt.GetId() - ABSCR_ATTRIBUTE_RADIO);
+
+  if (evt.IsChecked())
+  {
+    /* apply the flexible racial. This removes the racial from previous applied abilities, if necessary */
+    charPtr_->applyFlexibleRacial(marker);
+  }
+
+  /* update the entire page accordingly */
+  UpdateFields();
 }
 
 void AbilityScorePage::UpdateFields()
 {
-  
+
   /* Fill out ability score table: */
   for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
   {
     Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
     int modValue = charPtr_->getAbilityScore(marker) >= 3 ? charPtr_->abilityModifier(marker) : 0;
     wxString modString = " " + wxString::Format(wxT("%+i"), modValue) + " ";
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx))->SetLabel(
+      " " + wxString::Format(wxT("%+i"), charPtr_->racialAbilityScoreBonus(marker)) + " ");
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx))->SetLabel(
       " " + wxString::Format(wxT("%i"), charPtr_->getAbilityScore(marker)) + " ");
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx))->SetLabel(modString);
@@ -461,7 +487,7 @@ void AbilityScorePage::UpdateFields()
   wxString wisMod_str = " " + wxString::Format(wxT("%+i"), wisMod) + " ";
   wxString sizeMod_str = " " + wxString::Format(wxT("%+i"), sizeMod) + " ";
 
-  /* TODO: From class retrieve BAB, Base fort/reflex/will saves */
+  ///* TODO: From class retrieve BAB, Base fort/reflex/will saves */
 
   /* AC Equations: */
   wxString ACTotStr = " " + wxString::Format(wxT("%i"), 10 + dexMod + sizeMod /* + dodgeMod + armorVal + shieldVal + natArmor + misc + deflect*/) + " ";
@@ -477,7 +503,6 @@ void AbilityScorePage::UpdateFields()
 
   wxString initModStr = " " + wxString::Format(wxT("%+i"), dexMod /* + misc */) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_MISC_INITMOD_VALUE))->SetLabel(initModStr);
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_MISC_DEX_MOD))->SetLabel(dexMod_str);
 
   /* Saving throw equations: */
   /* Fortitude (Constitution) */
@@ -508,19 +533,20 @@ void AbilityScorePage::UpdateFields()
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMD_DEX))->SetLabel(dexMod_str);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMD_SIZE))->SetLabel(sizeMod_str);
 }
+
 void AbilityScorePage::populateScorePool(int modeIdx)
 {
   srand(time(NULL));
   std::vector<int> diceRolls;
   rolledScores_.clear();
-  for(int rollIdx = 0; rollIdx < 6; rollIdx++)
+  for (int rollIdx = 0; rollIdx < 6; rollIdx++)
   {
     std::vector<int> diceRolls;
     diceRolls.push_back(Pathfinder::rollD6());
     diceRolls.push_back(Pathfinder::rollD6());
     diceRolls.push_back(modeIdx == ABSCR_MODE_HEROIC ? 6 : Pathfinder::rollD6()); /* if heroic, give the guaranteed 6 roll; otherwise do another roll for classic or standard*/
     diceRolls.push_back(modeIdx == ABSCR_MODE_STANDARD ? Pathfinder::rollD6() : 0); /* if standard, do the fourth dice rool; otherwise keep a 0*/
-    
+
     /* sort into ascending order */
     std::sort(diceRolls.rbegin(), diceRolls.rend());
     int scoreValue = 0;

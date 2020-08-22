@@ -96,7 +96,6 @@ void cMain::OnRaceLocked(wxCommandEvent& evt)
 {
   /* Update racial bonuses on the ability scores page */
   abilityScorePage_->ApplyRacialBonuses();
-  abilityScorePage_->UpdateFields();
 
   /* Propagate this information to the summary page */
   wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + currChar_->race().raceName());
@@ -134,6 +133,13 @@ void cMain::InitializeBorderPage()
 
 void cMain::ResetNotebook()
 {
+  if (currChar_ != NULL)
+  {
+    delete currChar_;
+  }
+
+  currChar_ = new Pathfinder::Character;
+
   summaryPage_->ResetPage(currChar_);
   abilityScorePage_->ResetPage(currChar_);
   racePage_->ResetPage(currChar_);
