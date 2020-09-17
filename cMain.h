@@ -54,15 +54,10 @@ public:
   void InitializeBorderPage();
 
 
-  void OnButtonClicked(wxCommandEvent& evt);
+  //void OnButtonClicked(wxCommandEvent& evt);
 
-  /* race page functions */
-  void OnRaceLocked(wxCommandEvent& evt);
+  void OnButtonPressed(wxCommandEvent& evt);
 
-  /* summary page functions*/
-  void OnCharLocked(wxCommandEvent& evt);
-
-  wxDECLARE_EVENT_TABLE();
 
 private:
   Pathfinder::Character* currChar_ = NULL;

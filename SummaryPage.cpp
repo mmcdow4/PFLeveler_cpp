@@ -268,8 +268,8 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
   todoList->Clear();
   todoList->Show();
   todoList->AppendString(wxString("Fill Out Character Info"));
-  todoList->AppendString(wxString("Generate Ability Scores"));
   todoList->AppendString(wxString("Pick Race"));
+  todoList->AppendString(wxString("Generate Ability Scores"));
   todoList->AppendString(wxString("Pick Class"));
   todoList->AppendString(wxString("Pick Skills"));
   todoList->AppendString(wxString("Pick Feats"));

@@ -12,12 +12,6 @@
 #include <pf_include/PFTable.h>
 #include <pf_include/Race.h>
 
-/* create a table to handle events for class cMain based on class wxFrame */
-wxBEGIN_EVENT_TABLE(cMain, wxFrame)
-EVT_BUTTON(10001, OnButtonClicked)
-
-wxEND_EVENT_TABLE()
-
 
 cMain::cMain() : wxFrame(nullptr, wxID_ANY, "char_generator", wxPoint(30, 30), wxSize(DEFAULT_WINDOW_SIZE_X, DEFAULT_WINDOW_SIZE_Y))
 {
@@ -41,7 +35,7 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "char_generator", wxPoint(30, 30), w
   notebook_ = new wxNotebook(panel1, wxID_ANY);
 
   InitializeNotebook();
-  Bind(wxEVT_COMMAND_BUTTON_CLICKED, &cMain::OnRaceLocked, this);
+  Bind(wxEVT_COMMAND_BUTTON_CLICKED, &cMain::OnButtonPressed, this);
 
   box1->Add(notebook_, 1, wxEXPAND, 0);
   panel1->SetSizer(box1);
@@ -81,10 +75,10 @@ void cMain::InitializeNotebook()
 {
   summaryPage_ = new SummaryPage(notebook_, currChar_);
   notebook_->AddPage(summaryPage_, L"Summary");
-  abilityScorePage_ = new AbilityScorePage(notebook_, currChar_);
-  notebook_->AddPage(abilityScorePage_, L"Ability Scores");
   racePage_ = new RacePage(notebook_, currChar_);
   notebook_->AddPage(racePage_, L"Race");
+  abilityScorePage_ = new AbilityScorePage(notebook_, currChar_);
+  notebook_->AddPage(abilityScorePage_, L"Ability Scores");
   InitializeClassPage();
   InitializeSkillsPage();
   InitializeSpellsPage();
@@ -92,20 +86,40 @@ void cMain::InitializeNotebook()
   //InitializeBorderPage();
 }
 
-void cMain::OnRaceLocked(wxCommandEvent& evt)
+void cMain::OnButtonPressed(wxCommandEvent& evt)
 {
-  /* Update racial bonuses on the ability scores page */
-  abilityScorePage_->ApplyRacialBonuses();
 
-  /* Propagate this information to the summary page */
-  wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + currChar_->race().raceName());
   wxListBox* todoList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_TODO_LIST_ID));
-  int todoIdx = todoList->FindString("Pick Race");
-  if (todoIdx != wxNOT_FOUND)
+  int todoIdx = 0;
+  switch(evt.GetId())
   {
-    todoList->Delete(todoIdx);
-  }
+  case RACE_SELECT_BTN_ID:
+    /* Update racial bonuses on the ability scores page */
+    abilityScorePage_->ApplyRacialBonuses();
 
+    /* Propagate this information to the summary page */
+    wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + currChar_->race().raceName());
+    if (currChar_->race().numFavoredClass() > 1)
+    {
+      wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Classes: ");
+    }
+    todoIdx = todoList->FindString("Pick Race");
+    if (todoIdx != wxNOT_FOUND)
+    {
+      todoList->Delete(todoIdx);
+    }
+    break;
+  case ABSCR_ATTRIBUTE_LOCK_BUTTON:
+    todoIdx = todoList->FindString("Generate Ability Scores");
+    if (todoIdx != wxNOT_FOUND)
+    {
+      todoList->Delete(todoIdx);
+    }
+    break;
+  default:
+    wxMessageBox("Unknown button ID passed up to cMain [" + std::to_string(evt.GetId()) + "]");
+    break;
+  }
 }
 //A test to get borders working - does not work at all, breaks sizers for all other pages when used.
 void cMain::InitializeBorderPage()
@@ -240,73 +254,73 @@ cMain::~cMain()
   delete[]btn;
 }
 
-void cMain::OnButtonClicked(wxCommandEvent& evt)
-{
-  /* append the string in the text box to the list box */
-  //m_list1->AppendString(m_txt1->GetValue());
-  /* now tell wxWidgets that the event has been handled */
-
-  /* figure out coordinates of this button*/
-  int x = (evt.GetId() - 10000) % nFieldWidth;
-  int y = (evt.GetId() - 10000) / nFieldWidth;
-
-  /* populate mines on first click*/
-  if (bFirstClick)
-  {
-    int mines = 30;
-
-    while (mines)
-    {
-      int rx = rand() % nFieldWidth;
-      int ry = rand() % nFieldHeight;
-
-      /* if there isn't already a mine here, and this isn't the first location clicked, create a mine*/
-      if (nField[ry * nFieldWidth + rx] == 0 && (rx != x || ry != y))
-      {
-        nField[ry * nFieldWidth + rx] = -1;
-        mines--;
-      }
-    }
-
-    bFirstClick = false;
-  }
-
-  // Disable this button, so it can't be pressed again
-  btn[y * nFieldWidth + x]->Enable(false);
-
-  //Check if player hit a mine
-  if (nField[y * nFieldWidth + x] == -1)
-  {
-    wxMessageBox("BOOOM YOU FUCKIN NERRRRRD!");
-
-    //Reset the game
-    bFirstClick = true;
-    for (int x = 0; x < nFieldWidth; x++)
-    {
-      for (int y = 0; y < nFieldHeight; y++)
-      {
-        nField[y * nFieldWidth + x] = 0;
-        btn[y * nFieldWidth + x]->SetLabel("");
-        btn[y * nFieldWidth + x]->Enable(true);
-      }
-    }
-  }
-  else
-  {
-    /* figure out how many neighboring mines there are*/
-    int mine_count = 0;
-    for (int i = -1; i < 2; i++)
-    {
-      for (int j = -1; j < 2; j++)
-      {
-        if (x + i >= 0 && x + i < nFieldWidth && y + j >= 0 && y + j < nFieldHeight)
-        {
-          if (nField[(y + j) * nFieldWidth + (x + i)] == -1)
-            mine_count++;
-        }
-      }
-    }
-
-    btn[y * nFieldWidth + x]->SetLabel(std::to_string(mine_count));
-  }
-}
+//void cMain::OnButtonClicked(wxCommandEvent& evt)
+//{
+//  /* append the string in the text box to the list box */
+//  //m_list1->AppendString(m_txt1->GetValue());
+//  /* now tell wxWidgets that the event has been handled */
+//
+//  /* figure out coordinates of this button*/
+//  int x = (evt.GetId() - 10000) % nFieldWidth;
+//  int y = (evt.GetId() - 10000) / nFieldWidth;
+//
+//  /* populate mines on first click*/
+//  if (bFirstClick)
+//  {
+//    int mines = 30;
+//
+//    while (mines)
+//    {
+//      int rx = rand() % nFieldWidth;
+//      int ry = rand() % nFieldHeight;
+//
+//      /* if there isn't already a mine here, and this isn't the first location clicked, create a mine*/
+//      if (nField[ry * nFieldWidth + rx] == 0 && (rx != x || ry != y))
+//      {
+//        nField[ry * nFieldWidth + rx] = -1;
+//        mines--;
+//      }
+//    }
+//
+//    bFirstClick = false;
+//  }
+//
+//  // Disable this button, so it can't be pressed again
+//  btn[y * nFieldWidth + x]->Enable(false);
+//
+//  //Check if player hit a mine
+//  if (nField[y * nFieldWidth + x] == -1)
+//  {
+//    wxMessageBox("BOOOM YOU FUCKIN NERRRRRD!");
+//
+//    //Reset the game
+//    bFirstClick = true;
+//    for (int x = 0; x < nFieldWidth; x++)
+//    {
+//      for (int y = 0; y < nFieldHeight; y++)
+//      {
+//        nField[y * nFieldWidth + x] = 0;
+//        btn[y * nFieldWidth + x]->SetLabel("");
+//        btn[y * nFieldWidth + x]->Enable(true);
+//      }
+//    }
+//  }
+//  else
+//  {
+//    /* figure out how many neighboring mines there are*/
+//    int mine_count = 0;
+//    for (int i = -1; i < 2; i++)
+//    {
+//      for (int j = -1; j < 2; j++)
+//      {
+//        if (x + i >= 0 && x + i < nFieldWidth && y + j >= 0 && y + j < nFieldHeight)
+//        {
+//          if (nField[(y + j) * nFieldWidth + (x + i)] == -1)
+//            mine_count++;
+//        }
+//      }
+//    }
+//
+//    btn[y * nFieldWidth + x]->SetLabel(std::to_string(mine_count));
+//  }
+//}
