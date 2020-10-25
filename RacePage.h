@@ -33,7 +33,6 @@ public:
   void OnRaceLocked(wxCommandEvent& evt);
 
 private:
-  std::vector<int> rolledScores;
   Pathfinder::Character* charPtr_ = NULL;
 };
 

@@ -71,6 +71,7 @@ void cMain::menuCallback(wxCommandEvent& evt)
     break;
   }
 }
+
 void cMain::InitializeNotebook()
 {
   summaryPage_ = new SummaryPage(notebook_, currChar_);
@@ -79,7 +80,8 @@ void cMain::InitializeNotebook()
   notebook_->AddPage(racePage_, L"Race");
   abilityScorePage_ = new AbilityScorePage(notebook_, currChar_);
   notebook_->AddPage(abilityScorePage_, L"Ability Scores");
-  InitializeClassPage();
+  classPage_ = new ClassPage(notebook_, currChar_);
+  notebook_->AddPage(classPage_, L"Class");
   InitializeSkillsPage();
   InitializeSpellsPage();
   InitializeFeatsPage();
@@ -157,7 +159,7 @@ void cMain::ResetNotebook()
   summaryPage_->ResetPage(currChar_);
   abilityScorePage_->ResetPage(currChar_);
   racePage_->ResetPage(currChar_);
-  //setupClassPage();
+  classPage_->ResetPage(currChar_);
   //setupSkillsPage();
   //setupSpellsPage();
   //setupFeatsPage();

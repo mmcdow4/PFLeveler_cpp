@@ -99,6 +99,7 @@ RacePage::RacePage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
 
   wxString racialDesc = "Description:";
   wxStaticText* raceAbilitiesDesc = new wxStaticText(this, RACE_RACIAL_BONUS_DESC_ID, wxT("Description:"));
+  raceAbilitiesDesc->SetBackgroundColour(*wxWHITE);
   vbox2->Add(raceAbilitiesDesc, 1, wxEXPAND, 0);
 
   //raceAbilityDesc->Wrap(raceAbilityDesc->GetClientSize().GetWidth());

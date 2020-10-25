@@ -6,6 +6,7 @@
 #include "SummaryPage.h"
 #include "AbilityScorePage.h"
 #include "RacePage.h"
+#include "ClassPage.h"
 
 #include <pf_include/Character.h>
 
@@ -64,5 +65,6 @@ private:
   SummaryPage* summaryPage_ = NULL;
   AbilityScorePage* abilityScorePage_ = NULL;
   RacePage* racePage_ = NULL;
+  ClassPage* classPage_ = NULL;
 };
 
