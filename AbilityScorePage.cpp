@@ -307,6 +307,7 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
 void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
+  currChar->abilityScoresSet(false);
   flexibleApplied_ = false;
 
   /* turn on the method dropdown, select button, and label text*/
@@ -522,6 +523,8 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
     wxMessageBox("You must apply your flexible ability score bonus before locking ability scores.");
     return;
   }
+
+  charPtr_->abilityScoresSet(true);
 
   for (int abilityIdx = 0; abilityIdx < Pathfinder::NUMBER_ABILITY_SCORES; abilityIdx++)
   {

@@ -118,6 +118,9 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
       todoList->Delete(todoIdx);
     }
     break;
+  case CLASS_FAVORED_CLASS_BUTTON_ID:
+    wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Class: " + wxString(currChar_->getFavoredClassList()));
+    break;
   default:
     wxMessageBox("Unknown button ID passed up to cMain [" + std::to_string(evt.GetId()) + "]");
     break;

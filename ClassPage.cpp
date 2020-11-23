@@ -57,12 +57,20 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   classDropDown->Hide();
 
   wxButton* levelUpBtn = new wxButton(this, CLASS_LEVELUP_BUTTON_ID, wxT("Add Class Level"));
+  levelUpBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ClassPage::OnLevelAdded, this);
   levelUpBtn->Disable();
   levelUpBtn->Hide();
+
+
+  wxButton* favoredClassBtn = new wxButton(this, CLASS_FAVORED_CLASS_BUTTON_ID, wxT("Select Favored Class"));
+  favoredClassBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ClassPage::OnFavoredClassAdded, this);
+  favoredClassBtn->Disable();
+  favoredClassBtn->Hide();
 
   hbox_levelup->Add(classLabel, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 10);
   hbox_levelup->Add(classDropDown, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 10);
   hbox_levelup->Add(levelUpBtn, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 10);
+  hbox_levelup->Add(favoredClassBtn, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 10);
   vbox1->Add(hbox_levelup, 0, wxRIGHT, 10);
 
   /* Add a text box for the class description below the dropdown */
@@ -126,6 +134,10 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Show();
   wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Enable();
 
+  /* favored class button */
+  wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Show();
+  wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Enable();
+
   /* class description */
   wxWindow::FindWindowById(CLASS_DESCRIPTION_ID)->Show();
 
@@ -136,6 +148,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   /* selected features list */
   wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID)->Enable();
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID))->Clear();
+  this->features_.clear();
 
   /* add feature button */
   wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID)->Show();
@@ -149,4 +162,70 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->Show();
 
   this->Layout();
+}
+
+void ClassPage::OnFavoredClassAdded(wxCommandEvent& evt)
+{
+
+  int classIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection();
+
+  if (classIdx < 0)
+  {
+    wxMessageBox("Select a class from the dropdown menu.");
+    return;
+  }
+  else if (charPtr_->race().id() == -1)// if Race hasn't been set yet
+  {
+    wxMessageBox("You must finalize your race selection before selecting a favored class.");
+    return;
+  }
+
+  charPtr_->addFavoredClass(static_cast<Pathfinder::classMarker>(classIdx));
+
+  if (charPtr_->numFavoredClassLeft() == 0)
+  {
+    wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Hide();
+    wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Disable();
+  }
+
+  evt.Skip();
+}
+
+void ClassPage::OnLevelAdded(wxCommandEvent& evt)
+{
+
+  int classIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection();
+
+  if (classIdx < 0)
+  {
+    wxMessageBox("First select a class from the dropdown menu.");
+    return;
+  }
+  else if (charPtr_->race().id() == -1)// if Race hasn't been set yet
+  {
+    wxMessageBox("You must finalize your race selection before adding a class level.");
+    return;
+  }
+  else if (!charPtr_->abilityScoresSet()) // or if the ability scores haven't been set yet
+  {
+    wxMessageBox("You must finalize your ability scores before adding a class level.");
+    return;
+  }
+  else if (charPtr_->numFavoredClassLeft() > 0)
+  {
+    wxMessageBox("You must finish selecting your favored classes before adding a class level.");
+    return;
+  }
+
+  charPtr_->incrementClassLevel(classIdx);
+
+  std::vector<Pathfinder::ClassFeature> newFeatures = Pathfinder::PFTable::get_class(classIdx).getFeatureVec(charPtr_->getClassLevel(classIdx));
+
+  wxListBox* todoFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID));
+
+  for (auto featIter = newFeatures.begin(); featIter != newFeatures.end(); ++featIter)
+  {
+    features_.push_back(*featIter);
+    todoFeatList->AppendString(featIter->name());
+  }
 }
