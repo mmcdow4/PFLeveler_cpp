@@ -53,6 +53,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
     }
   }
 
+  classDropDown->Bind(wxEVT_CHOICE, &ClassPage::OnClassSelected, this);
   classDropDown->Disable();
   classDropDown->Hide();
 
@@ -92,6 +93,9 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxListBox* todoFeatList = new wxListBox(this, CLASS_TODO_FEATURE_LIST_ID);
   wxListBox* selectedFeatList = new wxListBox(this, CLASS_SELECTED_FEATURE_LIST_ID);
 
+  todoFeatList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &ClassPage::OnUnselectedFeatureSelected, this);
+  selectedFeatList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &ClassPage::OnFinishedFeatureSelected, this);
+
   todoFeatList->Disable();
   selectedFeatList->Disable();
   vbox_todo_features->Add(todoFeatList, 1, wxEXPAND | wxRIGHT, 10);
@@ -100,6 +104,9 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   hbox_features->Add(vbox_todo_features, 1, wxEXPAND | wxRIGHT, 10);
   hbox_features->Add(vbox_selected_features, 1, wxEXPAND | wxRIGHT, 10);
   vbox1->Add(hbox_features, 2, wxEXPAND | wxRIGHT | wxLEFT, 10);
+
+  wxStaticText* feature_description = new wxStaticText(this, CLASS_FEATURE_DESCRIPTION_ID, wxT("Feature Description:"));
+  vbox1->Add(feature_description, 0, wxRIGHT, 10);
 
   wxButton* addFeatureBtn = new wxButton(this, CLASS_FEATURE_BUTTON_ID, wxT("Choose Selected Feature"));
   addFeatureBtn->Disable();
@@ -114,6 +121,8 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxListBox* abilitiesList = new wxListBox(this, CLASS_ABILITIES_LIST_ID);
   abilitiesList->Disable();
   vbox2->Add(abilitiesList, 2, wxEXPAND | wxUP | wxDOWN, 10);
+
+  abilitiesList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &ClassPage::OnAbilitySelected, this);
 
   wxStaticText* abilitiesDescription = new wxStaticText(this, CLASS_ABILITIES_DESCRIPTION_ID, wxT("Ability Description:"));
   abilitiesDescription->SetBackgroundColour(*wxWHITE);
@@ -131,8 +140,8 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   wxWindow::FindWindowById(CLASS_DROPDOWN_ID)->Enable();
 
   /* level up button */
-  wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Show();
-  wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Enable();
+  wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Hide();
+  wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Disable();
 
   /* favored class button */
   wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Show();
@@ -144,11 +153,16 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   /* todo features list */
   wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID)->Enable();
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID))->Clear();
+  this->todoFeatures_.clear();
 
   /* selected features list */
   wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID)->Enable();
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID))->Clear();
-  this->features_.clear();
+  this->featureNames_.clear();
+  this->featureDescriptions_.clear();
+
+  /* feature description */
+  wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->Show();
 
   /* add feature button */
   wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID)->Show();
@@ -157,6 +171,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   /* class abilities list */
   wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID)->Enable();
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->Clear();
+  this->abilities_.clear();
 
   /* class abilities description */
   wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->Show();
@@ -186,6 +201,10 @@ void ClassPage::OnFavoredClassAdded(wxCommandEvent& evt)
   {
     wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Hide();
     wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Disable();
+    wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Show();
+    wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Enable();
+
+    this->Layout();
   }
 
   evt.Skip();
@@ -196,6 +215,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
 
   int classIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection();
 
+  /* verify that the necessary other information has been decided */
   if (classIdx < 0)
   {
     wxMessageBox("First select a class from the dropdown menu.");
@@ -216,16 +236,140 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     wxMessageBox("You must finish selecting your favored classes before adding a class level.");
     return;
   }
+  //else if (other things to do) //FIXME
+  //{
+  //  wxMessageBox("You must finish levelling up before adding a new level?");
+  //  return;
+  //}
 
-  charPtr_->incrementClassLevel(classIdx);
+  /* increment the level */
+  int classLevel = charPtr_->incrementClassLevel(classIdx);
 
-  std::vector<Pathfinder::ClassFeature> newFeatures = Pathfinder::PFTable::get_class(classIdx).getFeatureVec(charPtr_->getClassLevel(classIdx));
+  /* roll for new hit points */
+  int hitPointsAdded = charPtr_->abilityModifier(Pathfinder::CONSTITUTION);
+  if (charPtr_->getCharacterLevel() == 1)
+  {
+    hitPointsAdded += Pathfinder::PFTable::get_class(classIdx).hitDie();
+  }
+  else
+  {
+    hitPointsAdded += Pathfinder::rollDn(Pathfinder::PFTable::get_class(classIdx).hitDie());
+  }
 
+  hitPointsAdded = (hitPointsAdded < 1 ? 1 : hitPointsAdded);
+  charPtr_->incrementHitPoints(hitPointsAdded);
+
+  /* Add the new features, split into features that are fixed and features with a choice element */
+  std::vector<Pathfinder::ClassFeature> newFeatures = Pathfinder::PFTable::get_class(classIdx).getFeatureVec(classLevel);
+  
   wxListBox* todoFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID));
+  wxListBox* doneFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID));
 
+  todoFeatures_.reserve(todoFeatures_.size() + newFeatures.size());
+  featureNames_.reserve(featureNames_.size() + newFeatures.size());
+  featureDescriptions_.reserve(featureDescriptions_.size() + newFeatures.size());
   for (auto featIter = newFeatures.begin(); featIter != newFeatures.end(); ++featIter)
   {
-    features_.push_back(*featIter);
-    todoFeatList->AppendString(featIter->name());
+    if (featIter->numChoices() > 0)
+    {
+      todoFeatures_.push_back(*featIter);
+      todoFeatList->AppendString(featIter->name());
+    }
+    else
+    {
+      featureNames_.push_back(featIter->name());
+      featureDescriptions_.push_back(featIter->desc());
+      doneFeatList->AppendString(featIter->name());
+    }
   }
+
+  /* add the new class abilities */
+  std::vector<Pathfinder::ClassAbility> newAbilities = Pathfinder::PFTable::get_class(classIdx).getAbilityVec(classLevel);
+  abilities_.reserve(abilities_.size() + newAbilities.size());
+  for (auto abilityIter = newAbilities.begin(); abilityIter != newAbilities.end(); ++abilityIter)
+  {
+    //wxMessageBox("class feature [" + featIter->name() + "] has [" + wxString::Format(wxT("%d"), featIter->numChoices()) + "] choices");
+    abilities_.push_back(*abilityIter);
+    static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
+  }
+
+  /* if this is the first level, mark the new favored skills */
+  // if (classLevel == 1)
+  // {
+  //   /* update the favored class skills in the gui*/
+  // }
+
+  /* If this is a favored class, decide whether to add a bonus hitpoint or bonus skill rank */
+  if (charPtr_->isFavoredClass(static_cast<Pathfinder::classMarker>(classIdx)))
+  {
+    /* Do favored class logic here */
+    wxMessageDialog choiceWindow(this, "You have added a level to a favored class, select either +1 hit point or +1 skill rank.", "caption string", wxYES_NO | wxCENTRE | wxSTAY_ON_TOP);
+    choiceWindow.SetYesNoLabels("Bonus Hit Point", "Bonus Skill Rank");
+    int bonus_selection = choiceWindow.ShowModal();
+    if (bonus_selection == wxID_YES)
+    {
+      charPtr_->incrementHitPoints(1);
+    }
+    else if (bonus_selection == wxID_NO)
+    {
+      /* bonus skill rank */
+      //charPtr_->
+    }
+  }
+
+  //Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::);
+}
+
+void ClassPage::OnClassSelected(wxCommandEvent& evt)
+{
+  int classIdx = evt.GetSelection();
+
+  Pathfinder::ClassBase chosenClass = Pathfinder::PFTable::get_class(classIdx);
+
+  wxString classText;
+  if (!chosenClass.desc().empty())
+  {
+    classText = chosenClass.desc() + "\n";
+  }
+  classText += "hit die = d" + wxString::Format(wxT("%d"), chosenClass.hitDie());
+  classText += ", alignment = " + chosenClass.alignmentReq();
+
+  wxStaticText* classDescBox = static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_DESCRIPTION_ID));
+  classDescBox->SetLabel(classText);
+  //raceTextbox->Wrap(raceTextbox->GetClientSize().GetWidth());
+
+
+  wxWindow::FindWindowById(CLASS_DESCRIPTION_ID)->GetParent()->Layout();
+}
+
+void ClassPage::OnAbilitySelected(wxCommandEvent& evt)
+{
+  int abilityIdx = evt.GetSelection();
+
+  wxString abilityDesc = "Ability Description:\n" + abilities_[abilityIdx].desc();
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID))->SetLabel(abilityDesc);
+
+  wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->GetParent()->Layout();
+}
+
+void ClassPage::OnUnselectedFeatureSelected(wxCommandEvent& evt)
+{
+  int featIdx = evt.GetSelection();
+
+  wxString featDesc = "Feature Description:\n" + todoFeatures_[featIdx].desc();
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID))->SetLabel(featDesc);
+
+  static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID))->SetSelection(wxNOT_FOUND);
+  wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->GetParent()->Layout();
+}
+
+void ClassPage::OnFinishedFeatureSelected(wxCommandEvent& evt)
+{
+  int featIdx = evt.GetSelection();
+
+  wxString featDesc = "Feature Description:\n" + featureDescriptions_[featIdx];
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID))->SetLabel(featDesc);
+
+  static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID))->SetSelection(wxNOT_FOUND);
+  wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->GetParent()->Layout();
 }

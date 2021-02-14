@@ -19,10 +19,11 @@
 #define CLASS_TODO_FEATURE_LIST_ID 4006
 #define CLASS_SELECTED_FEATURE_LABEL_ID 4007
 #define CLASS_SELECTED_FEATURE_LIST_ID 4008
-#define CLASS_FEATURE_BUTTON_ID 4009
-#define CLASS_ABILITIES_LABEL_ID 4010
-#define CLASS_ABILITIES_LIST_ID 4011
-#define CLASS_ABILITIES_DESCRIPTION_ID 4012
+#define CLASS_FEATURE_DESCRIPTION_ID 4009
+#define CLASS_FEATURE_BUTTON_ID 4010
+#define CLASS_ABILITIES_LABEL_ID 4011
+#define CLASS_ABILITIES_LIST_ID 4012
+#define CLASS_ABILITIES_DESCRIPTION_ID 4013
 
 class ClassPage : public wxPanel
 {
@@ -35,14 +36,19 @@ public:
 
   void OnLevelAdded(wxCommandEvent& evt);
   void OnFavoredClassAdded(wxCommandEvent& evt);
-  //void OnRacialSelected(wxCommandEvent& evt);
-  //void OnRaceLocked(wxCommandEvent& evt);
+  void OnClassSelected(wxCommandEvent& evt);
+
+  void OnAbilitySelected(wxCommandEvent& evt);
+  void OnUnselectedFeatureSelected(wxCommandEvent& evt);
+  void OnFinishedFeatureSelected(wxCommandEvent& evt);
 
 private:
-  //std::vector<int> rolledScores;
   Pathfinder::Character* charPtr_ = NULL;
-  std::vector<Pathfinder::ClassFeature> features_;
+  std::vector<Pathfinder::ClassFeature> todoFeatures_;
+  std::vector<Pathfinder::ClassAbility> abilities_;
 
+  std::vector<wxString> featureNames_;
+  std::vector<wxString> featureDescriptions_;
 };
 
 #endif
