@@ -41,7 +41,8 @@ public:
   void OnAbilitySelected(wxCommandEvent& evt);
   void OnUnselectedFeatureSelected(wxCommandEvent& evt);
   void OnFinishedFeatureSelected(wxCommandEvent& evt);
-  void MakeFeatureChoice(wxCommandEvent& evt);
+  void SelectFeatureButtonPress(wxCommandEvent& evt);
+  void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec, wxString catName);
 
 private:
   Pathfinder::Character* charPtr_ = NULL;
