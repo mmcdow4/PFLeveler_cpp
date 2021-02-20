@@ -41,6 +41,7 @@ public:
   void OnAbilitySelected(wxCommandEvent& evt);
   void OnUnselectedFeatureSelected(wxCommandEvent& evt);
   void OnFinishedFeatureSelected(wxCommandEvent& evt);
+  void MakeFeatureChoice(wxCommandEvent& evt);
 
 private:
   Pathfinder::Character* charPtr_ = NULL;
@@ -49,6 +50,8 @@ private:
 
   std::vector<wxString> featureNames_;
   std::vector<wxString> featureDescriptions_;
+
+  std::multiset<int> choicesMade_;
 };
 
 #endif

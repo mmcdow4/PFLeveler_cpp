@@ -109,6 +109,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   vbox1->Add(feature_description, 0, wxRIGHT, 10);
 
   wxButton* addFeatureBtn = new wxButton(this, CLASS_FEATURE_BUTTON_ID, wxT("Choose Selected Feature"));
+  addFeatureBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ClassPage::MakeFeatureChoice, this);
   addFeatureBtn->Disable();
   addFeatureBtn->Hide();
 
@@ -160,13 +161,14 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID))->Clear();
   this->featureNames_.clear();
   this->featureDescriptions_.clear();
+  this->choicesMade_.clear();
 
   /* feature description */
   wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->Show();
 
   /* add feature button */
   wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID)->Show();
-  wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID)->Enable();
+  //wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID)->Enable();
 
   /* class abilities list */
   wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID)->Enable();
@@ -261,7 +263,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
 
   /* Add the new features, split into features that are fixed and features with a choice element */
   std::vector<Pathfinder::ClassFeature> newFeatures = Pathfinder::PFTable::get_class(classIdx).getFeatureVec(classLevel);
-  
+
   wxListBox* todoFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID));
   wxListBox* doneFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID));
 
@@ -283,6 +285,10 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     }
   }
 
+  if (!todoFeatures_.empty())
+  {
+    static_cast<wxButton*>(wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID))->Enable();
+  }
   /* add the new class abilities */
   std::vector<Pathfinder::ClassAbility> newAbilities = Pathfinder::PFTable::get_class(classIdx).getAbilityVec(classLevel);
   abilities_.reserve(abilities_.size() + newAbilities.size());
@@ -372,4 +378,85 @@ void ClassPage::OnFinishedFeatureSelected(wxCommandEvent& evt)
 
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID))->SetSelection(wxNOT_FOUND);
   wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->GetParent()->Layout();
+}
+
+void ClassPage::MakeFeatureChoice(wxCommandEvent& evt)
+{
+  unsigned int featIdx = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID))->GetSelection();
+  int classIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection();
+  int classLvl = charPtr_->getClassLevel(classIdx);
+  int numChoices = todoFeatures_[featIdx].numChoices();
+  wxListBox* featListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID));
+
+  /* make sure we didn't fuck up somewhere */
+  if (featIdx == wxNOT_FOUND)
+  {
+    wxMessageBox("Select a feature first, dumbass!");
+    return;
+  }
+  else if (featIdx > featListBox->GetCount() || featIdx > todoFeatures_.size())
+  {
+    wxMessageBox("The fuck is this? you giving me [" + wxString::Format(wxT("%d"), featIdx) + "] as a selection with only [" +
+      wxString::Format(wxT("%d"), featListBox->GetCount()) + "] or [" +
+      wxString::Format(wxT("%d"), todoFeatures_.size()) + "] items in the list?!");
+    return;
+  }
+
+  //Create the popup window to offer the selection
+  std::vector<Pathfinder::ClassChoice> choiceVec = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(todoFeatures_[featIdx].categoryId());
+  wxArrayString choiceStrings;
+  for (auto choiceIter = choiceVec.begin(); choiceIter != choiceVec.end(); )
+  {
+    if(choiceIter->lvlReq() <= classLvl && choicesMade_.count(choiceIter->id()) < choiceIter->maxNumSelections())
+    {
+      choiceStrings.Add(choiceIter->name());
+      ++choiceIter;
+    }
+    else
+    {
+      choiceIter = choiceVec.erase(choiceIter);
+    }
+  }
+
+  int numChoicesMade = 0;
+  while (numChoicesMade < numChoices)
+  {
+    wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
+      "Make selection " + wxString::Format(wxT("%d"), numChoicesMade + 1) + " out of " + wxString::Format(wxT("%d"), numChoices),
+      "caption string", choiceStrings, NULL, wxOK);
+    int choiceReturn = choiceDialog->ShowModal();
+    int choiceIdx = choiceDialog->GetSelection();
+
+    if (choiceReturn == wxID_OK)
+    {
+      wxString featName = todoFeatures_[featIdx].name() + ": " + choiceVec[choiceIdx].name();
+      featureNames_.push_back(featName);
+      featureDescriptions_.push_back(choiceVec[choiceIdx].desc());
+      choicesMade_.insert(choiceVec[choiceIdx].id());
+      static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID))->AppendString(featName);
+
+      if (choicesMade_.count(choiceVec[choiceIdx].id()) == choiceVec[choiceIdx].maxNumSelections())
+      {
+        choiceVec.erase(choiceVec.begin() + choiceIdx);
+        choiceStrings.RemoveAt(choiceIdx);
+      }
+      numChoicesMade++;
+    }
+  }
+
+  /* remove this item from the list of features */
+  todoFeatures_.erase(todoFeatures_.begin() + featIdx);
+
+  wxArrayString tmpList = featListBox->GetStrings();
+  tmpList.RemoveAt(featIdx);
+  featListBox->Clear();
+  featListBox->InsertItems(tmpList, 0);
+
+  /* if there aren't any features left to choose, turn off the button for now */
+  if (todoFeatures_.empty())
+  {
+    static_cast<wxButton*>(wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID))->Disable();
+  }
+
+  featListBox->GetParent()->Layout();
 }
