@@ -18,11 +18,7 @@
 #include <pf_include/Class.h>
 
 
-//wxString populateRaceText(Pathfinder::Race raceObj);
-//void populateRacialTable(wxListBox* racialAbilityList, Pathfinder::Race raceObj);
-
-
-ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar)
+ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true)
 {
   this->SetBackgroundColour(0xE5E5E5);
 
@@ -135,6 +131,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
 void ClassPage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
+  skillsLocked_ = true;
 
   /* class dropdown list */
   wxWindow::FindWindowById(CLASS_DROPDOWN_ID)->Show();
@@ -225,17 +222,22 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   }
   else if (charPtr_->race().id() == -1)// if Race hasn't been set yet
   {
-    wxMessageBox("You must finalize your race selection before adding a class level.");
+    wxMessageBox("You need to finalize your race selection before adding a class level.");
     return;
   }
   else if (!charPtr_->abilityScoresSet()) // or if the ability scores haven't been set yet
   {
-    wxMessageBox("You must finalize your ability scores before adding a class level.");
+    wxMessageBox("You need to finalize your ability scores before adding a class level.");
     return;
   }
   else if (charPtr_->numFavoredClassLeft() > 0)
   {
-    wxMessageBox("You must finish selecting your favored classes before adding a class level.");
+    wxMessageBox("You need to finish selecting your favored class(es) before adding a class level.");
+    return;
+  }
+  else if (!skillsLocked_)
+  {
+    wxMessageBox("You need to finish assigning skill points before adding a class level.");
     return;
   }
   //else if (other things to do) //FIXME
@@ -305,6 +307,14 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   //   /* update the favored class skills in the gui*/
   // }
 
+  /* Add skill points */
+  int numPoints = Pathfinder::PFTable::get_class(classIdx).skillsPerLvl() + charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) + (std::string("Human") == charPtr_->race().raceName()); // + 1 if human
+  if (numPoints > 0)
+  {
+    charPtr_->addSkillPoints(numPoints);
+    skillsLocked_ = false;
+  }
+
   /* If this is a favored class, decide whether to add a bonus hitpoint or bonus skill rank */
   if (charPtr_->isFavoredClass(static_cast<Pathfinder::classMarker>(classIdx)))
   {
@@ -319,11 +329,13 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     else if (bonus_selection == wxID_NO)
     {
       /* bonus skill rank */
-      //charPtr_->
+      charPtr_->addSkillPoints(1);
+      skillsLocked_ = false;
     }
   }
 
   //Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::);
+  evt.Skip();
 }
 
 void ClassPage::OnClassSelected(wxCommandEvent& evt)

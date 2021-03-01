@@ -82,7 +82,8 @@ void cMain::InitializeNotebook()
   notebook_->AddPage(abilityScorePage_, L"Ability Scores");
   classPage_ = new ClassPage(notebook_, currChar_);
   notebook_->AddPage(classPage_, L"Class");
-  InitializeSkillsPage();
+  skillPage_ = new SkillPage(notebook_, currChar_);
+  notebook_->AddPage(skillPage_, L"Skills");
   InitializeSpellsPage();
   InitializeFeatsPage();
   //InitializeBorderPage();
@@ -120,6 +121,12 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     break;
   case CLASS_FAVORED_CLASS_BUTTON_ID:
     wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Class: " + wxString(currChar_->getFavoredClassList()));
+    break;
+  case CLASS_LEVELUP_BUTTON_ID:
+    skillPage_->UpdateSkillPage();
+    break;
+  case SKILL_LOCK_BUTTON_ID:
+    classPage_->skillsLocked_ = true;
     break;
   default:
     wxMessageBox("Unknown button ID passed up to cMain [" + std::to_string(evt.GetId()) + "]");
@@ -163,7 +170,7 @@ void cMain::ResetNotebook()
   abilityScorePage_->ResetPage(currChar_);
   racePage_->ResetPage(currChar_);
   classPage_->ResetPage(currChar_);
-  //setupSkillsPage();
+  skillPage_->ResetPage(currChar_);
   //setupSpellsPage();
   //setupFeatsPage();
 }
@@ -175,17 +182,6 @@ void cMain::InitializeClassPage()
   wxPanel* panel = new wxPanel(notebook_);
   panel->SetBackgroundColour(BACKGROUND_COLOR);
   notebook_->AddPage(panel, L"Class");
-
-  wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
-
-  panel->SetSizerAndFit(hbox1);
-}
-
-void cMain::InitializeSkillsPage()
-{
-  wxPanel* panel = new wxPanel(notebook_);
-  panel->SetBackgroundColour(BACKGROUND_COLOR);
-  notebook_->AddPage(panel, L"Skills");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
 

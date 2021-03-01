@@ -44,6 +44,7 @@ public:
   void SelectFeatureButtonPress(wxCommandEvent& evt);
   void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec, wxString catName);
 
+  bool skillsLocked_;
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<Pathfinder::ClassFeature> todoFeatures_;
@@ -53,6 +54,7 @@ private:
   std::vector<wxString> featureDescriptions_;
 
   std::multiset<int> choicesMade_;
+
 };
 
 #endif
