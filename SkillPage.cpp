@@ -79,8 +79,9 @@ SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxBoxSizer* vboxFillerTop = new wxBoxSizer(wxHORIZONTAL);
   wxBoxSizer* vboxFillerBottom = new wxBoxSizer(wxHORIZONTAL);
 
-  hbox->Add(vbox, wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL | wxEXPAND);
+  hbox->Add(vbox, 1, wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL | wxEXPAND);
 
+  vboxFillerTop->Add(new wxPanel(this, -1));
   vbox->Add(vboxFillerTop, 1, wxEXPAND);
 
   wxStaticText* unusedSkillPointsText = new wxStaticText(this, SKILL_NUM_SKILL_POINTS_LABEL_ID, "Number of Unspent Skill Points: 0");
@@ -91,7 +92,8 @@ SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   skillLockButton->Disable();
   vbox->Add(skillLockButton, 0, wxALIGN_CENTER);
 
-  vbox->Add(vboxFillerBottom, 1, wxEXPAND);
+  vboxFillerBottom->Add(new wxPanel(this, -1));
+  vbox->Add(vboxFillerBottom, 2, wxEXPAND);
 
   this->SetSizerAndFit(hbox);
   this->Layout();
