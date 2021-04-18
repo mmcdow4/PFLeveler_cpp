@@ -84,9 +84,9 @@ void cMain::InitializeNotebook()
   notebook_->AddPage(classPage_, L"Class");
   skillPage_ = new SkillPage(notebook_, currChar_);
   notebook_->AddPage(skillPage_, L"Skills");
-  InitializeSpellsPage();
+  spellPage_ = new SpellPage(notebook_, currChar_);
+  notebook_->AddPage(spellPage_, L"Spells");
   InitializeFeatsPage();
-  //InitializeBorderPage();
 }
 
 void cMain::OnButtonPressed(wxCommandEvent& evt)
@@ -124,6 +124,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     break;
   case CLASS_LEVELUP_BUTTON_ID:
     skillPage_->UpdateSkillPage();
+    spellPage_->UpdateSpellPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     break;
   case SKILL_LOCK_BUTTON_ID:
     classPage_->skillsLocked_ = true;
@@ -171,33 +172,11 @@ void cMain::ResetNotebook()
   racePage_->ResetPage(currChar_);
   classPage_->ResetPage(currChar_);
   skillPage_->ResetPage(currChar_);
-  //setupSpellsPage();
+  spellPage_->ResetPage(currChar_);
   //setupFeatsPage();
 }
 
 
-
-void cMain::InitializeClassPage()
-{
-  wxPanel* panel = new wxPanel(notebook_);
-  panel->SetBackgroundColour(BACKGROUND_COLOR);
-  notebook_->AddPage(panel, L"Class");
-
-  wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
-
-  panel->SetSizerAndFit(hbox1);
-}
-
-void cMain::InitializeSpellsPage()
-{
-  wxPanel* panel = new wxPanel(notebook_);
-  panel->SetBackgroundColour(BACKGROUND_COLOR);
-  notebook_->AddPage(panel, L"Spells");
-
-  wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
-
-  panel->SetSizerAndFit(hbox1);
-}
 
 void cMain::InitializeFeatsPage()
 {
@@ -252,7 +231,7 @@ cMain::~cMain()
   /* NOTE: due to the unpredictable nature of GUI's, wxWidgets prefers to handle the deletes itself */
 
   /* HOWEVER, the array of buttons does need to be deleted */
-  delete[]btn;
+  //delete[]btn;
 }
 
 //void cMain::OnButtonClicked(wxCommandEvent& evt)

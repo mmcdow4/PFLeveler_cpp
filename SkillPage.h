@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 
 #ifndef SKILLPAGE_H
 #define SKILLPAGE_H

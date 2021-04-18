@@ -8,6 +8,7 @@
 #include "RacePage.h"
 #include "ClassPage.h"
 #include "SkillPage.h"
+#include "SpellPage.h"
 
 #include <pf_include/Character.h>
 
@@ -31,27 +32,16 @@ public:
 
 
 public:
-  int nFieldWidth = 10;
-  int nFieldHeight = 10;
-  wxButton** btn;
-  int* nField = nullptr;
-  bool bFirstClick = true;
 
   wxMenuBar* menubar_;
   wxMenu* file_;
 
   wxNotebook* notebook_;
-  //wxButton*   m_btn1;
-  //wxTextCtrl* m_txt1;
-  //wxListBox*  m_list1;
 
   void menuCallback(wxCommandEvent& evt);
   void InitializeNotebook();
   void ResetNotebook();
 
-  void InitializeClassPage();
-  void InitializeSkillsPage();
-  void InitializeSpellsPage();
   void InitializeFeatsPage();
   void InitializeBorderPage();
 
@@ -68,5 +58,6 @@ private:
   RacePage* racePage_ = NULL;
   ClassPage* classPage_ = NULL;
   SkillPage* skillPage_ = NULL;
+  SpellPage* spellPage_ = NULL;
 };
 
