@@ -54,7 +54,6 @@ void SpellPage::ResetPage(Pathfinder::Character* currChar)
   charPtr_ = currChar;
 
   availSpellIds_.clear();
-  knownSpellIds_.clear();
 
   memset(spellsLeft_, 0, 10 * sizeof(int));
 
@@ -64,15 +63,11 @@ void SpellPage::ResetPage(Pathfinder::Character* currChar)
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Spells Left to Learn");
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID))->SetLabel("Description:");
 
-  int maxSpellIdx = charPtr_->getMaxSpellIdx();
-  for (int spellIdx = 0; spellIdx <= maxSpellIdx; spellIdx++)
+  std::vector<int> knownSpells = charPtr_->getKnownSpells();
+  for (auto spellIter = knownSpells.begin(); spellIter != knownSpells.end(); ++spellIter)
   {
-    Pathfinder::Spell* spellPtr = NULL;
-    if (charPtr_->getSpell(spellIdx, &spellPtr))
-    {
-      knownSpellIds_.push_back(spellIdx);
-      knownSpellList->AppendString(spellPtr->name());
-    }
+    Pathfinder::Spell currSpell = Pathfinder::PFTable::get_spell(*spellIter);
+    knownSpellList->AppendString(wxString::Format(wxT("level %d spell: %s"), currSpell.SlaLvl(), currSpell.name()));
   }
 }
 
@@ -104,13 +99,11 @@ bool SpellPage::UpdateSpellPage(int classId)
         {
           if (Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) > -1 && // Is this available to your class?
             Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) <= classLevel && // is your level high enough to learn it?
-            !std::binary_search(knownSpellIds_.begin(), knownSpellIds_.end(), *spellIter)) //You don't already know this spell
+            !charPtr_->isSpellKnown(*spellIter)) //You don't already know this spell
           {
             availSpellIds_.push_back(*spellIter);
             availSpellList->AppendString(wxString::Format(wxT("level %d spell: %s"), spellLevel,
                 Pathfinder::PFTable::get_spell(*spellIter).name()));
-            //availSpellList->AppendString(wxString::Format(wxT("level %d %s spell: %s"), spellLevel,
-            //  Pathfinder::CLASS_NAMES[classId], Pathfinder::PFTable::get_spell(*spellIter).name()));
           }
         }
       }
@@ -139,7 +132,7 @@ void SpellPage::OnSpellSelected(wxCommandEvent& evt)
   else if (evt.GetId() == SPELL_KNOWN_SPELL_LIST_ID)
   {
     static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->SetSelection(wxNOT_FOUND);
-    UpdateSpellDescription(knownSpellIds_[spellListIdx]);
+    UpdateSpellDescription(charPtr_->knownSpell(spellListIdx));
   }
 
   wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID)->GetParent()->Layout();
@@ -171,8 +164,7 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
 
   int spellIdx = availSpellIds_[spellListIdx];
   /* update the internal lists */
-  knownSpellIds_.push_back(availSpellIds_[spellListIdx]);
-  std::sort(knownSpellIds_.begin(), knownSpellIds_.end());
+  charPtr_->learnSpell(spellIdx);
   availSpellIds_.erase(availSpellIds_.begin() + spellListIdx);
 
   /* update the listboxes */

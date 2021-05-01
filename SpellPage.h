@@ -44,7 +44,6 @@ public:
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<int> availSpellIds_;
-  std::vector<int> knownSpellIds_;
   int spellsLeft_[10] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0 };
 };
 

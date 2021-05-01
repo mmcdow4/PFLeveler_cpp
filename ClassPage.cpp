@@ -86,8 +86,9 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   vbox_todo_features->Add(todoFeatureLabel, 0, wxUP | wxDOWN, 10);
   vbox_selected_features->Add(selectedFeatureLabel, 0, wxUP | wxDOWN, 10);
 
-  wxListBox* todoFeatList = new wxListBox(this, CLASS_TODO_FEATURE_LIST_ID);
-  wxListBox* selectedFeatList = new wxListBox(this, CLASS_SELECTED_FEATURE_LIST_ID);
+  wxString* dummyStr = NULL;
+  wxListBox* todoFeatList = new wxListBox(this, CLASS_TODO_FEATURE_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  wxListBox* selectedFeatList = new wxListBox(this, CLASS_SELECTED_FEATURE_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
 
   todoFeatList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &ClassPage::OnUnselectedFeatureSelected, this);
   selectedFeatList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &ClassPage::OnFinishedFeatureSelected, this);
@@ -115,7 +116,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxStaticText* abilitiesLabel = new wxStaticText(this, CLASS_ABILITIES_LABEL_ID, wxT("Class Abilities:"));
   vbox2->Add(abilitiesLabel, 0, wxEXPAND | wxUP | wxDOWN, 10);
 
-  wxListBox* abilitiesList = new wxListBox(this, CLASS_ABILITIES_LIST_ID);
+  wxListBox* abilitiesList = new wxListBox(this, CLASS_ABILITIES_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   abilitiesList->Disable();
   vbox2->Add(abilitiesList, 2, wxEXPAND | wxUP | wxDOWN, 10);
 

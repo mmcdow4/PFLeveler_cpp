@@ -90,7 +90,8 @@ RacePage::RacePage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
 
   /* fill out the race ability list here */
   wxBoxSizer* hbox_racials = new wxBoxSizer(wxHORIZONTAL);
-  wxListBox* raceAbilityList = new wxListBox(this, RACE_RACIAL_BONUS_TABLE_ID);
+  wxString* dummyStr = NULL;
+  wxListBox* raceAbilityList = new wxListBox(this, RACE_RACIAL_BONUS_TABLE_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   raceAbilityList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &RacePage::OnRacialSelected, this);
 
   hbox_racials->Add(raceAbilityList, 1, wxEXPAND | wxFIXED_MINSIZE, 0);

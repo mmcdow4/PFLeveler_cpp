@@ -172,7 +172,8 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   todoLabel->Hide();
   vbox1->Add(todoLabel, 0, 0, 0);
 
-  wxListBox* todoList = new wxListBox(this, SUMMARY_TODO_LIST_ID);
+  wxString* dummyStr = NULL;
+  wxListBox* todoList = new wxListBox(this, SUMMARY_TODO_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   todoList->Hide();
   vbox1->Add(todoList, 1, wxEXPAND, 0);
 
@@ -182,7 +183,7 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   /* Spell List */
   wxStaticText* spellLabel = new wxStaticText(this, wxID_ANY, wxT("Known Spells:"));
   vbox2->Add(spellLabel, 0, wxBOTTOM, 5);
-  wxListBox* spellList = new wxListBox(this, SUMMARY_SPELL_LIST_ID);
+  wxListBox* spellList = new wxListBox(this, SUMMARY_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   vbox2->Add(spellList, 1, wxEXPAND, 0);
 
   hbox1->Add(vbox2, 1, wxEXPAND | wxRIGHT, 10);
@@ -190,7 +191,7 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   /* Feat List */
   wxStaticText* featLabel = new wxStaticText(this, wxID_ANY, wxT("Your Feats:"));
   vbox3->Add(featLabel, 0, wxBOTTOM, 5);
-  wxListBox* featList = new wxListBox(this, SUMMARY_FEAT_LIST_ID);
+  wxListBox* featList = new wxListBox(this, SUMMARY_FEAT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   vbox3->Add(featList, 1, wxEXPAND, 0);
 
   hbox1->Add(vbox3, 1, wxEXPAND | wxRIGHT, 10);
@@ -198,7 +199,7 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   /* Skill List */
   wxStaticText* skillLabel = new wxStaticText(this, wxID_ANY, wxT("Skills:"));
   vbox4->Add(skillLabel, 0, wxBOTTOM, 5);
-  wxListBox* skillList = new wxListBox(this, SUMMARY_SKILL_LIST_ID);
+  wxListBox* skillList = new wxListBox(this, SUMMARY_SKILL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   //skillList->AppendString(wxString("Acrobatics: 4"));
   vbox4->Add(skillList, 1, wxEXPAND, 0);
 
