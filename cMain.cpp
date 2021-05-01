@@ -124,10 +124,13 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     break;
   case CLASS_LEVELUP_BUTTON_ID:
     skillPage_->UpdateSkillPage();
-    spellPage_->UpdateSpellPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
+    classPage_->spellsLeft_ = spellPage_->UpdateSpellPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     break;
   case SKILL_LOCK_BUTTON_ID:
     classPage_->skillsLocked_ = true;
+    break;
+  case SPELL_LEARN_BUTTON_ID:
+    classPage_->spellsLeft_ = false;
     break;
   default:
     wxMessageBox("Unknown button ID passed up to cMain [" + std::to_string(evt.GetId()) + "]");

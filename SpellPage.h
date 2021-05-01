@@ -15,6 +15,17 @@
 #define SPELL_KNOWN_SPELL_LIST_ID 6004
 #define SPELL_SELECTED_DESCRIPTION_ID 6005
 
+static const char* SPELL_LEVEL_RANK_SUFFIX[10] = {
+    "th",
+    "st",
+    "nd",
+    "rd",
+    "th",
+    "th",
+    "th",
+    "th",
+    "th",
+    "th" };
 class SpellPage : public wxPanel
 {
 
@@ -23,11 +34,13 @@ public:
   ~SpellPage() {}
 
   void ResetPage(Pathfinder::Character* currChar);
-  void UpdateSpellPage(int classId);
+  bool UpdateSpellPage(int classId);
 
   void OnSpellSelected(wxCommandEvent& evt);
+  void LearnSpellButtonPress(wxCommandEvent& evt);
+  
   void UpdateSpellDescription(int spellIndex);
-
+  bool UpdateSpellsRemainingText(void);
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<int> availSpellIds_;

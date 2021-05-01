@@ -7,7 +7,7 @@ SpellPage::SpellPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxBoxSizer* vboxOverall = new wxBoxSizer(wxVERTICAL); /* will contain the various vertical sizers */
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* spell lists */
 
-  wxStaticText* spellsLeftText = new wxStaticText(this, SPELL_REMAINING_COUNTER_TEXT_ID, wxT("0 Spells Left To Learn"));
+  wxStaticText* spellsLeftText = new wxStaticText(this, SPELL_REMAINING_COUNTER_TEXT_ID, wxT("No Spells Left to Learn"));
   vboxOverall->Add(spellsLeftText, 1, wxEXPAND | wxALIGN_LEFT, 10);
 
 
@@ -15,7 +15,8 @@ SpellPage::SpellPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxBoxSizer* vboxAvail = new wxBoxSizer(wxVERTICAL);
   wxStaticText* availSpellsLabel = new wxStaticText(this, wxID_ANY, wxT("Available Spells:"));
   vboxAvail->Add(availSpellsLabel, 0, wxBOTTOM, 5);
-  wxListBox* availSpellsList = new wxListBox(this, SPELL_AVAIL_SPELL_LIST_ID);
+  wxString *dummyStr = NULL;
+  wxListBox* availSpellsList = new wxListBox(this, SPELL_AVAIL_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_SORT | wxLB_NEEDED_SB);
   vboxAvail->Add(availSpellsList, 1, wxEXPAND, 0);
 
   availSpellsList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &SpellPage::OnSpellSelected, this);
@@ -26,7 +27,7 @@ SpellPage::SpellPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxBoxSizer* vboxKnown = new wxBoxSizer(wxVERTICAL);
   wxStaticText* knownSpellsLabel = new wxStaticText(this, wxID_ANY, wxT("Known Spells:"));
   vboxKnown->Add(knownSpellsLabel, 0, wxBOTTOM, 5);
-  wxListBox* knownSpellsList = new wxListBox(this, SPELL_KNOWN_SPELL_LIST_ID);
+  wxListBox* knownSpellsList = new wxListBox(this, SPELL_KNOWN_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_SORT | wxLB_NEEDED_SB);
   vboxKnown->Add(knownSpellsList, 1, wxEXPAND, 0);
 
   knownSpellsList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &SpellPage::OnSpellSelected, this);
@@ -41,7 +42,7 @@ SpellPage::SpellPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
 
   /* learn/unlearn buttons */
   wxButton* learnBtn = new wxButton(this, SPELL_LEARN_BUTTON_ID, wxT("Learn Selected Spell"));
-  //selectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &RacePage::OnRaceLocked, this);
+  learnBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &SpellPage::LearnSpellButtonPress, this);
   learnBtn->Disable();
   vboxOverall->Add(learnBtn, 0, wxALIGN_LEFT | wxRIGHT | wxBOTTOM, 10);
 
@@ -75,12 +76,11 @@ void SpellPage::ResetPage(Pathfinder::Character* currChar)
   }
 }
 
-void SpellPage::UpdateSpellPage(int classId)
+bool SpellPage::UpdateSpellPage(int classId)
 {
   int classLevel = charPtr_->getClassLevel(classId);
   wxListBox* availSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
 
-  wxString spellsRemainingString = "";
   if (Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_0) > 0)
   {
     /* cycle through spell levels, append all available spells to available list as level N : spell name */
@@ -98,28 +98,33 @@ void SpellPage::UpdateSpellPage(int classId)
       }
       if (spellsLeft_[spellLevel] > 0)
       {
-        spellsRemainingString += wxString::Format(wxT("%d level %d spells remaining\n"), spellsLeft_[spellLevel], spellLevel);
         std::vector<int> spellVec = Pathfinder::PFTable::get_spell_list(spellLevel);
 
         for (std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
         {
-          if (Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) > -1 && 
-            Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) <= classLevel)
+          if (Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) > -1 && // Is this available to your class?
+            Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) <= classLevel && // is your level high enough to learn it?
+            !std::binary_search(knownSpellIds_.begin(), knownSpellIds_.end(), *spellIter)) //You don't already know this spell
           {
             availSpellIds_.push_back(*spellIter);
-            availSpellList->AppendString(wxString::Format(wxT("level %d %s spell: %s"), spellLevel,
-              Pathfinder::CLASS_NAMES[classId], Pathfinder::PFTable::get_spell(*spellIter).name()));
+            availSpellList->AppendString(wxString::Format(wxT("level %d spell: %s"), spellLevel,
+                Pathfinder::PFTable::get_spell(*spellIter).name()));
+            //availSpellList->AppendString(wxString::Format(wxT("level %d %s spell: %s"), spellLevel,
+            //  Pathfinder::CLASS_NAMES[classId], Pathfinder::PFTable::get_spell(*spellIter).name()));
           }
         }
       }
     }
   }
-  else
+
+  bool spellsLeft = UpdateSpellsRemainingText();
+
+  if (spellsLeft)
   {
-    spellsRemainingString = "No Spells Left to Learn";
+    wxWindow::FindWindowById(SPELL_LEARN_BUTTON_ID)->Enable();
   }
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_REMAINING_COUNTER_TEXT_ID))->SetLabel(spellsRemainingString);
+  return spellsLeft;
 }
 
 void SpellPage::OnSpellSelected(wxCommandEvent& evt)
@@ -128,10 +133,12 @@ void SpellPage::OnSpellSelected(wxCommandEvent& evt)
 
   if (evt.GetId() == SPELL_AVAIL_SPELL_LIST_ID)
   {
+    static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID))->SetSelection(wxNOT_FOUND);
     UpdateSpellDescription(availSpellIds_[spellListIdx]);
   }
   else if (evt.GetId() == SPELL_KNOWN_SPELL_LIST_ID)
   {
+    static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->SetSelection(wxNOT_FOUND);
     UpdateSpellDescription(knownSpellIds_[spellListIdx]);
   }
 
@@ -151,4 +158,99 @@ void SpellPage::UpdateSpellDescription(int spellIdx)
   descriptionText += "\n" + currSpell.description();
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID))->SetLabel(descriptionText);
+}
+
+void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
+{
+  /* get the selected spell index */
+  unsigned int spellListIdx = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->GetSelection();
+  if (spellListIdx == wxNOT_FOUND)
+  {
+    return;
+  }
+
+  int spellIdx = availSpellIds_[spellListIdx];
+  /* update the internal lists */
+  knownSpellIds_.push_back(availSpellIds_[spellListIdx]);
+  std::sort(knownSpellIds_.begin(), knownSpellIds_.end());
+  availSpellIds_.erase(availSpellIds_.begin() + spellListIdx);
+
+  /* update the listboxes */
+  wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
+  wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
+  knownListBox->AppendString(availListBox->GetString(spellListIdx));
+  wxArrayString tmpList = availListBox->GetStrings();
+  tmpList.RemoveAt(spellListIdx);
+  availListBox->Clear();
+  availListBox->InsertItems(tmpList, 0);
+
+  /* update the spells left counter */
+  int spellLevel = Pathfinder::PFTable::get_spell(spellIdx).SlaLvl();
+  spellsLeft_[spellLevel]--;
+  
+  if (spellsLeft_[spellLevel] == 0)
+  {
+    /* Done learning this spell level, remove all spells of this level */
+    for (size_t spellIter = 0; spellIter < availSpellIds_.size(); )
+    {
+      if (Pathfinder::PFTable::get_spell(availSpellIds_[spellIter]).SlaLvl() == spellLevel)
+      {
+        availSpellIds_.erase(availSpellIds_.begin() + spellIter);
+        tmpList.RemoveAt(spellIter);
+      }
+      else
+      {
+        ++spellIter;
+      }
+    }
+  }
+  availListBox->Clear();
+  availListBox->InsertItems(tmpList, 0);
+
+  if(UpdateSpellsRemainingText() == false)
+  {
+    /* No more spells to learn -> disable the learn button and kick back to main */
+    wxWindow::FindWindowById(SPELL_LEARN_BUTTON_ID)->Disable();
+    evt.Skip();
+  }
+
+  availListBox->GetParent()->Layout();
+}
+
+bool SpellPage::UpdateSpellsRemainingText(void)
+{
+  bool anySpellsLeft = false;
+  for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
+  {
+    if (spellsLeft_[spellLevel] > 0)
+    {
+      anySpellsLeft = true;
+      break;
+    }
+  }
+
+  if (!anySpellsLeft)
+  {
+    /* all spells have been chosen */
+    /* Update text box */
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Spells Left to Learn");
+    /* Clear the available spells list */
+    static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->Clear();
+    /* disable the learn button */
+    static_cast<wxButton*>(wxWindow::FindWindowById(SPELL_LEARN_BUTTON_ID))->Disable();
+  }
+  else
+  {
+    /* update the spells available text */
+    wxString spellsRemainingString = "";
+    for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
+    {
+      if (spellsLeft_[spellLevel] > 0)
+      {
+        spellsRemainingString += wxString::Format(wxT("%d%s level : %d spells remaining\n"), spellLevel, SPELL_LEVEL_RANK_SUFFIX[spellLevel], spellsLeft_[spellLevel]);
+      }
+    }
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_REMAINING_COUNTER_TEXT_ID))->SetLabel(spellsRemainingString);
+  }
+  return anySpellsLeft;
 }

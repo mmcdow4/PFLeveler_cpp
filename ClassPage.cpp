@@ -18,7 +18,7 @@
 #include <pf_include/Class.h>
 
 
-ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true)
+ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false)
 {
   this->SetBackgroundColour(0xE5E5E5);
 
@@ -132,6 +132,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
   skillsLocked_ = true;
+  spellsLeft_ = false;
 
   /* class dropdown list */
   wxWindow::FindWindowById(CLASS_DROPDOWN_ID)->Show();
@@ -240,6 +241,11 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     wxMessageBox("You need to finish assigning skill points before adding a class level.");
     return;
   }
+  else if (spellsLeft_)
+  {
+    wxMessageBox("You need to finish learning spells before adding a class level.");
+    return;
+  }
   //else if (other things to do) //FIXME
   //{
   //  wxMessageBox("You must finish levelling up before adding a new level?");
@@ -301,12 +307,6 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
   }
 
-  /* if this is the first level, mark the new favored skills */
-  // if (classLevel == 1)
-  // {
-  //   /* update the favored class skills in the gui*/
-  // }
-
   /* Add skill points */
   int numPoints = Pathfinder::PFTable::get_class(classIdx).skillsPerLvl() + charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) + (std::string("Human") == charPtr_->race().raceName()); // + 1 if human
   if (numPoints > 0)
@@ -334,6 +334,8 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     }
   }
 
+  /* assume you need to handle spells, the spell page will immediately kick back and correct this if there are no spells to learn */
+  spellsLeft_ = true;
   //Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::);
   evt.Skip();
 }

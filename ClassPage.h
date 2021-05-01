@@ -45,6 +45,7 @@ public:
   void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec, wxString catName);
 
   bool skillsLocked_;
+  bool spellsLeft_;
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<Pathfinder::ClassFeature> todoFeatures_;
