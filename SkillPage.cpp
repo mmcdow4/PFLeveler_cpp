@@ -17,8 +17,11 @@
 #include <pf_include/Character.h>
 #include <pf_include/Skills.h>
 
-SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar)
+SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxScrolled<wxPanel>(parentNotebook, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL), charPtr_(currChar)
 {
+  this->SetVirtualSize(1000, 600);
+  this->SetScrollRate(10, 10);
+
   this->SetBackgroundColour(0xE5E5E5);
   this->SetFont(*wxSMALL_FONT);
 
@@ -95,6 +98,7 @@ SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   vboxFillerBottom->Add(new wxPanel(this, -1));
   vbox->Add(vboxFillerBottom, 2, wxEXPAND);
 
+  //wxScrollBar* scrollBar = new wxScrollBar(this, SKILL_SCROLL_BAR_ID, wxDefaultPosition, wxDefaultSize, wxSB_VERTICAL);
   this->SetSizerAndFit(hbox);
   this->Layout();
 }

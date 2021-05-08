@@ -26,8 +26,9 @@
 
 #define SKILL_NUM_SKILL_POINTS_LABEL_ID (SKILL_GRID_OFFSET + 1)
 #define SKILL_LOCK_BUTTON_ID (SKILL_GRID_OFFSET + 2)
+#define SKILL_SCROLL_BAR_ID (SKILL_GRID_OFFSET + 3)
 
-class SkillPage : public wxPanel
+class SkillPage : public wxScrolled<wxPanel>
 {
 
 public:
