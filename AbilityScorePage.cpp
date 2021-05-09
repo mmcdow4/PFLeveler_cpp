@@ -37,7 +37,7 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
   methodDropdown->Append("Heroic");
   methodDropdown->Append("Dice Pool");
   methodDropdown->Append("Purchase");
-  methodDropdown->Append("Alternate");
+  methodDropdown->Append("Direct Input");
 
   methodDropdown->Disable();
   methodDropdown->Hide();
@@ -81,6 +81,8 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
     wxBoxSizer* hboxValue = new wxBoxSizer(wxHORIZONTAL);
     hboxValue->Add(new wxChoice(valuePanel, ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx), 0, wxEXPAND | wxALIGN_CENTER);
     hboxValue->Add(new wxStaticText(valuePanel, ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx, " 0 "), 0, wxEXPAND | wxALIGN_CENTER);
+    hboxValue->Add(new wxTextCtrl(valuePanel, ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER | wxTE_CENTRE),
+      0, wxEXPAND | wxALIGN_CENTER);
     valuePanel->SetSizer(hboxValue);
     scoresGrid->Add(valuePanel, 1, wxEXPAND | wxALIGN_CENTRE);
 
@@ -100,6 +102,8 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Hide();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->Hide();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
@@ -112,6 +116,7 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx)->SetBackgroundColour(*wxWHITE);
 
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Bind(wxEVT_CHOICE, &AbilityScorePage::OnAbilityScoreSelected, this);
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Bind(wxEVT_TEXT, &AbilityScorePage::OnTextInput, this);
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Bind(wxEVT_RADIOBUTTON, &AbilityScorePage::OnRacialRadioSelected, this);
   }
   vbox1->Add(scoresGrid, 1, wxEXPAND);
@@ -343,6 +348,35 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
   Layout();
 }
 
+void AbilityScorePage::OnTextInput(wxCommandEvent& evt)
+{
+  int abilityIdx = evt.GetId() - ABSCR_ATTRIBUTE_VALUE_INPUT;
+
+  wxTextCtrl* textBox = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(evt.GetId()));
+  wxString inputStr = textBox->GetValue();
+  long value;
+  if (!inputStr.ToLong(&value) || value <= 0)
+  {
+    if (prevSelections_[abilityIdx] > 0)
+    {
+      textBox->SetValue(wxString::Format(wxT("%d"), prevSelections_[abilityIdx]));
+    }
+    else
+    {
+      textBox->SetValue("");
+    }
+    return;
+  }
+  else
+  {
+    charPtr_->decrementAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(abilityIdx), prevSelections_[abilityIdx]);
+    prevSelections_[abilityIdx] = value;
+    charPtr_->incrementAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(abilityIdx), prevSelections_[abilityIdx]);
+    //charPtr_->setAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(abilityIdx), value);
+    UpdateFields();
+  }
+}
+
 void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
 {
   int modeIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->GetCurrentSelection();
@@ -358,21 +392,9 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
   }
   switch (modeIdx)
   {
-    //case 0:/*standard*/
-    //  /* roll 4d6 discarding lowest die roll, repeat 6 times, assign scores*/
-    //  wxMessageBox("Standard ability score generation is not implemented yet, come back in rev 2.0");
-    //  break;
-    //case 1:/*classic*/
-    //  /* roll 3d6, repeat 6 times, assign scores */
-    //  wxMessageBox("Classic ability score generation is not implemented yet, come back in rev 2.0");
-    //  break;
-    //case 2:/*heroic*/
-    //  /* roll 2d6 and add 6, repeat 6 times, and assign scores*/
-    //  wxMessageBox("Heroic ability score generation is not implemented yet, come back in rev 2.0");
-    //  break;
-  case ABSCR_MODE_STANDARD:
-  case ABSCR_MODE_CLASSIC:
-  case ABSCR_MODE_HEROIC:
+  case ABSCR_MODE_STANDARD:/* roll 4d6 and discard lowest die roll, repeat 6 times, assign scores*/
+  case ABSCR_MODE_CLASSIC:/* roll 3d6, repeat 6 times, assign scores */
+  case ABSCR_MODE_HEROIC:/* roll 2d6 and add 6, repeat 6 times, and assign scores*/
     populateScorePool(modeIdx);
     for (int ii = 0; ii < 6; ii++)
     {
@@ -383,11 +405,6 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
       prevSelections_[ii] = 0;
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + ii)->Hide();
     }
-    //static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID))->Hide();
-    //static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->Disable();
-    //static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->Hide();
-    //static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID))->Disable();
-    //static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID))->Hide();
 
     static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID))->GetParent()->Layout();
     break;
@@ -400,6 +417,21 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
     /* pool of points available and each ability score starts at 10. Spend points to raise ability score values or lower ability scores to get more points.
     Cannot lower ability scores below 7 or raise them above 18*/
     wxMessageBox("Purchase ability score generation is not implemented yet, come back in rev 2.0");
+    break;
+  case ABSCR_MODE_DIRECT_INPUT:/*direct input*/
+    /* directly type in desired numerical values for each ability score */
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID))->Hide();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID))->Hide();
+    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID))->Hide();
+    for (int abilityIdx = 0; abilityIdx < Pathfinder::NUMBER_ABILITY_SCORES; abilityIdx++)
+    {
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->Hide();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Enable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Show();
+    }
+    Layout();
     break;
   default:
     wxMessageBox("You must select a method for generating ability scores first");
@@ -507,15 +539,15 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
     wxMessageBox("You must select a race before locking ability scores.");
     return;
   }
-  else if (wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN)->IsEnabled() == false)
+  else if (wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN)->IsEnabled() == false && wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT)->IsEnabled() == false)
   {
-    wxMessageBox("You must generate and assign ability scores.");
+    wxMessageBox("You must assign ability scores.");
     return;
   }
   else if ((prevSelections_[0] == 0) || (prevSelections_[1] == 0) || (prevSelections_[2] == 0) ||
     (prevSelections_[3] == 0) || (prevSelections_[4] == 0) || (prevSelections_[5] == 0))/* if any ability scores are unassigned */
   {
-    wxMessageBox("You must select a base value for every ability score.");
+    wxMessageBox("You must set a base value for every ability score.");
     return;
   }
   else if (charPtr_->race().abilityOffset(Pathfinder::FLEXIBLE_ABILITY_SCORE_BONUS) > 0 && flexibleApplied_ == false)
@@ -529,12 +561,23 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
   for (int abilityIdx = 0; abilityIdx < Pathfinder::NUMBER_ABILITY_SCORES; abilityIdx++)
   {
     wxChoice* currDropdown = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx));
+    wxTextCtrl* currTextInput = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx));
 
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->Show();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(" " + currDropdown->GetStringSelection() + " ");
+    if (currDropdown->IsEnabled())
+    {
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(" " + currDropdown->GetStringSelection() + " ");
+    }
+    else if (currTextInput->IsEnabled())
+    {
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(" " + currTextInput->GetValue() + " ");
+    }
+
     currDropdown->Disable();
     currDropdown->Hide();
 
+    currTextInput->Disable();
+    currTextInput->Hide();
     static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Disable();
     static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Hide();
   }
