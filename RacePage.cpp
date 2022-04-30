@@ -202,6 +202,12 @@ wxString populateRaceText(Pathfinder::Race chosenRace)
     }
   }
 
+  if (chosenRace.bonusSkill()) {
+    raceText += "\nBonus Skill Point Each Level";
+  }
+  if (chosenRace.bonusFeat()) {
+    raceText += "\nBonus Feat At First Level";
+  }
 
   raceText += "\nLangauges known: ";
   for (int langIdx = 0; langIdx < chosenRace.numLanguages(); langIdx++)

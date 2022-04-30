@@ -53,7 +53,7 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
 
-  featsRemaining_ = charPtr_->getNumFeatSelectionsRemaining();
+  featsRemaining_ = 0;
   availFeatIds_.clear();
 
   wxListBox* knownFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
@@ -68,22 +68,7 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
   }
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID))->SetLabel("Description:");
-  if (featsRemaining_ > 0) {
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_REMAINING_COUNTER_TEXT_ID))->SetLabel(wxString::Format(wxT("%d Feats remaining"), featsRemaining_));
-  }
-  else
-  {
-    featsRemaining_ = 0;
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Feat Picks Remaining");
-  }
-  
-
-  std::vector<int> knownFeats = charPtr_->getSelectedFeats();
-  for (auto featIter = knownFeats.begin(); featIter != knownFeats.end(); ++featIter)
-  {
-    Pathfinder::Feat currFeat = Pathfinder::PFTable::get_feat(*featIter);
-    knownFeatList->AppendString(wxString::Format(wxT("%s"), currFeat.name()));
-  }
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Feat Picks Remaining");
 
 }
 
@@ -93,6 +78,9 @@ bool FeatPage::UpdateFeatPage(int classId)
   wxListBox* availSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
 
   featsRemaining_ += Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::NEW_FEAT);
+  if (charPtr_->getCharacterLevel() == 1 && charPtr_->race().bonusFeat()) {
+    featsRemaining_++;
+  }
 
   if (featsRemaining_ > 0)
   {

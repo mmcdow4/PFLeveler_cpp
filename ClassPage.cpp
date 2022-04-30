@@ -315,7 +315,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   }
 
   /* Add skill points */
-  int numPoints = Pathfinder::PFTable::get_class(classIdx).skillsPerLvl() + charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) + (std::string("Human") == charPtr_->race().raceName()); // + 1 if human
+  int numPoints = Pathfinder::PFTable::get_class(classIdx).skillsPerLvl() + charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) + charPtr_->race().bonusSkill();
   if (numPoints > 0)
   {
     charPtr_->addSkillPoints(numPoints);
