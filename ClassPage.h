@@ -46,6 +46,7 @@ public:
 
   bool skillsLocked_;
   bool spellsLeft_;
+  bool featsLeft_;
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<Pathfinder::ClassFeature> todoFeatures_;

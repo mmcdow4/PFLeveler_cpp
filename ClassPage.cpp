@@ -18,7 +18,7 @@
 #include <pf_include/Class.h>
 
 
-ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false)
+ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false), featsLeft_(false)
 {
   this->SetBackgroundColour(0xE5E5E5);
 
@@ -134,6 +134,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   charPtr_ = currChar;
   skillsLocked_ = true;
   spellsLeft_ = false;
+  featsLeft_ = false;
 
   /* class dropdown list */
   wxWindow::FindWindowById(CLASS_DROPDOWN_ID)->Show();
@@ -247,6 +248,11 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     wxMessageBox("You need to finish learning spells before adding a class level.");
     return;
   }
+  else if (featsLeft_)
+  {
+    wxMessageBox("You need to finish selecting feats before adding a class level.");
+    return;
+  }
   //else if (other things to do) //FIXME
   //{
   //  wxMessageBox("You must finish levelling up before adding a new level?");
@@ -337,7 +343,8 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
 
   /* assume you need to handle spells, the spell page will immediately kick back and correct this if there are no spells to learn */
   spellsLeft_ = true;
-  //Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::);
+  featsLeft_ = (Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::NEW_FEAT) > 0);
+
   evt.Skip();
 }
 

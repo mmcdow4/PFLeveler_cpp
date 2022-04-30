@@ -86,6 +86,8 @@ void cMain::InitializeNotebook()
   notebook_->AddPage(skillPage_, L"Skills");
   spellPage_ = new SpellPage(notebook_, currChar_);
   notebook_->AddPage(spellPage_, L"Spells");
+  featPage_ = new FeatPage(notebook_, currChar_);
+  notebook_->AddPage(featPage_, L"Feats");
   InitializeFeatsPage();
 }
 
@@ -125,12 +127,16 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
   case CLASS_LEVELUP_BUTTON_ID:
     skillPage_->UpdateSkillPage();
     classPage_->spellsLeft_ = spellPage_->UpdateSpellPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
+    featPage_->UpdateFeatPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     break;
   case SKILL_LOCK_BUTTON_ID:
     classPage_->skillsLocked_ = true;
     break;
   case SPELL_LEARN_BUTTON_ID:
     classPage_->spellsLeft_ = false;
+    break;
+  case FEAT_SELECT_BUTTON_ID:
+    classPage_->featsLeft_ = false;
     break;
   default:
     wxMessageBox("Unknown button ID passed up to cMain [" + std::to_string(evt.GetId()) + "]");
@@ -176,7 +182,7 @@ void cMain::ResetNotebook()
   classPage_->ResetPage(currChar_);
   skillPage_->ResetPage(currChar_);
   spellPage_->ResetPage(currChar_);
-  //setupFeatsPage();
+  featPage_->ResetPage(currChar_);
 }
 
 
@@ -185,7 +191,6 @@ void cMain::InitializeFeatsPage()
 {
   wxPanel* panel = new wxPanel(notebook_);
   panel->SetBackgroundColour(BACKGROUND_COLOR);
-  notebook_->AddPage(panel, L"Feats");
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
 
