@@ -119,11 +119,11 @@ void FeatPage::UpdateFeatDescription(int featIdx)
   descriptionText += "\n" + currFeat.description();
   if (!currFeat.prerequisites().empty())
   {
-      descriptionText += "Prerequesites: " + currFeat.prerequisites() + "\n";
+      descriptionText += "\nPrerequesites: " + currFeat.prerequisites();
   }
   if (!currFeat.prereqFeats().empty())
   {
-      descriptionText += "Prerequesite Feats: " + currFeat.prereqFeats() + "\n";
+      descriptionText += "\nPrerequesite Feats: " + currFeat.prereqFeats();
   }
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID))->SetLabel(descriptionText);
@@ -145,15 +145,13 @@ void FeatPage::SelectFeatButtonPress(wxCommandEvent& evt)
   /* update the listboxes */
   wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
   wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
+  availListBox->DeselectAll();
   knownListBox->AppendString(availListBox->GetString(featListIdx));
-
+  
   if (!Pathfinder::PFTable::get_feat(featIdx).multiple()) {
     availFeatIds_.erase(availFeatIds_.begin() + featListIdx);
 
-    wxArrayString tmpList = availListBox->GetStrings();
-    tmpList.RemoveAt(featListIdx);
-    availListBox->Clear();
-    availListBox->InsertItems(tmpList, 0);
+    availListBox->Delete(featListIdx);
   }
 
   /* update the feats left counter */

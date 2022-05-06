@@ -73,7 +73,7 @@ RacePage::RacePage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
   wxButton* selectBtn = new wxButton(this, RACE_SELECT_BTN_ID, wxT("Lock Race Selection"));
   selectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &RacePage::OnRaceLocked, this);
   selectBtn->Hide();
-  hbox_name->Add(selectBtn, 0, wxALIGN_RIGHT | wxRIGHT | wxBOTTOM, 10);
+  hbox_name->Add(selectBtn, 0, wxRIGHT | wxBOTTOM, 10);
 
   /* Create a text box containing the race details: size, attribute bonuses, etc. */
   wxString raceText = "Size: \nSpeed: \nAbilty Score Offsets: \nLangauges known: \nLangauges Available: ";

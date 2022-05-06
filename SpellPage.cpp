@@ -171,10 +171,8 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
   wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
   wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
   knownListBox->AppendString(availListBox->GetString(spellListIdx));
-  wxArrayString tmpList = availListBox->GetStrings();
-  tmpList.RemoveAt(spellListIdx);
-  availListBox->Clear();
-  availListBox->InsertItems(tmpList, 0);
+  availListBox->DeselectAll();
+  availListBox->Delete(spellListIdx);
 
   /* update the spells left counter */
   int spellLevel = Pathfinder::PFTable::get_spell(spellIdx).SlaLvl();
@@ -188,7 +186,7 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
       if (Pathfinder::PFTable::get_spell(availSpellIds_[spellIter]).SlaLvl() == spellLevel)
       {
         availSpellIds_.erase(availSpellIds_.begin() + spellIter);
-        tmpList.RemoveAt(spellIter);
+        availListBox->Delete(spellIter);
       }
       else
       {
@@ -196,8 +194,6 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
       }
     }
   }
-  availListBox->Clear();
-  availListBox->InsertItems(tmpList, 0);
 
   if(UpdateSpellsRemainingText() == false)
   {

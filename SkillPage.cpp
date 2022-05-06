@@ -33,35 +33,35 @@ SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxFlexGridSizer* skillsGrid = new wxFlexGridSizer(Pathfinder::NUMBER_SKILLS + 1, NUMBER_SKILL_GRID_COLUMNS, 1, 1);
   
   /* Add labels for the columns*/
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Class Skill")), 0, wxEXPAND | wxALIGN_CENTER); //Class Skill Indicator
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Skill")), 0, wxEXPAND | wxALIGN_CENTER);
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Total")), 0, wxEXPAND | wxALIGN_CENTER);
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxEXPAND | wxALIGN_CENTER); // equals sign
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Ability")), 0, wxEXPAND | wxALIGN_CENTER); 
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Ability Mod.")), 0, wxEXPAND | wxALIGN_CENTER);
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxEXPAND | wxALIGN_CENTER); // plus sign
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Ranks")), 0, wxEXPAND | wxALIGN_CENTER);
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxEXPAND | wxALIGN_CENTER); // plus sign
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Misc. Mod")), 0, wxEXPAND | wxALIGN_CENTER);
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxEXPAND | wxALIGN_CENTER); // plus button
-  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxEXPAND | wxALIGN_CENTER); // minus button
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Class Skill")), 0, wxALIGN_CENTER); //Class Skill Indicator
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Skill")), 0, wxALIGN_CENTER);
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Total")), 0, wxALIGN_CENTER);
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxALIGN_CENTER); // equals sign
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Ability")), 0, wxALIGN_CENTER); 
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Ability Mod.")), 0, wxALIGN_CENTER);
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxALIGN_CENTER); // plus sign
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Ranks")), 0, wxALIGN_CENTER);
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxALIGN_CENTER); // plus sign
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("Misc. Mod")), 0, wxALIGN_CENTER);
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxALIGN_CENTER); // plus button
+  skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT("")), 0, wxALIGN_CENTER); // minus button
 
   /* Set up the rows of skills */
   for (int skillIdx = 0; skillIdx < Pathfinder::NUMBER_SKILLS; skillIdx++)
   {
-    skillsGrid->Add(new wxCheckBox(this, SKILL_IS_CLASS_SKILL_BOX_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, ""), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, SKILL_SKILL_NAME_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxString(Pathfinder::skillStrings[skillIdx])), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, SKILL_TOTAL_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" = ")), 0, wxEXPAND | wxALIGN_CENTER);
+    skillsGrid->Add(new wxCheckBox(this, SKILL_IS_CLASS_SKILL_BOX_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, ""), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, SKILL_SKILL_NAME_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxString(Pathfinder::skillStrings[skillIdx])), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, SKILL_TOTAL_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" = ")), 0, wxALIGN_CENTER);
     skillsGrid->Add(new wxStaticText(this, SKILL_ABILITY_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS,
-      wxString(Pathfinder::ABILITY_SCORE_ABBREVIATIONS[static_cast<int>(Pathfinder::SKILL_BASE_ABILITIES[skillIdx])])), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, SKILL_ABILITY_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" + ")), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, SKILL_RANK_VALUE_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" + ")), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxStaticText(this, SKILL_MISC_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxButton(this, SKILL_PLUS_RANK_BUTTON_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT("+ Rank")), 0, wxEXPAND | wxALIGN_CENTER);
-    skillsGrid->Add(new wxButton(this, SKILL_MINUS_RANK_BUTTON_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT("- Rank")), 0, wxEXPAND | wxALIGN_CENTER);
+      wxString(Pathfinder::ABILITY_SCORE_ABBREVIATIONS[static_cast<int>(Pathfinder::SKILL_BASE_ABILITIES[skillIdx])])), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, SKILL_ABILITY_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" + ")), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, SKILL_RANK_VALUE_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, wxID_ANY, wxT(" + ")), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxStaticText(this, SKILL_MISC_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT(" 0 ")), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxButton(this, SKILL_PLUS_RANK_BUTTON_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT("+ Rank")), 0, wxALIGN_CENTER);
+    skillsGrid->Add(new wxButton(this, SKILL_MINUS_RANK_BUTTON_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS, wxT("- Rank")), 0, wxALIGN_CENTER);
 
     wxWindow::FindWindowById(SKILL_TOTAL_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetBackgroundColour(*wxWHITE);
     wxWindow::FindWindowById(SKILL_ABILITY_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetBackgroundColour(*wxWHITE);
@@ -76,13 +76,13 @@ SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
     wxWindow::FindWindowById(SKILL_MINUS_RANK_BUTTON_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &SkillPage::OnSkillDecrement, this);
   }
   
-  hbox->Add(skillsGrid, 0, wxALIGN_LEFT | wxEXPAND);
+  hbox->Add(skillsGrid, 0, wxEXPAND);
 
   wxBoxSizer* vbox = new wxBoxSizer(wxVERTICAL);
   wxBoxSizer* vboxFillerTop = new wxBoxSizer(wxHORIZONTAL);
   wxBoxSizer* vboxFillerBottom = new wxBoxSizer(wxHORIZONTAL);
 
-  hbox->Add(vbox, 1, wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL | wxEXPAND);
+  hbox->Add(vbox, 1, wxEXPAND);
 
   vboxFillerTop->Add(new wxPanel(this, -1));
   vbox->Add(vboxFillerTop, 1, wxEXPAND);
@@ -98,7 +98,6 @@ SkillPage::SkillPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   vboxFillerBottom->Add(new wxPanel(this, -1));
   vbox->Add(vboxFillerBottom, 2, wxEXPAND);
 
-  //wxScrollBar* scrollBar = new wxScrollBar(this, SKILL_SCROLL_BAR_ID, wxDefaultPosition, wxDefaultSize, wxSB_VERTICAL);
   this->SetSizerAndFit(hbox);
   this->Layout();
 }
