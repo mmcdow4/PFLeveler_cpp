@@ -2,6 +2,7 @@
 
 #include <exception>
 #include <stdexcept>
+#include <filesystem>
 
 #include <pf_include/PFTable.h>
 
@@ -22,7 +23,8 @@ bool cApp::OnInit()
 
   try
   {
-    Pathfinder::PFTable::initialize("E:/dev/pathfinder/csv_files/PathFinder.db");
+    //std::string path1 = "E:/dev/pathfinder/csv_files/";
+    Pathfinder::PFTable::initialize( std::filesystem::current_path().string() + "/PathFinder.db" );
   }
   catch (const std::invalid_argument& e)
   {
