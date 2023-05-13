@@ -310,8 +310,12 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   for (auto abilityIter = newAbilities.begin(); abilityIter != newAbilities.end(); ++abilityIter)
   {
     //wxMessageBox("class feature [" + featIter->name() + "] has [" + wxString::Format(wxT("%d"), featIter->numChoices()) + "] choices");
-    abilities_.push_back(*abilityIter);
-    static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
+    if(abilityIter->choicePrereqId() < 0 || charPtr_->checkForChoice(abilityIter->choicePrereqId())) {
+      abilities_.push_back(*abilityIter);
+      charPtr_->addClassAbility(abilityIter->id());
+      static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
+      //TODO: If this ability is a spell, go learn the spell and add it to the spell page list. If it is a feat, go learn the feat and add it to the feat page list
+    }
   }
 
   /* Add skill points */
@@ -430,10 +434,7 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
   /* remove this item from the list of features */
   todoFeatures_.erase(todoFeatures_.begin() + featIdx);
 
-  wxArrayString tmpList = featListBox->GetStrings();
-  tmpList.RemoveAt(featIdx);
-  featListBox->Clear();
-  featListBox->InsertItems(tmpList, 0);
+  featListBox->Delete(featIdx);
 
   /* if there aren't any features left to choose, turn off the button for now */
   if (todoFeatures_.empty())
@@ -464,6 +465,7 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
   }
 
   int numChoicesMade = 0;
+  
   while (numChoicesMade < numChoices)
   {
     wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
@@ -487,7 +489,24 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
         static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID))->AppendString(featName);
       }
 
+      //Record this choice
       choicesMade_.insert(choiceVec[choiceIdx].id());
+
+      //Record the choice within the character class
+      charPtr_->makeClassChoice(choiceVec[choiceIdx].id());
+      if (choiceVec[choiceIdx].featId() >= 0) {
+        charPtr_->selectFeat(choiceVec[choiceIdx].featId());
+      }
+      //Go add any class abilities that had this choice as a prerequisite
+      for (int classLevel = 0; classLevel < charPtr_->getClassLevel(classIdx); classLevel++) {
+        std::vector<Pathfinder::ClassAbility> abilityVec = Pathfinder::PFTable::get_class(classIdx).getAbilityVec(classLevel);
+        for (unsigned int abilityIdx = 0; abilityIdx < abilityVec.size(); abilityIdx++) {
+          if (abilityVec[abilityIdx].choicePrereqId() == choiceVec[choiceIdx].id()) {
+            //TODO: If this is a spell, go learn the spell and add it to the spell list. If it is a feat, go learn the feat and add it to the feat list
+            charPtr_->addClassAbility(abilityVec[abilityIdx].id());
+          }
+        }
+      }
       if (choicesMade_.count(choiceVec[choiceIdx].id()) == choiceVec[choiceIdx].maxNumSelections())
       {
         choiceVec.erase(choiceVec.begin() + choiceIdx);
