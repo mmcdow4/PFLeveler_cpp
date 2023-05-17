@@ -127,7 +127,29 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
   case CLASS_LEVELUP_BUTTON_ID:
     skillPage_->UpdateSkillPage();
     classPage_->spellsLeft_ = spellPage_->UpdateSpellPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
+    if (classPage_->grantedSpells_)
+    {
+      spellPage_->GrantSpells();
+      classPage_->grantedSpells_ = false;
+    }
     featPage_->UpdateFeatPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
+    if (classPage_->grantedFeats_)
+    {
+      featPage_->GrantFeats();
+      classPage_->grantedFeats_ = false;
+    }
+    break;
+  case CLASS_FEATURE_BUTTON_ID:
+    if (classPage_->grantedSpells_)
+    {
+      spellPage_->GrantSpells();
+      classPage_->grantedSpells_ = false;
+    }
+    if (classPage_->grantedFeats_)
+    {
+      featPage_->GrantFeats();
+      classPage_->grantedFeats_ = false;
+    }
     break;
   case SKILL_LOCK_BUTTON_ID:
     classPage_->skillsLocked_ = true;

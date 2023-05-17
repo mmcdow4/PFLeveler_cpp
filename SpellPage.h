@@ -39,6 +39,7 @@ public:
   void OnSpellSelected(wxCommandEvent& evt);
   void LearnSpellButtonPress(wxCommandEvent& evt);
   
+  void GrantSpells(void);
   void UpdateSpellDescription(int spellIndex);
   bool UpdateSpellsRemainingText(void);
 private:

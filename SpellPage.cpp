@@ -138,6 +138,25 @@ void SpellPage::OnSpellSelected(wxCommandEvent& evt)
   wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID)->GetParent()->Layout();
 }
 
+void SpellPage::GrantSpells(void)
+{
+  wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
+  wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
+  std::vector<int> knownSpells = charPtr_->getKnownSpells();
+  for (auto spellIter = knownSpells.begin(); spellIter != knownSpells.end(); ++spellIter)
+  {
+    int loc = availListBox->FindString(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).SlaLvl(), Pathfinder::PFTable::get_spell(*spellIter).name()));
+    if(loc != wxNOT_FOUND)
+    {
+      knownListBox->AppendString(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).SlaLvl(),
+          Pathfinder::PFTable::get_spell(*spellIter).name()));
+      /* Now delete from the available list */
+      availListBox->Delete(loc);
+      availSpellIds_.erase(availSpellIds_.begin() + loc);
+    }
+  }
+}
+
 void SpellPage::UpdateSpellDescription(int spellIdx)
 {
   Pathfinder::Spell currSpell = Pathfinder::PFTable::get_spell(spellIdx);

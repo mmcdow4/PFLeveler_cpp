@@ -18,7 +18,7 @@
 #include <pf_include/Class.h>
 
 
-ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false), featsLeft_(false)
+ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false), featsLeft_(false), grantedSpells_(false), grantedFeats_(false)
 {
   this->SetBackgroundColour(0xE5E5E5);
 
@@ -135,6 +135,9 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   skillsLocked_ = true;
   spellsLeft_ = false;
   featsLeft_ = false;
+
+  grantedSpells_ = false;
+  grantedFeats_ = false;
 
   /* class dropdown list */
   wxWindow::FindWindowById(CLASS_DROPDOWN_ID)->Show();
@@ -253,6 +256,11 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     wxMessageBox("You need to finish selecting feats before adding a class level.");
     return;
   }
+  else if (!todoFeatures_.empty())
+  {
+    wxMessageBox("You need to finish making choices for your class features before adding a class level.");
+    return;
+  }
   //else if (other things to do) //FIXME
   //{
   //  wxMessageBox("You must finish levelling up before adding a new level?");
@@ -309,12 +317,18 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   abilities_.reserve(abilities_.size() + newAbilities.size());
   for (auto abilityIter = newAbilities.begin(); abilityIter != newAbilities.end(); ++abilityIter)
   {
-    //wxMessageBox("class feature [" + featIter->name() + "] has [" + wxString::Format(wxT("%d"), featIter->numChoices()) + "] choices");
     if(abilityIter->choicePrereqId() < 0 || charPtr_->checkForChoice(abilityIter->choicePrereqId())) {
       abilities_.push_back(*abilityIter);
       charPtr_->addClassAbility(abilityIter->id());
       static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
-      //TODO: If this ability is a spell, go learn the spell and add it to the spell page list. If it is a feat, go learn the feat and add it to the feat page list
+      if (abilityIter->spellId() >= 0) {
+        charPtr_->learnSpell(abilityIter->spellId());
+        grantedSpells_ = true;
+      }
+      else if (abilityIter->featId() >= 0) {
+        charPtr_->selectFeat(abilityIter->featId());
+        grantedFeats_ = true;
+      }
     }
   }
 
@@ -443,6 +457,10 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
   }
 
   featListBox->GetParent()->Layout();
+  if (grantedSpells_ || grantedFeats_)
+  {
+    evt.Skip();
+  }
 }
 
 void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice> &choiceVec, wxString catName)
@@ -465,7 +483,7 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
   }
 
   int numChoicesMade = 0;
-  
+
   while (numChoicesMade < numChoices)
   {
     wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
@@ -495,6 +513,7 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
       //Record the choice within the character class
       charPtr_->makeClassChoice(choiceVec[choiceIdx].id());
       if (choiceVec[choiceIdx].featId() >= 0) {
+        grantedFeats_ = true;
         charPtr_->selectFeat(choiceVec[choiceIdx].featId());
       }
       //Go add any class abilities that had this choice as a prerequisite
@@ -502,8 +521,15 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
         std::vector<Pathfinder::ClassAbility> abilityVec = Pathfinder::PFTable::get_class(classIdx).getAbilityVec(classLevel);
         for (unsigned int abilityIdx = 0; abilityIdx < abilityVec.size(); abilityIdx++) {
           if (abilityVec[abilityIdx].choicePrereqId() == choiceVec[choiceIdx].id()) {
-            //TODO: If this is a spell, go learn the spell and add it to the spell list. If it is a feat, go learn the feat and add it to the feat list
             charPtr_->addClassAbility(abilityVec[abilityIdx].id());
+            if (abilityVec[abilityIdx].spellId() >= 0) {
+              charPtr_->learnSpell(abilityVec[abilityIdx].spellId());
+              grantedSpells_ = true;
+            }
+            else if (abilityVec[abilityIdx].featId() >= 0) {
+              charPtr_->selectFeat(abilityVec[abilityIdx].featId());
+              grantedFeats_ = true;
+            }
           }
         }
       }

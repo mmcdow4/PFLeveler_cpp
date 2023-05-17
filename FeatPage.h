@@ -29,6 +29,7 @@ public:
   void OnFeatSelected(wxCommandEvent& evt);
   void SelectFeatButtonPress(wxCommandEvent& evt);
   
+  void GrantFeats(void);
   void UpdateFeatDescription(int spellIndex);
 private:
   Pathfinder::Character* charPtr_ = NULL;

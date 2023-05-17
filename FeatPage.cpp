@@ -16,7 +16,7 @@ FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
   wxStaticText* availFeatsLabel = new wxStaticText(this, wxID_ANY, wxT("Available Feats:"));
   vboxAvail->Add(availFeatsLabel, 0, wxBOTTOM, 5);
   wxString *dummyStr = NULL;
-  wxListBox* availFeatsList = new wxListBox(this, FEAT_AVAIL_FEAT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_SORT | wxLB_NEEDED_SB);
+  wxListBox* availFeatsList = new wxListBox(this, FEAT_AVAIL_FEAT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   vboxAvail->Add(availFeatsList, 1, wxEXPAND, 0);
 
   availFeatsList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &FeatPage::OnFeatSelected, this);
@@ -27,7 +27,7 @@ FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
   wxBoxSizer* vboxKnown = new wxBoxSizer(wxVERTICAL);
   wxStaticText* knownFeatsLabel = new wxStaticText(this, wxID_ANY, wxT("Known Feats:"));
   vboxKnown->Add(knownFeatsLabel, 0, wxBOTTOM, 5);
-  wxListBox* knownFeatsList = new wxListBox(this, FEAT_KNOWN_FEAT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_SORT | wxLB_NEEDED_SB);
+  wxListBox* knownFeatsList = new wxListBox(this, FEAT_KNOWN_FEAT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   vboxKnown->Add(knownFeatsList, 1, wxEXPAND, 0);
 
   knownFeatsList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &FeatPage::OnFeatSelected, this);
@@ -56,14 +56,15 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
   featsRemaining_ = 0;
   availFeatIds_.clear();
 
-  wxListBox* knownFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
-  knownFeatList->Clear();
-  wxListBox* availFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
-  availFeatList->Clear();
+  wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
+  knownListBox->Clear();
+  wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
+  availListBox->Clear();
+
   for (int featIdx = 0; featIdx < Pathfinder::PFTable::get_num_feats(); featIdx++) {
     if (!charPtr_->isFeatSelected(featIdx) || Pathfinder::PFTable::get_feat(featIdx).multiple()) {
       availFeatIds_.push_back(featIdx);
-      availFeatList->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
+      availListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
     }
   }
 
@@ -75,7 +76,7 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
 bool FeatPage::UpdateFeatPage(int classId)
 {
   int classLevel = charPtr_->getClassLevel(classId);
-  wxListBox* availSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
+  wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
 
   featsRemaining_ += Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::NEW_FEAT);
   if (charPtr_->getCharacterLevel() == 1 && charPtr_->race().bonusFeat()) {
@@ -84,7 +85,6 @@ bool FeatPage::UpdateFeatPage(int classId)
 
   if (featsRemaining_ > 0)
   {
-    //wxString featsRemainingString = wxString::Format(wxT("%d Feats remaining"), featsRemaining_);
     static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_REMAINING_COUNTER_TEXT_ID))->SetLabel(wxString::Format(wxT("%d Feats remaining"), featsRemaining_));
     wxWindow::FindWindowById(FEAT_SELECT_BUTTON_ID)->Enable();
   }
@@ -108,6 +108,24 @@ void FeatPage::OnFeatSelected(wxCommandEvent& evt)
   }
 
   wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID)->GetParent()->Layout();
+}
+
+void FeatPage::GrantFeats(void)
+{
+  wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
+  wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
+  std::vector<int> knownFeats = charPtr_->getSelectedFeats();
+  for (auto featIter = knownFeats.begin(); featIter != knownFeats.end(); ++featIter)
+  {
+    int loc = availListBox->FindString(Pathfinder::PFTable::get_feat(*featIter).name());
+    if (loc != wxNOT_FOUND)
+    {
+      knownListBox->AppendString(Pathfinder::PFTable::get_feat(*featIter).name());
+      /* Now delete from the available list */
+      availListBox->Delete(loc);
+      availFeatIds_.erase(availFeatIds_.begin() + loc);
+    }
+  }
 }
 
 void FeatPage::UpdateFeatDescription(int featIdx)
