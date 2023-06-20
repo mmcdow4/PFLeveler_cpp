@@ -71,6 +71,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   vbox1->Add(hbox_levelup, 0, wxRIGHT, 10);
 
   /* Add a text box for the class description below the dropdown */
+  classDescWrapper_ = NULL;
   wxStaticText* classDescription = new wxStaticText(this, CLASS_DESCRIPTION_ID, wxT("Class Description:"));
   classDescription->SetBackgroundColour(*wxWHITE);
   vbox1->Add(classDescription, 1, wxEXPAND | wxUP | wxDOWN, 10);
@@ -100,10 +101,11 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
 
   hbox_features->Add(vbox_todo_features, 1, wxEXPAND | wxRIGHT, 10);
   hbox_features->Add(vbox_selected_features, 1, wxEXPAND | wxRIGHT, 10);
-  vbox1->Add(hbox_features, 2, wxEXPAND | wxRIGHT | wxLEFT, 10);
+  vbox1->Add(hbox_features, 3, wxEXPAND | wxRIGHT | wxLEFT, 10);
 
   wxStaticText* feature_description = new wxStaticText(this, CLASS_FEATURE_DESCRIPTION_ID, wxT("Feature Description:"));
-  vbox1->Add(feature_description, 0, wxRIGHT, 10);
+  feature_description->SetBackgroundColour(*wxWHITE);
+  vbox1->Add(feature_description, 1, wxALL, 10);
 
   wxButton* addFeatureBtn = new wxButton(this, CLASS_FEATURE_BUTTON_ID, wxT("Choose Selected Feature"));
   addFeatureBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ClassPage::SelectFeatureButtonPress, this);
@@ -127,6 +129,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   vbox2->Add(abilitiesDescription, 1, wxEXPAND | wxUP | wxDOWN, 10);
 
   this->SetSizerAndFit(hbox1);
+
 }
 
 void ClassPage::ResetPage(Pathfinder::Character* currChar)
@@ -182,6 +185,23 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->Show();
 
   this->Layout();
+
+  if (classDescWrapper_ != NULL)
+  {
+    delete classDescWrapper_;
+    delete featureDescWrapper_;
+    delete abilityDescWrapper_;
+  }
+
+  int maxWidth = 0;
+  wxWindow::FindWindowById(CLASS_DESCRIPTION_ID)->GetSize(&maxWidth, NULL);
+  classDescWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(CLASS_DESCRIPTION_ID), "", maxWidth);
+
+  //wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->GetSize(&maxWidth, NULL);
+  featureDescWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID), "", maxWidth);
+  
+  //wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->GetSize(&maxWidth, NULL);
+  abilityDescWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID), "", maxWidth);
 }
 
 void ClassPage::OnFavoredClassAdded(wxCommandEvent& evt)
@@ -381,7 +401,7 @@ void ClassPage::OnClassSelected(wxCommandEvent& evt)
   classText += ", alignment = " + chosenClass.alignmentReq();
 
   wxStaticText* classDescBox = static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_DESCRIPTION_ID));
-  classDescBox->SetLabel(classText);
+  classDescBox->SetLabel(classDescWrapper_->UpdateText(classText));
   //raceTextbox->Wrap(raceTextbox->GetClientSize().GetWidth());
 
 
@@ -393,7 +413,7 @@ void ClassPage::OnAbilitySelected(wxCommandEvent& evt)
   int abilityIdx = evt.GetSelection();
 
   wxString abilityDesc = "Ability Description:\n" + abilities_[abilityIdx].desc();
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID))->SetLabel(abilityDesc);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID))->SetLabel(abilityDescWrapper_->UpdateText(abilityDesc));
 
   wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->GetParent()->Layout();
 }
@@ -403,7 +423,7 @@ void ClassPage::OnUnselectedFeatureSelected(wxCommandEvent& evt)
   int featIdx = evt.GetSelection();
 
   wxString featDesc = "Feature Description:\n" + todoFeatures_[featIdx].desc();
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID))->SetLabel(featDesc);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID))->SetLabel(featureDescWrapper_->UpdateText(featDesc));
 
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID))->SetSelection(wxNOT_FOUND);
   wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->GetParent()->Layout();
@@ -414,7 +434,7 @@ void ClassPage::OnFinishedFeatureSelected(wxCommandEvent& evt)
   int featIdx = evt.GetSelection();
 
   wxString featDesc = "Feature Description:\n" + featureDescriptions_[featIdx];
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID))->SetLabel(featDesc);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID))->SetLabel(featureDescWrapper_->UpdateText(featDesc));
 
   static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID))->SetSelection(wxNOT_FOUND);
   wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->GetParent()->Layout();

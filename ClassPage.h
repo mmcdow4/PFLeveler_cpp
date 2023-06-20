@@ -7,7 +7,7 @@
 #include <wx/notebook.h>
 
 #include <pf_include/Character.h>
-
+#include "WrapText.h"
 #include <vector>
 
 #define CLASS_DROPDOWN_LABEL_ID 4000
@@ -60,6 +60,9 @@ private:
 
   std::multiset<int> choicesMade_;
 
+  HardBreakWrapper* classDescWrapper_ = NULL;
+  HardBreakWrapper* featureDescWrapper_ = NULL;
+  HardBreakWrapper* abilityDescWrapper_ = NULL;
 };
 
 #endif

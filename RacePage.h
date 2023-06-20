@@ -7,6 +7,7 @@
 #include <wx/notebook.h>
 
 #include <pf_include/Character.h>
+#include "WrapText.h"
 
 #include <vector>
 
@@ -34,6 +35,9 @@ public:
 
 private:
   Pathfinder::Character* charPtr_ = NULL;
+
+  HardBreakWrapper* raceTextWrapper_ = NULL;
+  HardBreakWrapper* racialDescWrapper_ = NULL;
 };
 
 #endif

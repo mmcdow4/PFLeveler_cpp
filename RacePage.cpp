@@ -136,6 +136,19 @@ void RacePage::ResetPage(Pathfinder::Character* currChar)
   populateRacialTable(raceAbilityList, chosenRace);
 
   this->Layout();
+
+  if (raceTextWrapper_ == NULL)
+  {
+    delete raceTextWrapper_;
+    delete racialDescWrapper_;
+  }
+
+  int maxWidth = 0;
+  wxWindow::FindWindowById(RACE_TEXT_ID)->GetSize(&maxWidth, NULL);
+  raceTextWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(RACE_TEXT_ID), "", maxWidth);
+
+  wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->GetSize(&maxWidth, NULL);
+  racialDescWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID), "", maxWidth);
 }
 
 void RacePage::OnRaceSelected(wxCommandEvent& evt)
@@ -146,7 +159,7 @@ void RacePage::OnRaceSelected(wxCommandEvent& evt)
 
   wxString raceText = populateRaceText(chosenRace);
   wxStaticText* raceTextbox = static_cast<wxStaticText*>(wxWindow::FindWindowById(RACE_TEXT_ID));
-  raceTextbox->SetLabel(raceText);
+  raceTextbox->SetLabel(raceTextWrapper_->UpdateText(raceText));
   //raceTextbox->Wrap(raceTextbox->GetClientSize().GetWidth());
 
   wxListBox* racialListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(RACE_RACIAL_BONUS_TABLE_ID));
@@ -179,7 +192,7 @@ void RacePage::OnRacialSelected(wxCommandEvent& evt)
   int raceId = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID))->GetSelection();
   int racialId = evt.GetSelection();
   wxString racialTxt = "Description:\n" + Pathfinder::PFTable::get_race(raceId).getRacial(racialId).description();
-  wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->SetLabel(racialTxt);
+  wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->SetLabel(racialDescWrapper_->UpdateText(racialTxt));
 
   wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->GetParent()->Layout();
 }

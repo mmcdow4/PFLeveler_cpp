@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef CMAIN_H
+#define CMAIN_H
+
+/* wxWidgets includes */
 #include <wx/wx.h>
 #include <wx/notebook.h>
 
@@ -63,3 +67,4 @@ private:
   FeatPage* featPage_ = NULL;
 };
 
+#endif
