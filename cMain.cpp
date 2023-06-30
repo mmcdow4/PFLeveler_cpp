@@ -94,48 +94,40 @@ void cMain::InitializeNotebook()
 void cMain::OnButtonPressed(wxCommandEvent& evt)
 {
 
-  wxListBox* todoList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_TODO_LIST_ID));
-  int todoIdx = 0;
   switch(evt.GetId())
   {
   case RACE_SELECT_BTN_ID:
     /* Update racial bonuses on the ability scores page */
     abilityScorePage_->ApplyRacialBonuses();
 
-    /* Propagate this information to the summary page */
-    wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + currChar_->race().raceName());
-    if (currChar_->race().numFavoredClass() > 1)
-    {
-      wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Classes: ");
-    }
-    todoIdx = todoList->FindString("Pick Race");
-    if (todoIdx != wxNOT_FOUND)
-    {
-      todoList->Delete(todoIdx);
-    }
+    /* Propagate race information to the summary page */
+    summaryPage_->PopulateRaceData();
+
     break;
   case ABSCR_ATTRIBUTE_LOCK_BUTTON:
-    todoIdx = todoList->FindString("Generate Ability Scores");
-    if (todoIdx != wxNOT_FOUND)
-    {
-      todoList->Delete(todoIdx);
-    }
+    /* Propagate Ability Scores to the summary page */
+    summaryPage_->PopulateAbilityScoreData();
     break;
   case CLASS_FAVORED_CLASS_BUTTON_ID:
-    wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Class: " + wxString(currChar_->getFavoredClassList()));
+    /* Propagate favored classes to the summary page */
+    summaryPage_->PopulateFavoredClassData();
     break;
   case CLASS_LEVELUP_BUTTON_ID:
+    /* Propagate class levels to the summary page */
+    summaryPage_->PopulateClassLevelData();
     skillPage_->UpdateSkillPage();
     classPage_->spellsLeft_ = spellPage_->UpdateSpellPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     if (classPage_->grantedSpells_)
     {
       spellPage_->GrantSpells();
+      summaryPage_->PopulateSpellData();
       classPage_->grantedSpells_ = false;
     }
     featPage_->UpdateFeatPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     if (classPage_->grantedFeats_)
     {
       featPage_->GrantFeats();
+      summaryPage_->PopulateFeatData();
       classPage_->grantedFeats_ = false;
     }
     break;
@@ -143,21 +135,29 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     if (classPage_->grantedSpells_)
     {
       spellPage_->GrantSpells();
+      summaryPage_->PopulateSpellData();
       classPage_->grantedSpells_ = false;
     }
     if (classPage_->grantedFeats_)
     {
       featPage_->GrantFeats();
+      summaryPage_->PopulateFeatData();
       classPage_->grantedFeats_ = false;
     }
     break;
   case SKILL_LOCK_BUTTON_ID:
+    /* Propagate skills to the summary page */
+    summaryPage_->PopulateSkillData();
     classPage_->skillsLocked_ = true;
     break;
   case SPELL_LEARN_BUTTON_ID:
+    /* Propagate spells to the summary page */
+    summaryPage_->PopulateSpellData();
     classPage_->spellsLeft_ = false;
     break;
   case FEAT_SELECT_BUTTON_ID:
+    /* Propagate feats to the summary page */
+    summaryPage_->PopulateFeatData();
     classPage_->featsLeft_ = false;
     break;
   default:

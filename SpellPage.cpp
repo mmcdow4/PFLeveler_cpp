@@ -75,6 +75,7 @@ bool SpellPage::UpdateSpellPage(int classId)
 {
   int classLevel = charPtr_->getClassLevel(classId);
   wxListBox* availSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
+  wxListBox* knownSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
 
   if (Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_0) > 0)
   {
@@ -106,6 +107,38 @@ bool SpellPage::UpdateSpellPage(int classId)
                 Pathfinder::PFTable::get_spell(*spellIter).name()));
           }
         }
+      }
+    }
+  }
+  else if (Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::SPELLS_PER_DAY_0) > 0)
+  {
+    for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
+    {
+      Pathfinder::lvlUpMarker spellLevelMarker = static_cast<Pathfinder::lvlUpMarker>(static_cast<int>(Pathfinder::SPELLS_PER_DAY_0) + spellLevel);
+      if (Pathfinder::PFTable::get_class(classId).levelItem(classLevel, spellLevelMarker))
+      {
+        std::vector<int> spellVec = Pathfinder::PFTable::get_spell_list(spellLevel);
+        for (std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
+        {
+          if (Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) > -1 && // Is this spell available to your class?
+            Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) <= classLevel && // is your level high enough to learn it?
+            !charPtr_->isSpellKnown(*spellIter)) // You con't already know this spell
+          {
+            wxString spell_name = wxString::Format(wxT("level %d spell: %s"), spellLevel,
+              Pathfinder::PFTable::get_spell(*spellIter).name());
+            int loc = availSpellList->FindString(spell_name);
+            if (loc != wxNOT_FOUND)
+            {
+              availSpellList->Delete(loc);
+            }
+            knownSpellList->AppendString(spell_name);
+            charPtr_->learnSpell(*spellIter);
+          }
+        }
+      }
+      else
+      {
+        break;
       }
     }
   }

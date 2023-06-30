@@ -34,13 +34,17 @@
 #define SUMMARY_AGE_LABEL_ID 1020
 #define SUMMARY_AGE_INPUT_ID 1021
 #define SUMMARY_RACE_LABEL_ID 1022
-#define SUMMARY_FAV_CLASS_LABEL_ID 1023
-#define SUMMARY_BUTTON_ID 1024
-#define SUMMARY_TODO_LABEL_ID 1025
-#define SUMMARY_TODO_LIST_ID 1026
-#define SUMMARY_SPELL_LIST_ID 1027
-#define SUMMARY_FEAT_LIST_ID 1028
+#define SUMMARY_SIZE_LABEL_ID 1023
+#define SUMMARY_SPEED_LABEL_ID 1024
+#define SUMMARY_FAV_CLASS_LABEL_ID 1025
+#define SUMMARY_BUTTON_ID 1026
+#define SUMMARY_CLASS_LEVEL_LIST_ID 1027
+#define SUMMARY_ABILITY_SCORES_LIST_ID 1028
 #define SUMMARY_SKILL_LIST_ID 1029
+#define SUMMARY_FEAT_LIST_ID 1030
+#define SUMMARY_ABILITY_LIST_ID 1031
+#define SUMMARY_SPELL_SLOT_LIST_ID 1032
+#define SUMMARY_SPELL_LIST_ID 1033
 
 class SummaryPage : public wxPanel
 {
@@ -53,6 +57,13 @@ public:
 
   void OnCharLocked(wxCommandEvent& evt);
 
+  void PopulateFavoredClassData(void);
+  void PopulateClassLevelData(void);
+  void PopulateRaceData(void);
+  void PopulateAbilityScoreData(void);
+  void PopulateSkillData(void);
+  void PopulateFeatData(void);
+  void PopulateSpellData(void);
 private:
   Pathfinder::Character* charPtr_ = NULL;
 };

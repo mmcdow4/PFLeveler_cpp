@@ -22,10 +22,10 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   this->SetBackgroundColour(0xE5E5E5);
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
-  wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* character summary and todo list */
-  wxBoxSizer* vbox2 = new wxBoxSizer(wxVERTICAL); /* spell list */
-  wxBoxSizer* vbox3 = new wxBoxSizer(wxVERTICAL); /* feat list */
-  wxBoxSizer* vbox4 = new wxBoxSizer(wxVERTICAL); /* skill list */
+  wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* character summary and class levels */
+  wxBoxSizer* vbox2 = new wxBoxSizer(wxVERTICAL); /* Ability scores and skill bonuses */
+  wxBoxSizer* vbox3 = new wxBoxSizer(wxVERTICAL); /* feats and abilities */
+  wxBoxSizer* vbox4 = new wxBoxSizer(wxVERTICAL); /* spell slots and spells known */
 
   int summarySpacing = 1;
   /* Character Name */
@@ -151,9 +151,21 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
 
   /* Race */
   wxBoxSizer* hbox_race = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* raceLabel = new wxStaticText(this, SUMMARY_RACE_LABEL_ID, wxT("Race:"));
+  wxStaticText* raceLabel = new wxStaticText(this, SUMMARY_RACE_LABEL_ID, wxT("Race: "));
   hbox_race->Add(raceLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
   vbox1->Add(hbox_race);
+
+  /* Size */
+  wxBoxSizer* hbox_size = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText* sizeLabel = new wxStaticText(this, SUMMARY_SIZE_LABEL_ID, wxT("Size: "));
+  hbox_size->Add(sizeLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
+  vbox1->Add(hbox_size);
+
+  /* Speed */
+  wxBoxSizer* hbox_speed = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText* speedLabel = new wxStaticText(this, SUMMARY_SPEED_LABEL_ID, wxT("Speed: "));
+  hbox_speed->Add(speedLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
+  vbox1->Add(hbox_speed);
 
   /* Favored Class(es) */
   wxBoxSizer* hbox_favClass = new wxBoxSizer(wxHORIZONTAL);
@@ -167,24 +179,25 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   summaryBtn->Hide();
   vbox1->Add(summaryBtn, 0, wxALIGN_RIGHT, 0);
 
-  /* To Do List */
-  wxStaticText* todoLabel = new wxStaticText(this, SUMMARY_TODO_LABEL_ID, wxT("To Do List:"));
-  todoLabel->Hide();
-  vbox1->Add(todoLabel, 0, 0, 0);
-
+  /* Class Levels */
   wxString* dummyStr = NULL;
-  wxListBox* todoList = new wxListBox(this, SUMMARY_TODO_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
-  todoList->Hide();
-  vbox1->Add(todoList, 1, wxEXPAND, 0);
+  wxListBox* classLevelList = new wxListBox(this, SUMMARY_CLASS_LEVEL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  vbox1->Add(classLevelList, 1, wxEXPAND, 0);
 
   /* Summary Box Finished */
   hbox1->Add(vbox1, 1, wxEXPAND | wxRIGHT, 10);
 
-  /* Spell List */
-  wxStaticText* spellLabel = new wxStaticText(this, wxID_ANY, wxT("Known Spells:"));
-  vbox2->Add(spellLabel, 0, wxBOTTOM, 5);
-  wxListBox* spellList = new wxListBox(this, SUMMARY_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
-  vbox2->Add(spellList, 1, wxEXPAND, 0);
+  /* Ability Scores and etc. */
+  wxStaticText* AbilityScoreLabel = new wxStaticText(this, wxID_ANY, wxT("Ability Scores:"));
+  vbox2->Add(AbilityScoreLabel, 0, wxBOTTOM, 5);
+  wxListBox* abilityScoreList = new wxListBox(this, SUMMARY_ABILITY_SCORES_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  vbox2->Add(abilityScoreList, 1, wxEXPAND, 0);
+
+  /* Skill List */
+  wxStaticText* skillLabel = new wxStaticText(this, wxID_ANY, wxT("Skills:"));
+  vbox2->Add(skillLabel, 0, wxBOTTOM, 5);
+  wxListBox* skillList = new wxListBox(this, SUMMARY_SKILL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  vbox2->Add(skillList, 1, wxEXPAND, 0);
 
   hbox1->Add(vbox2, 1, wxEXPAND | wxRIGHT, 10);
 
@@ -194,14 +207,23 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   wxListBox* featList = new wxListBox(this, SUMMARY_FEAT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   vbox3->Add(featList, 1, wxEXPAND, 0);
 
+  /* Special Abilities List */
+  wxStaticText* abilityLabel = new wxStaticText(this, wxID_ANY, wxT("Special Abilities:"));
+  vbox3->Add(abilityLabel, 0, wxBOTTOM, 5);
+  wxListBox* abilityList = new wxListBox(this, SUMMARY_ABILITY_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  vbox3->Add(abilityList, 1, wxEXPAND, 0);
   hbox1->Add(vbox3, 1, wxEXPAND | wxRIGHT, 10);
 
-  /* Skill List */
-  wxStaticText* skillLabel = new wxStaticText(this, wxID_ANY, wxT("Skills:"));
-  vbox4->Add(skillLabel, 0, wxBOTTOM, 5);
-  wxListBox* skillList = new wxListBox(this, SUMMARY_SKILL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
-  //skillList->AppendString(wxString("Acrobatics: 4"));
-  vbox4->Add(skillList, 1, wxEXPAND, 0);
+  /* Spell Slot List */
+  wxStaticText* spellSlotLabel = new wxStaticText(this, wxID_ANY, wxT("Spell Slots:"));
+  vbox4->Add(spellSlotLabel, 0, wxBOTTOM, 5);
+  wxListBox* spellSlotList = new wxListBox(this, SUMMARY_SPELL_SLOT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  vbox4->Add(spellSlotList, 1, wxEXPAND, 0);
+
+  wxStaticText* spellListLabel = new wxStaticText(this, wxID_ANY, wxT("Spells Known:"));
+  vbox4->Add(spellListLabel, 0, wxBOTTOM, 5);
+  wxListBox* spellList = new wxListBox(this, SUMMARY_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  vbox4->Add(spellList, 3, wxEXPAND, 0);
 
   hbox1->Add(vbox4, 1, wxEXPAND, 0);
 
@@ -258,22 +280,21 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
   wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Show();
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID))->SetLabel(wxT("Race:"));
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_SIZE_LABEL_ID))->SetLabel(wxT("Size:"));
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_SPEED_LABEL_ID))->SetLabel(wxT("Speed:"));
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID))->SetLabel(wxT("Favored Class:"));
 
   wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Enable();
   wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Show();
 
-  wxWindow::FindWindowById(SUMMARY_TODO_LABEL_ID)->Show();
-  wxListBox* todoList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_TODO_LIST_ID));
-  todoList->Clear();
-  todoList->Show();
-  todoList->AppendString(wxString("Fill Out Character Info"));
-  todoList->AppendString(wxString("Pick Race"));
-  todoList->AppendString(wxString("Generate Ability Scores"));
-  todoList->AppendString(wxString("Pick Class"));
-  todoList->AppendString(wxString("Pick Skills"));
-  todoList->AppendString(wxString("Pick Feats"));
+  static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_SCORES_LIST_ID))->Clear();
+  static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SKILL_LIST_ID))->Clear();
+  static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_LIST_ID))->Clear();
+
+  this->PopulateClassLevelData();
+  this->PopulateFeatData();
+  this->PopulateSpellData();
 
   wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID)->GetParent()->GetSizer()->Layout();
 }
@@ -334,14 +355,6 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   wxWindow::FindWindowById(SUMMARY_GENDER_LABEL_ID)->SetLabel("Gender: " + gender);
   wxWindow::FindWindowById(SUMMARY_AGE_LABEL_ID)->SetLabel("Age: " + ageStr);
 
-  /* Remove item from the to do list*/
-  wxListBox* todoList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_TODO_LIST_ID));
-  int todoIdx = todoList->FindString("Fill Out Character Info");
-  if (todoIdx != wxNOT_FOUND)
-  {
-    todoList->Delete(todoIdx);
-  }
-
   /* disable and hide all of the input boxes */
   static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID))->Clear();
   wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID)->Hide();
@@ -390,4 +403,101 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Hide();
   wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Disable();
 
+}
+
+void SummaryPage::PopulateFavoredClassData(void)
+{
+  if (charPtr_->race().numFavoredClass() > 1)
+  {
+    wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Classes: " + wxString(charPtr_->getFavoredClassList()));
+  }
+  else
+  {
+    wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Class: " + wxString(charPtr_->getFavoredClassList()));
+  }
+}
+
+void SummaryPage::PopulateClassLevelData(void)
+{
+  wxListBox* classLevelList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_CLASS_LEVEL_LIST_ID));
+
+  classLevelList->Clear();
+  for (int classId = 0; classId < Pathfinder::NUMBER_CLASSES; classId++)
+  {
+    int classLvl = charPtr_->getClassLevel(classId);
+    if (classLvl > 0)
+    {
+      classLevelList->AppendString(Pathfinder::PFTable::get_class(classId).name() + " : Level " + std::to_string(classLvl));
+    }
+  }
+}
+
+void SummaryPage::PopulateRaceData(void)
+{
+  wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + charPtr_->race().raceName());
+  wxWindow::FindWindowById(SUMMARY_SIZE_LABEL_ID)->SetLabel("Size: " + charPtr_->race().charSize());
+  wxWindow::FindWindowById(SUMMARY_SPEED_LABEL_ID)->SetLabel("Speed: " + std::to_string(charPtr_->race().speed()));
+
+  if (charPtr_->race().numFavoredClass() > 1)
+  {
+    wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Classes: ");
+  }
+}
+
+void SummaryPage::PopulateAbilityScoreData(void)
+{
+  wxListBox* abilityScoreList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_SCORES_LIST_ID));
+
+  abilityScoreList->Clear();
+  for(int abilityScoreId = 0; abilityScoreId < Pathfinder::NUMBER_ABILITY_SCORES; abilityScoreId++)
+  {
+    Pathfinder::abilityScoreMarker ability = static_cast<Pathfinder::abilityScoreMarker>(abilityScoreId);
+    abilityScoreList->AppendString(wxString(Pathfinder::ABILITY_SCORE_ABBREVIATIONS[abilityScoreId]) + " = " + std::to_string(charPtr_->getAbilityScore(ability)) + " (Mod. " + std::to_string(charPtr_->abilityModifier(ability)) + ")");
+  }
+
+  /* add armor class */
+  /* add fortitude base save */
+  /* add reflex base save */
+  /* add will base save */
+  /* add bab */
+  /* add cmb */
+  /* add cmd */
+}
+
+void SummaryPage::PopulateSkillData(void)
+{
+  wxListBox* skillList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SKILL_LIST_ID));
+
+  skillList->Clear();
+  for (int skillId = 0; skillId < Pathfinder::NUMBER_SKILLS; skillId++)
+  {
+    skillList->AppendString(wxString(Pathfinder::skillStrings[skillId]) + " : " + std::to_string(charPtr_->effectiveSkillRank(static_cast<Pathfinder::skillMarker>(skillId))));
+  }
+}
+
+void SummaryPage::PopulateFeatData(void)
+{
+  wxListBox* featList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_FEAT_LIST_ID));
+
+  featList->Clear();
+  std::vector<int> feat_vec = charPtr_->getSelectedFeats();
+
+  for (std::vector<int>::iterator featIter = feat_vec.begin(); featIter != feat_vec.end(); ++featIter)
+  {
+    featList->AppendString(Pathfinder::PFTable::get_feat(*featIter).name());
+  }
+}
+
+void SummaryPage::PopulateSpellData(void)
+{
+  wxListBox* spellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SPELL_LIST_ID));
+
+  spellList->Clear();
+  std::vector<int> spell_vec = charPtr_->getKnownSpells();
+
+  for (std::vector<int>::iterator spellIter = spell_vec.begin(); spellIter != spell_vec.end(); ++spellIter)
+  {
+    Pathfinder::Spell currSpell = Pathfinder::PFTable::get_spell(*spellIter);
+    spellList->AppendString(wxString::Format(wxT("level %d spell: %s"), currSpell.SlaLvl(), currSpell.name()));
+  }
 }
