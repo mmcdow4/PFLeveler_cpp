@@ -454,14 +454,16 @@ void SummaryPage::PopulateAbilityScoreData(void)
     Pathfinder::abilityScoreMarker ability = static_cast<Pathfinder::abilityScoreMarker>(abilityScoreId);
     abilityScoreList->AppendString(wxString(Pathfinder::ABILITY_SCORE_ABBREVIATIONS[abilityScoreId]) + " = " + std::to_string(charPtr_->getAbilityScore(ability)) + " (Mod. " + std::to_string(charPtr_->abilityModifier(ability)) + ")");
   }
-
-  /* add armor class */
-  /* add fortitude base save */
-  /* add reflex base save */
-  /* add will base save */
-  /* add bab */
-  /* add cmb */
-  /* add cmd */
+  abilityScoreList->AppendString("Armor Class : " + std::to_string(charPtr_->getArmorClass()));
+  abilityScoreList->AppendString("Touch AC : " + std::to_string(charPtr_->getTouchArmorClass()));
+  abilityScoreList->AppendString("Flat-Footed AC : " + std::to_string(charPtr_->getFlatFootedArmorClass()));
+  abilityScoreList->AppendString("Initiative Mod : " + std::to_string(charPtr_->abilityModifier(Pathfinder::DEXTERITY)));
+  abilityScoreList->AppendString("Fortitude Save : " + std::to_string(charPtr_->getFortitudeSave()));
+  abilityScoreList->AppendString("Reflex Save : " + std::to_string(charPtr_->getReflexSave()));
+  abilityScoreList->AppendString("Will Save : " + std::to_string(charPtr_->getWillSave()));
+  abilityScoreList->AppendString("Base Attack Bonus : " + std::to_string(charPtr_->getBaseAttackBonus()));
+  abilityScoreList->AppendString("CMB : " + std::to_string(charPtr_->getCombatManeuverBonus()));
+  abilityScoreList->AppendString("CMD : " + std::to_string(charPtr_->getCombatManeuverDefense()));
 }
 
 void SummaryPage::PopulateSkillData(void)

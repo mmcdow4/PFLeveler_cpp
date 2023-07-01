@@ -623,17 +623,23 @@ void AbilityScorePage::UpdateFields()
   wxString sizeMod_str = " " + wxString::Format(wxT("%+i"), sizeMod) + " ";
 
   ///* TODO: From class retrieve BAB, Base fort/reflex/will saves */
-
+  int bab = charPtr_->getBaseAttackBonus();
+  int baseFort = charPtr_->getBaseFortitudeSave();
+  int baseRef = charPtr_->getBaseReflexSave();
+  int baseWill = charPtr_->getBaseWillSave();
+  wxString baseFortStr = " " + wxString::Format(wxT("%+i"), charPtr_->getBaseFortitudeSave()) + " ";
+  wxString baseRefStr = " " + wxString::Format(wxT("%+i"), charPtr_->getBaseReflexSave()) + " ";
+  wxString baseWillStr = " " + wxString::Format(wxT("%+i"), charPtr_->getBaseWillSave()) + " ";
   /* AC Equations: */
-  wxString ACTotStr = " " + wxString::Format(wxT("%i"), 10 + dexMod + sizeMod /* + dodgeMod + armorVal + shieldVal + natArmor + misc + deflect*/) + " ";
+  wxString ACTotStr = " " + wxString::Format(wxT("%i"), charPtr_->getArmorClass()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_TOTAL))->SetLabel(ACTotStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_SIZE_MOD))->SetLabel(sizeMod_str);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_DEX_MOD))->SetLabel(dexMod_str);
 
-  wxString touchACTotStr = " " + wxString::Format(wxT("%i"), 10 + dexMod + sizeMod /* + dodgeMod + misc + deflect*/) + " ";
+  wxString touchACTotStr = " " + wxString::Format(wxT("%i"), charPtr_->getTouchArmorClass()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_MISC_TOUCH_VALUE))->SetLabel(touchACTotStr);
 
-  wxString flatFoothACTotStr = " " + wxString::Format(wxT("%i"), 10 + sizeMod /* + armorVal + shieldVal + natArmor + misc + deflect*/) + " ";
+  wxString flatFoothACTotStr = " " + wxString::Format(wxT("%i"), charPtr_->getFlatFootedArmorClass()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_MISC_FLATFOOT_VALUE))->SetLabel(flatFoothACTotStr);
 
   wxString initModStr = " " + wxString::Format(wxT("%+i"), dexMod /* + misc */) + " ";
@@ -641,32 +647,37 @@ void AbilityScorePage::UpdateFields()
 
   /* Saving throw equations: */
   /* Fortitude (Constitution) */
-  wxString fortSaveTotStr = " " + wxString::Format(wxT("%+i"), /* fortSaveBase + magicMod + tempMod + miscMod +*/ conMod) + " ";
+  wxString fortSaveTotStr = " " + wxString::Format(wxT("%+i"), charPtr_->getFortitudeSave()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_TOTAL))->SetLabel(fortSaveTotStr);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_BASE))->SetLabel(baseFortStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_ABILITY_MOD))->SetLabel(conMod_str);
 
   /* Reflex (Dexterity) */
-  wxString refSaveTotStr = " " + wxString::Format(wxT("%+i"), /* refSaveBase + magicMod + tempMod + miscMod +*/ dexMod) + " ";
+  wxString refSaveTotStr = " " + wxString::Format(wxT("%+i"), charPtr_->getReflexSave()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_TOTAL + 1))->SetLabel(refSaveTotStr);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_BASE + 1))->SetLabel(baseRefStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_ABILITY_MOD + 1))->SetLabel(dexMod_str);
 
   /* Will (Wisdom) */
-  wxString willSaveTotStr = " " + wxString::Format(wxT("%+i"), /* willSaveBase + magicMod + tempMod + miscMod +*/ wisMod) + " ";
+  wxString willSaveTotStr = " " + wxString::Format(wxT("%+i"), charPtr_->getWillSave()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_TOTAL + 2))->SetLabel(willSaveTotStr);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_BASE + 2))->SetLabel(baseWillStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SAVES_ABILITY_MOD + 2))->SetLabel(wisMod_str);
 
   /* CMB Equation: */
-  wxString CmbTotStr = " " + wxString::Format(wxT("%+i"), /* bab +*/ strMod + sizeMod) + " ";
+  wxString CmbTotStr = " " + wxString::Format(wxT("%+i"), charPtr_->getCombatManeuverBonus()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMB_TOTAL))->SetLabel(CmbTotStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMB_STR))->SetLabel(strMod_str);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMB_SIZE))->SetLabel(sizeMod_str);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMB_BAB))->SetLabel(std::to_string(bab));
 
   /* CMD Equation: */
-  wxString CmdTotStr = " " + wxString::Format(wxT("%+i"), /* bab +*/ strMod + dexMod + sizeMod) + " ";
+  wxString CmdTotStr = " " + wxString::Format(wxT("%+i"), charPtr_->getCombatManeuverDefense()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMD_TOTAL))->SetLabel(CmdTotStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMD_STR))->SetLabel(strMod_str);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMD_DEX))->SetLabel(dexMod_str);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMD_SIZE))->SetLabel(sizeMod_str);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_COMBAT_CMD_BAB))->SetLabel(std::to_string(bab));
 
   this->Layout();
 }
