@@ -179,19 +179,10 @@ void SpellPage::GrantSpells(void)
   for (auto spellIter = knownSpells.begin(); spellIter != knownSpells.end(); ++spellIter)
   {
     wxString spell_name = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).SlaLvl(), Pathfinder::PFTable::get_spell(*spellIter).name());
-    wxMessageBox("Looking for spell [" + spell_name + "]");
     int loc = knownListBox->FindString(spell_name);
     if(loc == wxNOT_FOUND)
     {
-      wxMessageBox("Found it! Adding to list");
       knownListBox->AppendString(spell_name);
-      /* Now delete from the available list */
-      //availListBox->Delete(loc);
-      //availSpellIds_.erase(availSpellIds_.begin() + loc);
-    }
-    else
-    {
-      wxMessageBox("Nope, already know it");
     }
   }
 }
