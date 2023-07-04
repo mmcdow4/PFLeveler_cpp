@@ -43,6 +43,7 @@ public:
   void OnFinishedFeatureSelected(wxCommandEvent& evt);
   void SelectFeatureButtonPress(wxCommandEvent& evt);
   void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec, wxString catName);
+  void ResizeCallback(wxSizeEvent& evt);
 
   bool skillsLocked_;
   bool spellsLeft_;

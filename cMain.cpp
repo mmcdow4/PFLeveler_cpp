@@ -121,16 +121,16 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     if (classPage_->grantedSpells_)
     {
       spellPage_->GrantSpells();
-      summaryPage_->PopulateSpellData();
       classPage_->grantedSpells_ = false;
     }
     featPage_->UpdateFeatPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     if (classPage_->grantedFeats_)
     {
       featPage_->GrantFeats();
-      summaryPage_->PopulateFeatData();
       classPage_->grantedFeats_ = false;
     }
+    summaryPage_->PopulateSpellData();
+    summaryPage_->PopulateFeatData();
     break;
   case CLASS_FEATURE_BUTTON_ID:
     if (classPage_->grantedSpells_)

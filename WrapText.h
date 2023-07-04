@@ -21,8 +21,16 @@ public:
   wxString UpdateText(const wxString& text)
   {
     m_wrapped.clear();
+    m_text.clear();
+    m_text = text;
     Wrap(m_win, text, m_widthMax);
     return GetWrapped();
+  }
+
+  wxString UpdateWidth(int widthMax)
+  {
+    m_widthMax = widthMax;
+    return(UpdateText(m_text));
   }
 
 protected:
@@ -36,6 +44,7 @@ protected:
   }
 private:
   wxWindow* m_win;
+  wxString m_text;
   wxString m_wrapped;
   int m_widthMax;
 };
