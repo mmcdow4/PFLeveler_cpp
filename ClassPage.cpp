@@ -340,7 +340,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
       charPtr_->addClassAbility(abilityIter->id());
       static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
       if (abilityIter->spellId() >= 0) {
-        charPtr_->learnSpell(abilityIter->spellId());
+        charPtr_->learnSpell(classIdx, abilityIter->spellId());
         grantedSpells_ = true;
       }
       else if (abilityIter->featId() >= 0) {
@@ -544,7 +544,7 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
             charPtr_->addClassAbility(abilityVec[abilityIdx].id());
             abilityListBox->AppendString(abilityVec[abilityIdx].name());
             if (abilityVec[abilityIdx].spellId() >= 0) {
-              charPtr_->learnSpell(abilityVec[abilityIdx].spellId());
+              charPtr_->learnSpell(classIdx, abilityVec[abilityIdx].spellId());
               grantedSpells_ = true;
             }
             else if (abilityVec[abilityIdx].featId() >= 0) {

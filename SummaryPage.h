@@ -45,6 +45,7 @@
 #define SUMMARY_ABILITY_LIST_ID 1031
 #define SUMMARY_SPELL_SLOT_LIST_ID 1032
 #define SUMMARY_SPELL_LIST_ID 1033
+#define SUMMARY_CLASS_DROPDOWN_ID 1034
 
 class SummaryPage : public wxPanel
 {
@@ -56,6 +57,7 @@ public:
   void ResetPage(Pathfinder::Character* currChar);
 
   void OnCharLocked(wxCommandEvent& evt);
+  void OnClassSelected(wxCommandEvent& evt);
 
   void PopulateFavoredClassData(void);
   void PopulateClassLevelData(void);
@@ -66,6 +68,8 @@ public:
   void PopulateSpellData(void);
 private:
   Pathfinder::Character* charPtr_ = NULL;
+  std::map<wxString, int> knownSpellsTable_;
+  std::vector<int> classList_;
 };
 
 #endif

@@ -22,6 +22,7 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   this->SetBackgroundColour(0xE5E5E5);
 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* will contain the various vertical sizers */
+  wxBoxSizer* hbox2 = new wxBoxSizer(wxHORIZONTAL); /* class dropdown and label */
   wxBoxSizer* vbox1 = new wxBoxSizer(wxVERTICAL); /* character summary and class levels */
   wxBoxSizer* vbox2 = new wxBoxSizer(wxVERTICAL); /* Ability scores and skill bonuses */
   wxBoxSizer* vbox3 = new wxBoxSizer(wxVERTICAL); /* feats and abilities */
@@ -214,15 +215,23 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   vbox3->Add(abilityList, 1, wxEXPAND, 0);
   hbox1->Add(vbox3, 1, wxEXPAND | wxRIGHT, 10);
 
+  /* Class Selection Drop Down */
+  wxStaticText* classDropdownLabel = new wxStaticText(this, wxID_ANY, wxT("Class:"));
+  hbox2->Add(classDropdownLabel, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 5);
+  wxChoice* classDropDown = new wxChoice(this, SUMMARY_CLASS_DROPDOWN_ID, wxDefaultPosition, wxDefaultSize, 0);
+  classDropDown->Bind(wxEVT_CHOICE, &SummaryPage::OnClassSelected, this);
+  hbox2->Add(classDropDown, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 5);
+  vbox4->Add(hbox2, 0, wxALIGN_CENTER, 5);
   /* Spell Slot List */
   wxStaticText* spellSlotLabel = new wxStaticText(this, wxID_ANY, wxT("Spell Slots:"));
   vbox4->Add(spellSlotLabel, 0, wxBOTTOM, 5);
   wxListBox* spellSlotList = new wxListBox(this, SUMMARY_SPELL_SLOT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   vbox4->Add(spellSlotList, 1, wxEXPAND, 0);
 
+  /* Spell List */
   wxStaticText* spellListLabel = new wxStaticText(this, wxID_ANY, wxT("Spells Known:"));
   vbox4->Add(spellListLabel, 0, wxBOTTOM, 5);
-  wxListBox* spellList = new wxListBox(this, SUMMARY_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  wxListBox* spellList = new wxListBox(this, SUMMARY_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_SORT | wxLB_NEEDED_SB);
   vbox4->Add(spellList, 3, wxEXPAND, 0);
 
   hbox1->Add(vbox4, 1, wxEXPAND, 0);
@@ -233,6 +242,9 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
 void SummaryPage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
+
+  knownSpellsTable_.clear();
+  classList_.clear();
 
   /* Reset summary info text boxes, enable and show input boxes for these fields */
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID))->SetLabel(wxT("Character Name:"));
@@ -291,6 +303,8 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
   static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_SCORES_LIST_ID))->Clear();
   static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SKILL_LIST_ID))->Clear();
   static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_LIST_ID))->Clear();
+
+  static_cast<wxChoice*>(wxWindow::FindWindowById(SUMMARY_CLASS_DROPDOWN_ID))->Clear();
 
   this->PopulateClassLevelData();
   this->PopulateFeatData();
@@ -490,16 +504,54 @@ void SummaryPage::PopulateFeatData(void)
   }
 }
 
+void SummaryPage::OnClassSelected(wxCommandEvent& evt)
+{
+  this->PopulateSpellData();
+}
+
 void SummaryPage::PopulateSpellData(void)
 {
   wxListBox* spellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SPELL_LIST_ID));
+  wxListBox* spellSlotList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SPELL_SLOT_LIST_ID));
+  wxChoice* classDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(SUMMARY_CLASS_DROPDOWN_ID));
+  int classChoice = classDropDown->GetSelection();
 
-  spellList->Clear();
-  std::vector<int> spell_vec = charPtr_->getKnownSpells();
-
-  for (std::vector<int>::iterator spellIter = spell_vec.begin(); spellIter != spell_vec.end(); ++spellIter)
+  for(int classId = 0; classId < Pathfinder::NUMBER_CLASSES; classId++)
   {
-    Pathfinder::Spell currSpell = Pathfinder::PFTable::get_spell(*spellIter);
-    spellList->AppendString(wxString::Format(wxT("level %d spell: %s"), currSpell.SlaLvl(), currSpell.name()));
+    std::vector<int> spell_vec = charPtr_->getKnownSpells(classId);
+    if (!spell_vec.empty())
+    {
+      if(std::find(classList_.begin(), classList_.end(), classId) == classList_.end())
+      {
+        /* First time this class has spells, add it to the list */
+        classList_.push_back(classId);
+        classDropDown->AppendString(wxString(Pathfinder::CLASS_NAMES[classId]));
+      }
+      else if (classChoice != wxNOT_FOUND && classList_[classChoice] == classId)
+      {
+        /* We have this class selected - update the spell list */
+        spellList->Clear();
+        spellSlotList->Clear();
+        knownSpellsTable_.clear();
+        int classLevel = charPtr_->getClassLevel(classId);
+        for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
+        {
+          /* TODO:Add the relevant spell slot modifier here! */
+          int slotCount = charPtr_->getNumSpellSlots(classId, spellLevel);//Pathfinder::PFTable::get_class(classId).levelItem(classLevel, static_cast<Pathfinder::lvlUpMarker>(Pathfinder::SPELLS_PER_DAY_0 + spellLevel));
+          if (slotCount > 0)
+          {
+            spellSlotList->AppendString(wxString::Format(wxT("%d level %d spell slots"), slotCount, spellLevel));
+          }
+        }
+
+        for (std::vector<int>::iterator spellIter = spell_vec.begin(); spellIter != spell_vec.end(); ++spellIter)
+        {
+          Pathfinder::Spell currSpell = Pathfinder::PFTable::get_spell(*spellIter);
+          wxString spellName = wxString::Format(wxT("level %d spell: %s"), currSpell.requiredClassLevel(classId), currSpell.name());
+          spellList->AppendString(spellName);
+          knownSpellsTable_.emplace(spellName, *spellIter);
+        }
+      }
+    }
   }
 }
