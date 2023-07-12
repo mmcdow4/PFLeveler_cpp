@@ -118,6 +118,8 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Bind(wxEVT_CHOICE, &AbilityScorePage::OnAbilityScoreSelected, this);
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Bind(wxEVT_TEXT, &AbilityScorePage::OnTextInput, this);
     wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Bind(wxEVT_RADIOBUTTON, &AbilityScorePage::OnRacialRadioSelected, this);
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &AbilityScorePage::OnPlusButtonPress, this);
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &AbilityScorePage::OnMinusButtonPress, this);
   }
   vbox1->Add(scoresGrid, 1, wxEXPAND);
 
@@ -314,6 +316,8 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
   charPtr_ = currChar;
   currChar->abilityScoresSet(false);
   flexibleApplied_ = false;
+  newPoint_ = false;
+  newPointUsed_ = false;
 
   /* turn on the method dropdown, select button, and label text*/
   wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->Show();
@@ -321,7 +325,7 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
   wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Show();
   wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Enable();
   wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Show();
-  wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Enable();
+  wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Disable();
   wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Show();
 
   /* reset all of the ability score page text fields*/
@@ -539,11 +543,11 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
     wxMessageBox("You must select a race before locking ability scores.");
     return;
   }
-  else if (wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN)->IsEnabled() == false && wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT)->IsEnabled() == false)
-  {
-    wxMessageBox("You must assign ability scores.");
-    return;
-  }
+  //else if (wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN)->IsEnabled() == false && wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT)->IsEnabled() == false)
+  //{
+  //  wxMessageBox("You must assign ability scores.");
+  //  return;
+  //}
   else if ((prevSelections_[0] == 0) || (prevSelections_[1] == 0) || (prevSelections_[2] == 0) ||
     (prevSelections_[3] == 0) || (prevSelections_[4] == 0) || (prevSelections_[5] == 0))/* if any ability scores are unassigned */
   {
@@ -553,6 +557,11 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
   else if (charPtr_->race().abilityOffset(Pathfinder::FLEXIBLE_ABILITY_SCORE_BONUS) > 0 && flexibleApplied_ == false)
   {
     wxMessageBox("You must apply your flexible ability score bonus before locking ability scores.");
+    return;
+  }
+  else if (newPoint_ && !newPointUsed_)
+  {
+    wxMessageBox("You must apply your new ability score point");
     return;
   }
 
@@ -580,6 +589,10 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
     currTextInput->Hide();
     static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Disable();
     static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Hide();
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Disable();
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Hide();
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Disable();
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Hide();
   }
 
   wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Disable();
@@ -727,4 +740,69 @@ void AbilityScorePage::populateScorePool(int modeIdx)
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(scoreText);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->Show();
+
+  static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Enable();
+  static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Show();
+}
+
+
+void AbilityScorePage::UpdateAbilityScorePage(int classId)
+{
+  int classLvl = charPtr_->getClassLevel(classId);
+  if (Pathfinder::PFTable::get_class(classId).levelItem(classLvl, Pathfinder::ABILITY_SCORE_POINT))
+  {
+    charPtr_->abilityScoresSet(false);
+    newPoint_ = true;
+    newPointUsed_ = false;
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Enable();
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Show();
+    /* Show the plus and minus buttons, unlock the plus, add 1 to number of abiliity points left */
+    for (size_t abilityIdx = 0; abilityIdx < static_cast<size_t>(Pathfinder::NUMBER_ABILITY_SCORES); abilityIdx++)
+    {
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Enable();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Show();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Disable();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Show();
+    }
+    /* Add callbacks for plus and minus functions, you know what to do*/
+  }
+  UpdateFields();
+}
+
+void AbilityScorePage::OnPlusButtonPress(wxCommandEvent& evt)
+{
+  Pathfinder::abilityScoreMarker abilityIdx = static_cast<Pathfinder::abilityScoreMarker>(evt.GetId() - ABSCR_ATTRIBUTE_PLUS_BTN);
+  
+  if (newPoint_ && !newPointUsed_)
+  {
+    charPtr_->incrementAbilityScore(abilityIdx);
+    newPointUsed_ = true;
+
+    for (size_t abilityIdx = 0; abilityIdx < static_cast<size_t>(Pathfinder::NUMBER_ABILITY_SCORES); abilityIdx++)
+    {
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Disable();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Enable();
+    }
+
+    UpdateFields();
+  }
+}
+
+void AbilityScorePage::OnMinusButtonPress(wxCommandEvent& evt)
+{
+  Pathfinder::abilityScoreMarker abilityIdx = static_cast<Pathfinder::abilityScoreMarker>(evt.GetId() - ABSCR_ATTRIBUTE_MINUS_BTN);
+
+  if (newPoint_ && newPointUsed_)
+  {
+    charPtr_->decrementAbilityScore(abilityIdx);
+    newPointUsed_ = false;
+
+    for (size_t abilityIdx = 0; abilityIdx < static_cast<size_t>(Pathfinder::NUMBER_ABILITY_SCORES); abilityIdx++)
+    {
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Enable();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Disable();
+    }
+
+    UpdateFields();
+  }
 }

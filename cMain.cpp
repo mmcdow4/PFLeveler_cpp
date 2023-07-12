@@ -114,7 +114,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     break;
   case CLASS_LEVELUP_BUTTON_ID:
     /* Propagate class levels to the summary page */
-    abilityScorePage_->UpdateFields();
+    abilityScorePage_->UpdateAbilityScorePage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     skillPage_->UpdateSkillPage();
     classPage_->spellsLeft_ = spellPage_->UpdateSpellPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
     summaryPage_->PopulateClassLevelData();

@@ -86,14 +86,18 @@ public:
   void OnRacialRadioSelected(wxCommandEvent& evt);
   void OnAttributesLocked(wxCommandEvent& evt);
   void OnTextInput(wxCommandEvent& evt);
+  void OnPlusButtonPress(wxCommandEvent& evt);
+  void OnMinusButtonPress(wxCommandEvent& evt);
 
   void ApplyRacialBonuses();
   void UpdateFields();
-
+  void UpdateAbilityScorePage(int classId);
 private:
   void populateScorePool(int modeIdx);
   int prevSelections_[Pathfinder::NUMBER_ABILITY_SCORES] = { 0, 0, 0, 0, 0, 0 };
   bool flexibleApplied_ = false;
+  bool newPoint_ = false;
+  bool newPointUsed_ = false;
 
   Pathfinder::Character* charPtr_ = NULL;
 };
