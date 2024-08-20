@@ -246,66 +246,124 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
   knownSpellsTable_.clear();
   classList_.clear();
 
-  /* Reset summary info text boxes, enable and show input boxes for these fields */
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID))->SetLabel(wxT("Character Name:"));
-  wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID)->Show();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_PLAYER_LABEL_ID))->SetLabel(wxT("Player Name:"));
-  wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Show();
+  if (charPtr_->getCharacterLevel() > 0)
+  {
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID))->SetLabel(wxT("Character Name: " + charPtr_->name()));
+    wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_ALIGNMENT_LABEL_ID))->SetLabel(wxT("Alignment:"));
-  wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_PLAYER_LABEL_ID))->SetLabel(wxT("Player Name: " + charPtr_->player()));
+    wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HEIGHT_LABEL_ID))->SetLabel(wxT("Height:"));
-  wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Show();
+    int alignmentIdx = 3 * static_cast<int>(charPtr_->geAlignment()) + static_cast<int>(charPtr_->lcAlignment());
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_ALIGNMENT_LABEL_ID))->SetLabel(wxT("Alignment: " + wxString(Pathfinder::alignmentStrings[alignmentIdx])));
+    wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_WEIGHT_LABEL_ID))->SetLabel(wxT("Weight:"));
-  wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HEIGHT_LABEL_ID))->SetLabel(wxT("Height: " + charPtr_->height()));
+    wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HAIR_LABEL_ID))->SetLabel(wxT("Hair:"));
-  wxWindow::FindWindowById(SUMMARY_HAIR_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_HAIR_INPUT_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_WEIGHT_LABEL_ID))->SetLabel(wxT("Weight: " + charPtr_->weight()));
+    wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_EYES_LABEL_ID))->SetLabel(wxT("Eyes:"));
-  wxWindow::FindWindowById(SUMMARY_EYES_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_EYES_INPUT_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HAIR_LABEL_ID))->SetLabel(wxT("Hair: " + charPtr_->hair()));
+    wxWindow::FindWindowById(SUMMARY_HAIR_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_HAIR_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_DEITY_LABEL_ID))->SetLabel(wxT("Deity:"));
-  wxWindow::FindWindowById(SUMMARY_DEITY_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_DEITY_INPUT_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_EYES_LABEL_ID))->SetLabel(wxT("Eyes: " + charPtr_->eyes()));
+    wxWindow::FindWindowById(SUMMARY_EYES_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_EYES_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HOMELAND_LABEL_ID))->SetLabel(wxT("Homeland:"));
-  wxWindow::FindWindowById(SUMMARY_HOMELAND_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_HOMELAND_INPUT_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_DEITY_LABEL_ID))->SetLabel(wxT("Deity: " + charPtr_->deity()));
+    wxWindow::FindWindowById(SUMMARY_DEITY_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_DEITY_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_GENDER_LABEL_ID))->SetLabel(wxT("Gender:"));
-  wxWindow::FindWindowById(SUMMARY_GENDER_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_GENDER_INPUT_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HOMELAND_LABEL_ID))->SetLabel(wxT("Homeland: " + charPtr_->homeland()));
+    wxWindow::FindWindowById(SUMMARY_HOMELAND_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_HOMELAND_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_AGE_LABEL_ID))->SetLabel(wxT("Age:"));
-  wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Show();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_GENDER_LABEL_ID))->SetLabel(wxT("Gender: " + charPtr_->gender()));
+    wxWindow::FindWindowById(SUMMARY_GENDER_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_GENDER_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID))->SetLabel(wxT("Race:"));
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_SIZE_LABEL_ID))->SetLabel(wxT("Size:"));
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_SPEED_LABEL_ID))->SetLabel(wxT("Speed:"));
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_AGE_LABEL_ID))->SetLabel(wxT("Age: " + charPtr_->age()));
+    wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Hide();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID))->SetLabel(wxT("Favored Class:"));
+    wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Disable();
+    wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Hide();
 
-  wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Enable();
-  wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Show();
+    this->PopulateSkillData();
+    this->PopulateAbilityScoreData();
+    this->PopulateFavoredClassData();
+    this->PopulateRaceData();
+  }
+  else
+  {
+    /* Reset summary info text boxes, enable and show input boxes for these fields */
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID))->SetLabel(wxT("Character Name:"));
+    wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID)->Show();
 
-  static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_SCORES_LIST_ID))->Clear();
-  static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SKILL_LIST_ID))->Clear();
-  static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_LIST_ID))->Clear();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_PLAYER_LABEL_ID))->SetLabel(wxT("Player Name:"));
+    wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Show();
 
-  static_cast<wxChoice*>(wxWindow::FindWindowById(SUMMARY_CLASS_DROPDOWN_ID))->Clear();
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_ALIGNMENT_LABEL_ID))->SetLabel(wxT("Alignment:"));
+    wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Show();
 
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HEIGHT_LABEL_ID))->SetLabel(wxT("Height:"));
+    wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_WEIGHT_LABEL_ID))->SetLabel(wxT("Weight:"));
+    wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HAIR_LABEL_ID))->SetLabel(wxT("Hair:"));
+    wxWindow::FindWindowById(SUMMARY_HAIR_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_HAIR_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_EYES_LABEL_ID))->SetLabel(wxT("Eyes:"));
+    wxWindow::FindWindowById(SUMMARY_EYES_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_EYES_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_DEITY_LABEL_ID))->SetLabel(wxT("Deity:"));
+    wxWindow::FindWindowById(SUMMARY_DEITY_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_DEITY_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_HOMELAND_LABEL_ID))->SetLabel(wxT("Homeland:"));
+    wxWindow::FindWindowById(SUMMARY_HOMELAND_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_HOMELAND_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_GENDER_LABEL_ID))->SetLabel(wxT("Gender:"));
+    wxWindow::FindWindowById(SUMMARY_GENDER_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_GENDER_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_AGE_LABEL_ID))->SetLabel(wxT("Age:"));
+    wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Show();
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID))->SetLabel(wxT("Race:"));
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_SIZE_LABEL_ID))->SetLabel(wxT("Size:"));
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_SPEED_LABEL_ID))->SetLabel(wxT("Speed:"));
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID))->SetLabel(wxT("Favored Class:"));
+
+    wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Enable();
+    wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Show();
+
+    static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_SCORES_LIST_ID))->Clear();
+    static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SKILL_LIST_ID))->Clear();
+    static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_LIST_ID))->Clear();
+
+    static_cast<wxChoice*>(wxWindow::FindWindowById(SUMMARY_CLASS_DROPDOWN_ID))->Clear();
+  }
   this->PopulateClassLevelData();
   this->PopulateFeatData();
   this->PopulateSpellData();
@@ -326,11 +384,11 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   wxString deity = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_DEITY_INPUT_ID))->GetValue();
   wxString homeland = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_HOMELAND_INPUT_ID))->GetValue();
   wxString gender = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_GENDER_INPUT_ID))->GetValue();
-  wxString ageStr = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID))->GetValue();
+  wxString age = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID))->GetValue();
 
   /* Verify that every box has been filled */
   if (name.empty() || playerName.empty() || alignmentIdx == wxNOT_FOUND || height.empty() || weight.empty() ||
-    hair.empty() || eyes.empty() || deity.empty() || homeland.empty() || gender.empty() || ageStr.empty())
+    hair.empty() || eyes.empty() || deity.empty() || homeland.empty() || gender.empty() || age.empty())
   {
     wxMessageBox("Finish filling out the character summary first.");
     return;
@@ -339,8 +397,6 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   /* Convert the non-string items */
   Pathfinder::GE_Alignment ge = static_cast<Pathfinder::GE_Alignment>(alignmentIdx % 3);
   Pathfinder::LC_Alignment lc = static_cast<Pathfinder::LC_Alignment>(floor(alignmentIdx / 3));
-  long age;
-  ageStr.ToLong(&age);
 
   /* Save the values to the character class */
   charPtr_->name(std::string(name.mb_str()));
@@ -350,11 +406,11 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   charPtr_->height(std::string(height.mb_str()));
   charPtr_->weight(std::string(weight.mb_str()));
   charPtr_->hair(std::string(hair.mb_str()));
-  charPtr_->hair(std::string(eyes.mb_str()));
-  charPtr_->hair(std::string(deity.mb_str()));
-  charPtr_->hair(std::string(homeland.mb_str()));
-  charPtr_->hair(std::string(gender.mb_str()));
-  charPtr_->age(age);
+  charPtr_->eyes(std::string(eyes.mb_str()));
+  charPtr_->deity(std::string(deity.mb_str()));
+  charPtr_->homeland(std::string(homeland.mb_str()));
+  charPtr_->gender(std::string(gender.mb_str()));
+  charPtr_->age(std::string(age.mb_str()));
 
   /* Update the text boxes */
   wxWindow::FindWindowById(SUMMARY_NAME_LABEL_ID)->SetLabel("Character Name: " + name);
@@ -367,7 +423,7 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   wxWindow::FindWindowById(SUMMARY_DEITY_LABEL_ID)->SetLabel("Deity: " + deity);
   wxWindow::FindWindowById(SUMMARY_HOMELAND_LABEL_ID)->SetLabel("Homeland: " + homeland);
   wxWindow::FindWindowById(SUMMARY_GENDER_LABEL_ID)->SetLabel("Gender: " + gender);
-  wxWindow::FindWindowById(SUMMARY_AGE_LABEL_ID)->SetLabel("Age: " + ageStr);
+  wxWindow::FindWindowById(SUMMARY_AGE_LABEL_ID)->SetLabel("Age: " + age);
 
   /* disable and hide all of the input boxes */
   static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SUMMARY_NAME_INPUT_ID))->Clear();

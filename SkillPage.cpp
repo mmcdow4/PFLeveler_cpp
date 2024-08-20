@@ -111,12 +111,13 @@ void SkillPage::ResetPage(Pathfinder::Character* currChar)
 
   for (int skillIdx = 0; skillIdx < Pathfinder::NUMBER_SKILLS; skillIdx++)
   {
-    wxWindow::FindWindowById(SKILL_TOTAL_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetLabel(" 0 ");
-    wxWindow::FindWindowById(SKILL_ABILITY_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetLabel(" 0 ");
-    wxWindow::FindWindowById(SKILL_RANK_VALUE_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetLabel(" 0 ");
+    Pathfinder::skillMarker currSkill = static_cast<Pathfinder::skillMarker>(skillIdx);
+    wxWindow::FindWindowById(SKILL_TOTAL_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetLabel(wxString::Format(wxT(" %d "), charPtr_->effectiveSkillRank(currSkill)));
+    wxWindow::FindWindowById(SKILL_ABILITY_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetLabel(wxString::Format(wxT(" %d "), charPtr_->abilityModifier(Pathfinder::SKILL_BASE_ABILITIES[skillIdx])));
+    wxWindow::FindWindowById(SKILL_RANK_VALUE_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetLabel(wxString::Format(wxT(" %d "), charPtr_->rawSkillRank(currSkill)));
     wxWindow::FindWindowById(SKILL_MISC_MOD_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS)->SetLabel(" 0 ");
 
-    static_cast<wxCheckBox*>(wxWindow::FindWindowById(SKILL_IS_CLASS_SKILL_BOX_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS))->SetValue(false);
+    static_cast<wxCheckBox*>(wxWindow::FindWindowById(SKILL_IS_CLASS_SKILL_BOX_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS))->SetValue(charPtr_->isClassSkill(currSkill));
     static_cast<wxButton*>(wxWindow::FindWindowById(SKILL_PLUS_RANK_BUTTON_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS))->Show();
     static_cast<wxButton*>(wxWindow::FindWindowById(SKILL_MINUS_RANK_BUTTON_ID + skillIdx * NUMBER_SKILL_GRID_COLUMNS))->Show();
   }

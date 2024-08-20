@@ -11,6 +11,7 @@
 #include <wx/window.h>
 #include <wx/stattext.h>
 #include <wx/notebook.h>
+#include <wx/tooltip.h>
 
 /* Pathfinder includes */
 #include <pf_include/PFTable.h>
@@ -171,6 +172,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   this->featureNames_.clear();
   this->featureDescriptions_.clear();
   this->choicesMade_.clear();
+  this->toolTip_ = NULL;
 
   /* feature description */
   wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->Show();
@@ -186,8 +188,6 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
 
   /* class abilities description */
   wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->Show();
-
-  this->Layout();
 
   if (classDescWrapper_ != NULL)
   {
@@ -205,6 +205,58 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   
   //wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID)->GetSize(&maxWidth, NULL);
   abilityDescWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(CLASS_ABILITIES_DESCRIPTION_ID), "", maxWidth);
+
+  if (charPtr_->getCharacterLevel() > 0)
+  {
+    /* Imported character has some class levels already, import that data */
+
+    /* level up button */
+    wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Show();
+    wxWindow::FindWindowById(CLASS_LEVELUP_BUTTON_ID)->Enable();
+
+    /* favored class button */
+    wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Hide();
+    wxWindow::FindWindowById(CLASS_FAVORED_CLASS_BUTTON_ID)->Disable();
+
+    std::vector<int> imported_abilities = charPtr_->getClassAbilities();
+    std::vector<int> imported_features = charPtr_->getClassFeatures();
+    std::vector<int> imported_choices = charPtr_->getClassChoices();
+    /* Go through the imported character's abilities and add them */
+    for (std::vector<int>::iterator iter = imported_abilities.begin(); iter != imported_abilities.end(); ++iter)
+    {
+      Pathfinder::ClassAbility ability = Pathfinder::PFTable::get_class_ability(*iter);
+      abilities_.push_back(ability);
+      static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(ability.name());
+    }
+    
+    /* Go through the imported character's class features and add them */
+    wxListBox* doneFeatList = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID));
+    for (std::vector<int>::iterator iter = imported_features.begin(); iter != imported_features.end(); ++iter)
+    {
+      Pathfinder::ClassFeature feature = Pathfinder::PFTable::get_class_feature(*iter);
+      
+      featureNames_.push_back(feature.name());
+      featureDescriptions_.push_back(feature.desc());
+      doneFeatList->AppendString(feature.name());
+    }
+
+    /* Go through the imported character's class choices and add them */
+    for (std::vector<int>::iterator iter = imported_choices.begin(); iter != imported_choices.end(); ++iter)
+    {
+      Pathfinder::ClassChoice choice = Pathfinder::PFTable::get_class_choice(*iter);
+      
+      wxString featName = Pathfinder::PFTable::get_class_choice_category(choice) + ": " + choice.name();
+      
+      featureNames_.push_back(featName);
+      featureDescriptions_.push_back(choice.desc());
+      doneFeatList->AppendString(featName);
+      
+      //Record this choice
+      choicesMade_.insert(choice.id());
+    }
+  }
+
+  this->Layout();
 }
 
 void ClassPage::OnFavoredClassAdded(wxCommandEvent& evt)
@@ -238,50 +290,61 @@ void ClassPage::OnFavoredClassAdded(wxCommandEvent& evt)
   evt.Skip();
 }
 
+bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
+{
+  if (classIdx < 0)
+  {
+    errMsg = "First select a class from the dropdown menu.";
+    return false;
+  }
+  else if (charPtr_->race().id() == -1)// if Race hasn't been set yet
+  {
+    errMsg ="Race selection is not finalized yet.";
+    return false;
+  }
+  else if (!charPtr_->abilityScoresSet()) // or if the ability scores haven't been set yet
+  {
+    errMsg ="Ability scores are not finalized yet.";
+    return false;
+  }
+  else if (charPtr_->numFavoredClassLeft() > 0)
+  {
+    errMsg ="Favored class(es) are not finalized yet.";
+    return false;
+  }
+  else if (!skillsLocked_)
+  {
+    errMsg ="Skill points have not been assigned yet.";
+    return false;
+  }
+  else if (spellsLeft_)
+  {
+    errMsg ="You have not finished learning spells yet.";
+    return false;
+  }
+  else if (featsLeft_)
+  {
+    errMsg ="You have not finished selecting feats yet.";
+    return false;
+  }
+  else if (!todoFeatures_.empty())
+  {
+    errMsg ="You have not finished making choices for your class features yet.";
+    return false;
+  }
+
+  return true;
+}
 void ClassPage::OnLevelAdded(wxCommandEvent& evt)
 {
 
   int classIdx = static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection();
 
   /* verify that the necessary other information has been decided */
-  if (classIdx < 0)
+  std::string errMsg = "";
+  if (!this->IsReadyForLevel(classIdx, errMsg))
   {
-    wxMessageBox("First select a class from the dropdown menu.");
-    return;
-  }
-  else if (charPtr_->race().id() == -1)// if Race hasn't been set yet
-  {
-    wxMessageBox("You need to finalize your race selection before adding a class level.");
-    return;
-  }
-  else if (!charPtr_->abilityScoresSet()) // or if the ability scores haven't been set yet
-  {
-    wxMessageBox("You need to finalize your ability scores before adding a class level.");
-    return;
-  }
-  else if (charPtr_->numFavoredClassLeft() > 0)
-  {
-    wxMessageBox("You need to finish selecting your favored class(es) before adding a class level.");
-    return;
-  }
-  else if (!skillsLocked_)
-  {
-    wxMessageBox("You need to finish assigning skill points before adding a class level.");
-    return;
-  }
-  else if (spellsLeft_)
-  {
-    wxMessageBox("You need to finish learning spells before adding a class level.");
-    return;
-  }
-  else if (featsLeft_)
-  {
-    wxMessageBox("You need to finish selecting feats before adding a class level.");
-    return;
-  }
-  else if (!todoFeatures_.empty())
-  {
-    wxMessageBox("You need to finish making choices for your class features before adding a class level.");
+    wxMessageBox("Unable to level up yet: " + errMsg);
     return;
   }
 
@@ -322,6 +385,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     {
       featureNames_.push_back(featIter->name());
       featureDescriptions_.push_back(featIter->desc());
+      charPtr_->addClassFeature(featIter->id());
       doneFeatList->AppendString(featIter->name());
     }
   }
@@ -362,7 +426,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   if (charPtr_->isFavoredClass(static_cast<Pathfinder::classMarker>(classIdx)))
   {
     /* Do favored class logic here */
-    wxMessageDialog choiceWindow(this, "You have added a level to a favored class, select either +1 hit point or +1 skill rank.", "caption string", wxYES_NO | wxCENTRE | wxSTAY_ON_TOP);
+    wxMessageDialog choiceWindow(this, "You have added a level to a favored class, select either +1w hit point or +1 skill rank.", "caption string", wxYES_NO | wxCENTRE | wxSTAY_ON_TOP);
     choiceWindow.SetYesNoLabels("Bonus Hit Point", "Bonus Skill Rank");
     int bonus_selection = choiceWindow.ShowModal();
     if (bonus_selection == wxID_YES)
@@ -483,6 +547,7 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
 
 void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice> &choiceVec, wxString catName)
 {
+  choiceDescriptions_.clear();
   wxListBox* featListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID));
   wxListBox* abilityListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID));
 
@@ -493,6 +558,7 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
     if(choiceIter->lvlReq() <= classLvl && choicesMade_.count(choiceIter->id()) < choiceIter->maxNumSelections())
     {
       choiceStrings.Add(choiceIter->name());
+      choiceDescriptions_.push_back(choiceIter->desc());
       ++choiceIter;
     }
     else
@@ -507,7 +573,10 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
   {
     wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
       "Make selection " + wxString::Format(wxT("%d"), numChoicesMade + 1) + " out of " + wxString::Format(wxT("%d"), numChoices),
-      "caption string", choiceStrings, NULL, wxOK);
+      "caption string", choiceStrings, NULL, wxOK | wxCANCEL);
+    /*choiceDialog->Bind(wxEVT_ENTER_WINDOW, &ClassPage::MouseOverEvent, this);
+    choiceDialog->Bind(wxEVT_LEAVE_WINDOW, &ClassPage::MouseOverEvent, this);
+    choiceDialog->Bind(wxEVT_MOTION, &ClassPage::MouseOverEvent, this);*/
     int choiceReturn = choiceDialog->ShowModal();
     int choiceIdx = choiceDialog->GetSelection();
 
@@ -582,4 +651,23 @@ void ClassPage::ResizeCallback(wxSizeEvent& evt)
     classDescBox->SetLabel(abilityDescWrapper_->UpdateWidth(maxWidth));
   }
   evt.Skip();
+}
+
+void ClassPage::MouseOverEvent(wxMouseEvent& evt)
+{
+  if(evt.Entering())
+  {
+    int item = HitTest(evt.GetPosition());
+    toolTip_ = new wxToolTip(choiceDescriptions_[item]);
+  }
+  else if (evt.Moving())
+  {
+    int item = HitTest(evt.GetPosition());
+    toolTip_->SetTip(choiceDescriptions_[item]);
+  }
+  else if (evt.Leaving())
+  {
+    delete toolTip_;
+    toolTip_ = NULL;
+  }
 }

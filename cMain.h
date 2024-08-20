@@ -57,6 +57,9 @@ public:
 
 
 private:
+
+  void exportCharacter(void);
+  void importCharacter(void);
   Pathfinder::Character* currChar_ = NULL;
   SummaryPage* summaryPage_ = NULL;
   AbilityScorePage* abilityScorePage_ = NULL;

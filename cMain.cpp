@@ -4,10 +4,12 @@
 #include <exception>
 #include <typeinfo>
 #include <stdexcept>
+#include <filesystem>
 
 #include <wx/window.h>
 #include <wx/stattext.h>
 #include <wx/notebook.h>
+#include <wx/filedlg.h>
 
 #include <pf_include/PFTable.h>
 #include <pf_include/Race.h>
@@ -43,6 +45,63 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "char_generator", wxPoint(30, 30), w
   Centre();
 }
 
+void cMain::importCharacter(void)
+{
+  std::string filename = "";
+  wxFileDialog choiceWindow(this, "Select a .pfr File", "", "", "Pathfinder files(*.pfr) | *.pfr", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+  if (choiceWindow.ShowModal() != wxID_CANCEL)
+  {
+    filename = choiceWindow.GetPath();
+  }
+
+  if (!filename.empty())
+  {
+    if (currChar_ != NULL)
+    {
+      delete currChar_;
+    }
+    currChar_ = new Pathfinder::Character;
+
+    int raceId = currChar_->importFromFile(filename);
+    Pathfinder::Race loadedRace = Pathfinder::PFTable::get_race(raceId);
+    currChar_->race(loadedRace);
+    ResetNotebook();
+  }
+  return;
+}
+
+void cMain::exportCharacter(void)
+{
+  std::string errMsg;
+  if (currChar_ == NULL)
+  {
+    wxMessageBox("A character has not been created yet");
+    return;
+  }
+  else if (!classPage_->IsReadyForLevel(0, errMsg))
+  {
+    wxMessageBox("Not ready to save the character: " + errMsg);
+    return;
+  }
+
+  std::string filename = "";
+  wxFileDialog choiceWindow(this, _("Save to File"), "", /*std::filesystem::current_path().string() + "/" +*/ currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".pfr",
+    "Pathfinder files (*.pfr)|*.pfr", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+  if (choiceWindow.ShowModal() != wxID_CANCEL)
+  {
+    filename = choiceWindow.GetPath();
+  }
+  
+  if (!filename.empty())
+  {
+    currChar_->exportToFile(filename);
+  }
+  return;
+}
+
+
 void cMain::menuCallback(wxCommandEvent& evt)
 {
   int origId = evt.GetId();
@@ -50,10 +109,10 @@ void cMain::menuCallback(wxCommandEvent& evt)
   switch (origId)
   {
   case FILE_IMPORT_ID :
-    wxMessageBox("Import is not implemented yet, come back in rev 2.0");
+    importCharacter();
     break;
   case FILE_EXPORT_ID :
-    wxMessageBox("Export is not implemented yet, come back in rev 2.0");
+    exportCharacter();
     break;
   case FILE_RESET_ID:
     if (currChar_ != NULL)
@@ -192,13 +251,6 @@ void cMain::InitializeBorderPage()
 
 void cMain::ResetNotebook()
 {
-  if (currChar_ != NULL)
-  {
-    delete currChar_;
-  }
-
-  currChar_ = new Pathfinder::Character;
-
   summaryPage_->ResetPage(currChar_);
   abilityScorePage_->ResetPage(currChar_);
   racePage_->ResetPage(currChar_);

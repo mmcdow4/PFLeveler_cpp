@@ -112,32 +112,7 @@ void RacePage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
 
-  /* Turn on dropdown menu and lock button */
-  wxChoice* raceDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID));
-  raceDropDown->Show();
-  raceDropDown->Enable();
-  wxWindow::FindWindowById(RACE_SELECT_BTN_ID)->Show();
-  wxWindow::FindWindowById(RACE_SELECT_BTN_ID)->Enable();
-
-  /* This triggers the selection callback function, which populates the race text and racials table for us*/
-  raceDropDown->SetSelection(0);
-
-  Pathfinder::Race chosenRace = Pathfinder::PFTable::get_race(raceDropDown->GetSelection());
-
-  /* Create a text box containing the race details: size, attribute bonuses, etc. */
-  wxString raceText = populateRaceText(chosenRace);
-
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(RACE_TEXT_ID))->SetLabel(raceText);
-
-  /* On the right of the screen show a list of all abilities above and description */
-
-  /* fill out the race ability list here */
-  wxListBox* raceAbilityList = static_cast<wxListBox*>(wxWindow::FindWindowById(RACE_RACIAL_BONUS_TABLE_ID));
-  populateRacialTable(raceAbilityList, chosenRace);
-
-  this->Layout();
-
-  if (raceTextWrapper_ == NULL)
+  if (raceTextWrapper_ != NULL)
   {
     delete raceTextWrapper_;
     delete racialDescWrapper_;
@@ -149,6 +124,58 @@ void RacePage::ResetPage(Pathfinder::Character* currChar)
 
   wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->GetSize(&maxWidth, NULL);
   racialDescWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID), "", maxWidth);
+
+  if (charPtr_->race().id() > -1)
+  {
+    /* Race data has been imported, just set that */
+    Pathfinder::Race chosenRace = Pathfinder::PFTable::get_race(charPtr_->race().id());
+
+    /* Remove the drop down menu and button, update the race name text */
+    wxWindow::FindWindowById(RACE_DROPDOWN_ID)->Disable();
+    wxWindow::FindWindowById(RACE_DROPDOWN_ID)->Hide();
+    wxWindow::FindWindowById(RACE_SELECT_BTN_ID)->Disable();
+    wxWindow::FindWindowById(RACE_SELECT_BTN_ID)->Hide();
+    wxWindow::FindWindowById(RACE_NAME_LABEL_ID)->SetLabel("Race: " + chosenRace.raceName());
+
+
+    wxString raceText = populateRaceText(chosenRace);
+    wxStaticText* raceTextbox = static_cast<wxStaticText*>(wxWindow::FindWindowById(RACE_TEXT_ID));
+    raceTextbox->SetLabel(raceTextWrapper_->UpdateText(raceText));
+
+    wxListBox* racialListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(RACE_RACIAL_BONUS_TABLE_ID));
+    populateRacialTable(racialListBox, chosenRace);
+
+    wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->SetLabel("Description:");
+    wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->GetParent()->Layout();
+  }
+  else
+  {
+    /* Resetting with a blank character, do the standar initialization */
+    /* Turn on dropdown menu and lock button */
+    wxChoice* raceDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID));
+    raceDropDown->Show();
+    raceDropDown->Enable();
+    wxWindow::FindWindowById(RACE_SELECT_BTN_ID)->Show();
+    wxWindow::FindWindowById(RACE_SELECT_BTN_ID)->Enable();
+
+    /* This triggers the selection callback function, which populates the race text and racials table for us*/
+    raceDropDown->SetSelection(0);
+
+    Pathfinder::Race chosenRace = Pathfinder::PFTable::get_race(raceDropDown->GetSelection());
+
+    /* Create a text box containing the race details: size, attribute bonuses, etc. */
+    wxString raceText = populateRaceText(chosenRace);
+
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(RACE_TEXT_ID))->SetLabel(raceText);
+
+    /* On the right of the screen show a list of all abilities above and description */
+
+    /* fill out the race ability list here */
+    wxListBox* raceAbilityList = static_cast<wxListBox*>(wxWindow::FindWindowById(RACE_RACIAL_BONUS_TABLE_ID));
+    populateRacialTable(raceAbilityList, chosenRace);
+
+    this->Layout();
+  }
 }
 
 void RacePage::OnRaceSelected(wxCommandEvent& evt)
@@ -189,7 +216,11 @@ void RacePage::OnRaceLocked(wxCommandEvent& evt)
 
 void RacePage::OnRacialSelected(wxCommandEvent& evt)
 {
-  int raceId = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID))->GetSelection();
+  int raceId = charPtr_->race().id();
+  if(raceId == -1)
+  {
+    raceId = static_cast<wxChoice*>(wxWindow::FindWindowById(RACE_DROPDOWN_ID))->GetSelection();
+   }
   int racialId = evt.GetSelection();
   wxString racialTxt = "Description:\n" + Pathfinder::PFTable::get_race(raceId).getRacial(racialId).description();
   wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->SetLabel(racialDescWrapper_->UpdateText(racialTxt));

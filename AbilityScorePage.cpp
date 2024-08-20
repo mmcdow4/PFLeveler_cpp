@@ -314,37 +314,74 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
 void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
-  currChar->abilityScoresSet(false);
-  flexibleApplied_ = false;
-  newPoint_ = false;
-  newPointUsed_ = false;
 
-  /* turn on the method dropdown, select button, and label text*/
-  wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->Show();
-  wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Enable();
-  wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Show();
-  wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Enable();
-  wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Show();
-  wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Disable();
-  wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Show();
-
-  /* reset all of the ability score page text fields*/
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(" ");
-  for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
+  if (charPtr_->getCharacterLevel() > 0)
   {
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Disable();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
-    static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->Clear();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->Show();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(" 0 ");
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Disable();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Hide();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
-    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
-  }
+    for (int abilityIdx = 0; abilityIdx < Pathfinder::NUMBER_ABILITY_SCORES; abilityIdx++)
+    {
+      wxChoice* currDropdown = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx));
+      wxTextCtrl* currTextInput = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx));
 
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->Show();
+      Pathfinder::abilityScoreMarker ability_marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
+      int raw_score_val = charPtr_->getAbilityScore(ability_marker) - charPtr_->racialAbilityScoreBonus(ability_marker);
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(wxString::Format(wxT(" %d "), raw_score_val));
+      currDropdown->Disable();
+      currDropdown->Hide();
+
+      currTextInput->Disable();
+      currTextInput->Hide();
+      static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Disable();
+      static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Hide();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Disable();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Hide();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Disable();
+      static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Hide();
+    }
+
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Hide();
+
+    wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->Hide();
+    wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Disable();
+    wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Hide();
+    wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Disable();
+    wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Hide();
+    wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID)->Hide();
+  }
+  else
+  {
+    currChar->abilityScoresSet(false);
+    flexibleApplied_ = false;
+    newPoint_ = false;
+    newPointUsed_ = false;
+
+    /* turn on the method dropdown, select button, and label text*/
+    wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID)->Show();
+    wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Enable();
+    wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_ID)->Show();
+    wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Enable();
+    wxWindow::FindWindowById(ABSCR_METHOD_BTN_ID)->Show();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Disable();
+    wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Show();
+
+    /* reset all of the ability score page text fields*/
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(" ");
+    for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
+    {
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
+      static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->Clear();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx)->Hide();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->Show();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(" 0 ");
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Hide();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx)->Hide();
+    }
+  }
   /* fix all of the text fields */
   UpdateFields();
 
@@ -607,6 +644,7 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
 
   evt.Skip();
 }
+
 void AbilityScorePage::UpdateFields()
 {
 

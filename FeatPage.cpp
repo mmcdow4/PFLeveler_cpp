@@ -66,6 +66,10 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
       availFeatIds_.push_back(featIdx);
       availListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
     }
+    if (charPtr_->isFeatSelected(featIdx))
+    {
+      knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
+    }
   }
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID))->SetLabel("Description:");

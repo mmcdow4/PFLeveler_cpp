@@ -44,6 +44,8 @@ public:
   void SelectFeatureButtonPress(wxCommandEvent& evt);
   void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec, wxString catName);
   void ResizeCallback(wxSizeEvent& evt);
+  void MouseOverEvent(wxMouseEvent& evt);
+  bool IsReadyForLevel(int classIdx, std::string& errMsg);
 
   bool skillsLocked_;
   bool spellsLeft_;
@@ -58,8 +60,11 @@ private:
 
   std::vector<wxString> featureNames_;
   std::vector<wxString> featureDescriptions_;
+  std::vector<wxString> choiceDescriptions_;
 
   std::multiset<int> choicesMade_;
+
+  wxToolTip* toolTip_;
 
   HardBreakWrapper* classDescWrapper_ = NULL;
   HardBreakWrapper* featureDescWrapper_ = NULL;

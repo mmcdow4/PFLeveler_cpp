@@ -68,20 +68,30 @@ void SpellPage::ResetPage(Pathfinder::Character* currChar)
   availSpellsTable_.clear();
   knownSpellsTable_.clear();
   classList_.clear();
-  for (int classIdx = 0; classIdx < Pathfinder::NUMBER_CLASSES; classIdx++)
-  {
-    std::vector<int> tempVec;
-    availSpellIds_.emplace(classIdx, tempVec);
-    tempVec.assign(10, 0);
-    spellsLeft_.emplace(classIdx, tempVec);
-  }
 
   static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID))->Clear();
   static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->Clear();
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Spells Left to Learn");
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID))->SetLabel("Description:");
 
-  static_cast<wxChoice*>(wxWindow::FindWindowById(SPELL_CLASS_DROPDOWN_ID))->Clear();
+  wxChoice* classDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(SPELL_CLASS_DROPDOWN_ID));
+  classDropDown->Clear();
+
+  for (int classIdx = 0; classIdx < Pathfinder::NUMBER_CLASSES; classIdx++)
+  {
+    std::vector<int> tempVec;
+    availSpellIds_.emplace(classIdx, tempVec);
+    tempVec.assign(10, 0);
+    spellsLeft_.emplace(classIdx, tempVec);
+
+    int classLevel = charPtr_->getClassLevel(classIdx);
+    if (classLevel > 0 && (Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_0) >= 0 ||
+      Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_1) >= 0))
+    {
+      classList_.push_back(classIdx);
+      classDropDown->AppendString(Pathfinder::CLASS_NAMES[classIdx]);
+    }
+  }
 }
 
 bool SpellPage::UpdateSpellPage(int classId)
