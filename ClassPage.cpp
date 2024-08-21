@@ -245,7 +245,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
     {
       Pathfinder::ClassChoice choice = Pathfinder::PFTable::get_class_choice(*iter);
       
-      wxString featName = Pathfinder::PFTable::get_class_choice_category(choice) + ": " + choice.name();
+      wxString featName = choice.name();
       
       featureNames_.push_back(featName);
       featureDescriptions_.push_back(choice.desc());
@@ -415,12 +415,10 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   }
 
   /* Add skill points */
-  int numPoints = Pathfinder::PFTable::get_class(classIdx).skillsPerLvl() + charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) + charPtr_->race().bonusSkill();
-  if (numPoints > 0)
-  {
-    charPtr_->addSkillPoints(numPoints);
-    skillsLocked_ = false;
-  }
+  int numPoints = std::max(1, Pathfinder::PFTable::get_class(classIdx).skillsPerLvl() + charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) + charPtr_->race().bonusSkill());
+  
+  charPtr_->addSkillPoints(numPoints);
+  skillsLocked_ = false;
 
   /* If this is a favored class, decide whether to add a bonus hitpoint or bonus skill rank */
   if (charPtr_->isFavoredClass(static_cast<Pathfinder::classMarker>(classIdx)))
@@ -526,7 +524,7 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
 
   std::vector<Pathfinder::ClassChoice> choiceVec = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(todoFeatures_[featIdx].categoryId());
 
-  this->MakeFeatureChoice(classIdx, classLvl, numChoices, choiceVec, todoFeatures_[featIdx].name());
+  this->MakeFeatureChoice(classIdx, classLvl, numChoices, choiceVec);
   /* remove this item from the list of features */
   todoFeatures_.erase(todoFeatures_.begin() + featIdx);
 
@@ -545,7 +543,7 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
   }
 }
 
-void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice> &choiceVec, wxString catName)
+void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice> &choiceVec)
 {
   choiceDescriptions_.clear();
   wxListBox* featListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID));
@@ -555,8 +553,9 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
   wxArrayString choiceStrings;
   for (auto choiceIter = choiceVec.begin(); choiceIter != choiceVec.end(); )
   {
-    if(choiceIter->lvlReq() <= classLvl && choicesMade_.count(choiceIter->id()) < choiceIter->maxNumSelections())
+    if(choiceIter->lvlReq() <= classLvl && choicesMade_.count(choiceIter->id()) < choiceIter->maxNumSelections() && !charPtr_->isFeatSelected(choiceIter->featId()))
     {
+      /* If you meet the level requirement, haven't chosen this too many times already, and it doesn't grant a feat you've already taken */
       choiceStrings.Add(choiceIter->name());
       choiceDescriptions_.push_back(choiceIter->desc());
       ++choiceIter;
@@ -582,17 +581,13 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
 
     if (choiceReturn == wxID_OK)
     {
-      wxString featName = catName + ": " + choiceVec[choiceIdx].name();
+      featureNames_.push_back(choiceVec[choiceIdx].name());
+      featureDescriptions_.push_back(choiceVec[choiceIdx].desc());
+      featListBox->AppendString(choiceVec[choiceIdx].name());
       if (choiceVec[choiceIdx].numSubsequentChoices() > 0)
       {
         std::vector<Pathfinder::ClassChoice> subsequentChoices = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(choiceVec[choiceIdx].subsequentChoiceCategory());
-        this->MakeFeatureChoice(classIdx, classLvl, choiceVec[choiceIdx].numSubsequentChoices(), subsequentChoices, featName);
-      }
-      else
-      {
-        featureNames_.push_back(featName);
-        featureDescriptions_.push_back(choiceVec[choiceIdx].desc());
-        featListBox->AppendString(featName);
+        this->MakeFeatureChoice(classIdx, classLvl, choiceVec[choiceIdx].numSubsequentChoices(), subsequentChoices);
       }
 
       //Record this choice

@@ -84,9 +84,8 @@ void SpellPage::ResetPage(Pathfinder::Character* currChar)
     tempVec.assign(10, 0);
     spellsLeft_.emplace(classIdx, tempVec);
 
-    int classLevel = charPtr_->getClassLevel(classIdx);
-    if (classLevel > 0 && (Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_0) >= 0 ||
-      Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_1) >= 0))
+    tempVec = charPtr_->getKnownSpells(classIdx);
+    if (!tempVec.empty())
     {
       classList_.push_back(classIdx);
       classDropDown->AppendString(Pathfinder::CLASS_NAMES[classIdx]);
@@ -138,7 +137,7 @@ bool SpellPage::UpdateSpellPage(int classId)
 
         for (std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
         {
-          if (charPtr_->isSpellKnown(classId, *spellIter)) //You don't already know this spell
+          if (!charPtr_->isSpellKnown(classId, *spellIter)) //You don't already know this spell
           {
             availSpellIds_[classId].push_back(*spellIter);
             if (classIdx == classId)
@@ -236,7 +235,7 @@ void SpellPage::GrantSpells(void)
   if (classChoice != wxNOT_FOUND)
   {
     classIdx = classList_[classChoice];
-   }
+  }
   /* FIXME: After adding the class drop down, switch this to get selected class */
   for(int classId = 0; classId < Pathfinder::NUMBER_CLASSES; classId++)
   {

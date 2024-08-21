@@ -86,7 +86,7 @@ void cMain::exportCharacter(void)
   }
 
   std::string filename = "";
-  wxFileDialog choiceWindow(this, _("Save to File"), "", /*std::filesystem::current_path().string() + "/" +*/ currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".pfr",
+  wxFileDialog choiceWindow(this, _("Save to File"), "", currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".pfr",
     "Pathfinder files (*.pfr)|*.pfr", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
   if (choiceWindow.ShowModal() != wxID_CANCEL)

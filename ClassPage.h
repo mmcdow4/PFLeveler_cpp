@@ -42,7 +42,7 @@ public:
   void OnUnselectedFeatureSelected(wxCommandEvent& evt);
   void OnFinishedFeatureSelected(wxCommandEvent& evt);
   void SelectFeatureButtonPress(wxCommandEvent& evt);
-  void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec, wxString catName);
+  void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec);
   void ResizeCallback(wxSizeEvent& evt);
   void MouseOverEvent(wxMouseEvent& evt);
   bool IsReadyForLevel(int classIdx, std::string& errMsg);
