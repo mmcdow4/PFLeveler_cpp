@@ -101,97 +101,99 @@ bool SpellPage::UpdateSpellPage(int classId)
   wxListBox* knownSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
   
   int classChoice = classDropDown->GetSelection();
-  int classIdx = -1;
-  if (classChoice != wxNOT_FOUND)
-  {
-    classIdx = classList_[classChoice];
-  }
-  if (classIdx == classId)
-  {
-    availSpellList->Clear();
-    knownSpellList->Clear();
-    availSpellsTable_.clear();
-    knownSpellsTable_.clear();
-  }
 
-  if (Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_0) >= 0 ||
-    Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::SPELLS_KNOWN_1) >= 0)
+  availSpellList->Clear();
+  knownSpellList->Clear();
+  availSpellsTable_.clear();
+  knownSpellsTable_.clear();
+
+  int listIdx = -1;
+  if (std::find(classList_.begin(), classList_.end(), classId) != classList_.end())
   {
-    if (std::find(classList_.begin(), classList_.end(), classId) == classList_.end())
+    /* If the class is already in the dropdown menu, select it */
+    listIdx = std::distance(classList_.begin(), std::find(classList_.begin(), classList_.end(), classId));
+    classDropDown->SetSelection(listIdx);
+  }
+  for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
+  {
+    Pathfinder::lvlUpMarker spellLevelMarker = static_cast<Pathfinder::lvlUpMarker>(static_cast<int>(Pathfinder::SPELLS_KNOWN_0) + spellLevel);
+    std::vector<int> spellVec = Pathfinder::PFTable::get_spell_list(classId, spellLevel);
+ 
+    if (!spellVec.empty() && listIdx == -1)
     {
+      /* If we have spells and are not already in the dropdown menu, add the class to the dropdown and select it */
       classList_.push_back(classId);
       classDropDown->AppendString(Pathfinder::CLASS_NAMES[classId]);
+      listIdx = classList_.size() - 1;
+      classDropDown->SetSelection(listIdx);
     }
-    /* cycle through spell levels, append all available spells to available list as level N : spell name */
-    for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
-    {
-      Pathfinder::lvlUpMarker spellLevelMarker = static_cast<Pathfinder::lvlUpMarker>(static_cast<int>(Pathfinder::SPELLS_KNOWN_0) + spellLevel);
-      spellsLeft_[classId][spellLevel] = Pathfinder::PFTable::get_class(classId).levelItem(classLevel, spellLevelMarker);
-      if (classLevel > 1 && Pathfinder::PFTable::get_class(classId).levelItem(classLevel - 1, spellLevelMarker) > 0)
-      {
-        spellsLeft_[classId][spellLevel] -= Pathfinder::PFTable::get_class(classId).levelItem(classLevel - 1, spellLevelMarker);
-      }
-      if (spellsLeft_[classId][spellLevel] > 0)
-      {
-        std::vector<int> spellVec = Pathfinder::PFTable::get_spell_list(classId, spellLevel);
 
+    /* Now automatically set the class dropdown to the current class */
+    int num_spells_known = Pathfinder::PFTable::get_class(classId).levelItem(classLevel, spellLevelMarker);
+    if (classLevel == 1 && static_cast<Pathfinder::classMarker>(classId) == Pathfinder::WIZARD && spellLevel == 1)
+    {
+      /* Ugly and hardcoded, but it's a literal one off case: for only level 1 Wizards learning level 1 spells, learn an additional number equal to your intelligence modifier */
+      num_spells_known += charPtr_->abilityModifier(Pathfinder::INTELLIGENCE);
+    }
+    if(num_spells_known == 0)
+    {
+      Pathfinder::abilityScoreMarker casterAbility = Pathfinder::PFTable::get_class(classId).casterAbility();
+      if (charPtr_->getAbilityScore(casterAbility) < 10 + spellLevel)
+      {
+        /* Can't learn or cast spells of this level due to caster ability score, skip this and all following levels */
+        break;
+      }
+      /* Spells Known == 0 means the entire spell list is known */
+      for (std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
+      {
+        charPtr_->learnSpell(classId, *spellIter);
+      }
+    }
+    else if (num_spells_known > 0)
+    {
+      Pathfinder::abilityScoreMarker casterAbility = Pathfinder::PFTable::get_class(classId).casterAbility();
+      if (charPtr_->getAbilityScore(casterAbility) < 10 + spellLevel)
+      {
+        /* Can't learn or cast spells of this level due to caster ability score, skip this and all following levels */
+        break;
+      }
+      /* Spells known > 0 means you must select a subset of spells to learn */
+      if (classLevel > 1)
+      {
+        num_spells_known -= std::max(0, Pathfinder::PFTable::get_class(classId).levelItem(classLevel - 1, spellLevelMarker));
+      }
+      spellsLeft_[classId][spellLevel] = num_spells_known;
+      if(num_spells_known > 0)
+      {
+        int num_spells_available = 0;
         for (std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
         {
           if (!charPtr_->isSpellKnown(classId, *spellIter)) //You don't already know this spell
           {
             availSpellIds_[classId].push_back(*spellIter);
-            if (classIdx == classId)
-            {
-              wxString spellName = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
-              availSpellList->AppendString(spellName);
-              availSpellsTable_.emplace(spellName, *spellIter);
-            }
+            num_spells_available++;
           }
         }
+        spellsLeft_[classId][spellLevel] = std::min(num_spells_available, num_spells_known);
       }
     }
   }
-  else if (Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::SPELLS_PER_DAY_0) >= 0 ||
-    Pathfinder::PFTable::get_class(classId).levelItem(classLevel, Pathfinder::SPELLS_PER_DAY_1) >= 0)
+ 
+  /* We already have this class selected, fill out the known and available spell lists */
+  std::vector<int> spellVec = charPtr_->getKnownSpells(classId);
+  for(std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
   {
-    if (std::find(classList_.begin(), classList_.end(), classId) == classList_.end())
-    {
-      classList_.push_back(classId);
-      classDropDown->AppendString(Pathfinder::CLASS_NAMES[classId]);
-    }
-    for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
-    {
-      Pathfinder::lvlUpMarker spellLevelMarker = static_cast<Pathfinder::lvlUpMarker>(static_cast<int>(Pathfinder::SPELLS_PER_DAY_0) + spellLevel);
-      if (Pathfinder::PFTable::get_class(classId).levelItem(classLevel, spellLevelMarker) >= 0)
-      {
-        std::vector<int> spellVec = Pathfinder::PFTable::get_spell_list(classId, spellLevel);
-        for (std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
-        {
-          if (Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) > -1 && // Is this spell available to your class?
-            Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId) <= classLevel && // is your level high enough to learn it?
-            !charPtr_->isSpellKnown(classId, *spellIter)) // You don't already know this spell
-          {
-            if (std::find(availSpellIds_[classId].begin(), availSpellIds_[classId].end(), *spellIter) != availSpellIds_[classId].end())
-            {
-              availSpellIds_[classId].erase(availSpellIds_[classId].begin() + *spellIter);
-            }
-            charPtr_->learnSpell(classId, *spellIter);
-          }
-        }
-      }
-    }
+    wxString spellName = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
+    knownSpellList->AppendString(spellName);
+    knownSpellsTable_.emplace(spellName, *spellIter);
   }
-
-  if (classIdx == classId)
+  for (std::vector<int>::iterator spellIter = availSpellIds_[classId].begin(); spellIter != availSpellIds_[classId].end(); ++spellIter)
   {
-    std::vector<int> spellVec = charPtr_->getKnownSpells(classIdx);
-    for(std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
-    {
-      wxString spellName = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
-      knownSpellList->AppendString(spellName);
-      knownSpellsTable_.emplace(spellName, *spellIter);
-    }
+    wxString spellName = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
+    availSpellList->AppendString(spellName);
+    availSpellsTable_.emplace(spellName, *spellIter);
   }
+  
   bool spellsLeft = UpdateSpellsRemainingText();
 
   if (spellsLeft)
@@ -225,42 +227,33 @@ void SpellPage::OnSpellSelected(wxCommandEvent& evt)
   wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID)->GetParent()->Layout();
 }
 
-void SpellPage::GrantSpells(void)
+void SpellPage::GrantSpells(int classId)
 {
   wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
   wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
 
-  int classChoice = static_cast<wxChoice*>(wxWindow::FindWindowById(SPELL_CLASS_DROPDOWN_ID))->GetSelection();
-  int classIdx = -1;
-  if (classChoice != wxNOT_FOUND)
-  {
-    classIdx = classList_[classChoice];
-  }
-  /* FIXME: After adding the class drop down, switch this to get selected class */
-  for(int classId = 0; classId < Pathfinder::NUMBER_CLASSES; classId++)
-  {
-    std::vector<int> knownSpells = charPtr_->getKnownSpells(classId);
-    for (auto spellIter = knownSpells.begin(); spellIter != knownSpells.end(); ++spellIter)
-    {
-      wxString spell_name = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
-      std::vector<int>::iterator availLoc = std::find(availSpellIds_[classId].begin(), availSpellIds_[classId].end(), *spellIter);
-      if (availLoc != availSpellIds_[classId].end())
-      {
-        availSpellIds_[classId].erase(availLoc);
-        availSpellsTable_.erase(spell_name);
-        int loc = availListBox->FindString(spell_name);
-        if (loc != wxNOT_FOUND && classIdx == classId)
-        {
-          availListBox->Delete(loc);
-        }
-      }
+  /* Set the class dropdown to the relevant class */
+  static_cast<wxChoice*>(wxWindow::FindWindowById(SPELL_CLASS_DROPDOWN_ID))->SetSelection(std::distance(classList_.begin(), std::find(classList_.begin(), classList_.end(), classId)));
+  
+  knownListBox->Clear();
+  knownSpellsTable_.clear();
 
-      int loc = knownListBox->FindString(spell_name);
-      if(loc == wxNOT_FOUND && classIdx == classId)
-      {
-        knownListBox->AppendString(spell_name);
-        knownSpellsTable_.emplace(spell_name, *spellIter);
-      }
+  std::vector<int> knownSpells = charPtr_->getKnownSpells(classId);
+  for (auto spellIter = knownSpells.begin(); spellIter != knownSpells.end(); ++spellIter)
+  {
+    /* Repopulate the known spells list */
+    wxString spell_name = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
+    knownListBox->AppendString(spell_name);
+    knownSpellsTable_.emplace(spell_name, *spellIter);
+
+    /* If the spell was in the available list, delete it */
+    std::vector<int>::iterator availLoc = std::find(availSpellIds_[classId].begin(), availSpellIds_[classId].end(), *spellIter);
+    if (availLoc != availSpellIds_[classId].end())
+    {
+      availSpellIds_[classId].erase(availLoc);
+      availSpellsTable_.erase(spell_name);
+      int loc = availListBox->FindString(spell_name);
+      availListBox->Delete(loc);
     }
   }
 }
@@ -291,6 +284,26 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
   }
   int classIdx = classList_[classChoice];
   int spellIdx = availSpellIds_[classIdx][spellListIdx];
+
+  /* If you are a first level wizard who has not chosen your arcane school yet, you cannot start learning spells */
+  if (static_cast<Pathfinder::classMarker>(classIdx) == Pathfinder::WIZARD && charPtr_->getClassLevel(classIdx) == 1)
+  {
+    bool arcane_school_chosen = false;
+    std::vector<int> choiceVec = charPtr_->getClassChoices();
+    for (std::vector<int>::iterator iter = choiceVec.begin(); iter != choiceVec.end(); ++iter)
+    {
+      if (Pathfinder::PFTable::get_class_choice(*iter).name().find("Arcane School:"))
+      {
+        arcane_school_chosen = true;
+        break;
+      }
+    }
+    if (!arcane_school_chosen)
+    {
+      wxMessageBox("As a first level wizard you must choose your arcane school before learning any spells");
+      return;
+    }
+  }
   /* update the internal lists */
   charPtr_->learnSpell(classIdx, spellIdx);
   availSpellIds_[classIdx].erase(availSpellIds_[classIdx].begin() + spellListIdx);

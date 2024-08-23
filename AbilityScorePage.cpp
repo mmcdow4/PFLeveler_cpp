@@ -317,6 +317,7 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
 
   if (charPtr_->getCharacterLevel() > 0)
   {
+    flexibleApplied_ = true;
     for (int abilityIdx = 0; abilityIdx < Pathfinder::NUMBER_ABILITY_SCORES; abilityIdx++)
     {
       wxChoice* currDropdown = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx));
@@ -328,6 +329,7 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(wxString::Format(wxT(" %d "), raw_score_val));
       currDropdown->Disable();
       currDropdown->Hide();
+      prevSelections_[abilityIdx] = -1;
 
       currTextInput->Disable();
       currTextInput->Hide();
@@ -369,6 +371,7 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(" ");
     for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
     {
+      prevSelections_[abilityIdx] = 0;
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Disable();
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx)->Hide();
       static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->Clear();
@@ -654,6 +657,8 @@ void AbilityScorePage::UpdateFields()
     Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
     int modValue = charPtr_->getAbilityScore(marker) >= 3 ? charPtr_->abilityModifier(marker) : 0;
     wxString modString = " " + wxString::Format(wxT("%+i"), modValue) + " ";
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx))->SetLabel(
+      " " + wxString::Format(wxT("%d"), charPtr_->getAbilityScore(marker) - charPtr_->racialAbilityScoreBonus(marker)) + " ");
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx))->SetLabel(
       " " + wxString::Format(wxT("%+i"), charPtr_->racialAbilityScoreBonus(marker)) + " ");
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx))->SetLabel(

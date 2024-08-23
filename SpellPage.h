@@ -42,7 +42,7 @@ public:
   void LearnSpellButtonPress(wxCommandEvent& evt);
   void OnClassSelected(wxCommandEvent& evt);
   
-  void GrantSpells(void);
+  void GrantSpells(int classId);
   void UpdateSpellDescription(int spellIndex);
   bool UpdateSpellsRemainingText(void);
 private:

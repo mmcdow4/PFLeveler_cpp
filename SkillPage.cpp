@@ -153,7 +153,11 @@ void SkillPage::UpdateSkillPage(void)
     }
     startingRanksVec_[skillIdx] = charPtr_->rawSkillRank(static_cast<Pathfinder::skillMarker>(skillIdx));
   }
-  static_cast<wxButton*>(wxWindow::FindWindowById(SKILL_LOCK_BUTTON_ID))->Enable();
+
+  if(startingUnusedPoints_ > 0)
+  {
+    static_cast<wxButton*>(wxWindow::FindWindowById(SKILL_LOCK_BUTTON_ID))->Enable();
+  }
 }
 
 void SkillPage::OnSkillIncrement(wxCommandEvent& evt)

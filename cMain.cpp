@@ -179,7 +179,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     summaryPage_->PopulateClassLevelData();
     if (classPage_->grantedSpells_)
     {
-      spellPage_->GrantSpells();
+      spellPage_->GrantSpells(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
       classPage_->grantedSpells_ = false;
     }
     featPage_->UpdateFeatPage(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
@@ -190,11 +190,12 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     }
     summaryPage_->PopulateSpellData();
     summaryPage_->PopulateFeatData();
+    summaryPage_->PopulateAbilityScoreData();
     break;
   case CLASS_FEATURE_BUTTON_ID:
     if (classPage_->grantedSpells_)
     {
-      spellPage_->GrantSpells();
+      spellPage_->GrantSpells(static_cast<wxChoice*>(wxWindow::FindWindowById(CLASS_DROPDOWN_ID))->GetSelection());
       summaryPage_->PopulateSpellData();
       classPage_->grantedSpells_ = false;
     }
@@ -203,6 +204,12 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
       featPage_->GrantFeats();
       summaryPage_->PopulateFeatData();
       classPage_->grantedFeats_ = false;
+    }
+    if (classPage_->skillsChanged_)
+    {
+      skillPage_->UpdateSkillPage();
+      summaryPage_->PopulateSkillData();
+      classPage_->skillsChanged_ = false;
     }
     break;
   case SKILL_LOCK_BUTTON_ID:

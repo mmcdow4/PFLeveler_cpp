@@ -19,7 +19,7 @@
 #include <pf_include/Class.h>
 
 
-ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false), featsLeft_(false), grantedSpells_(false), grantedFeats_(false)
+ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false), featsLeft_(false), grantedSpells_(false), grantedFeats_(false), skillsChanged_(false)
 {
   this->SetBackgroundColour(0xE5E5E5);
 
@@ -145,6 +145,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
 
   grantedSpells_ = false;
   grantedFeats_ = false;
+  skillsChanged_ = false;
 
   /* class dropdown list */
   wxWindow::FindWindowById(CLASS_DROPDOWN_ID)->Show();
@@ -401,6 +402,20 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   {
     if(abilityIter->choicePrereqId() < 0 || charPtr_->checkForChoice(abilityIter->choicePrereqId())) {
       abilities_.push_back(*abilityIter);
+      if (abilityIter->name().find("Class Skill: ") != std::string::npos)
+      {
+        std::string temp_string = abilityIter->name().substr(13);
+        int skill = 0;
+        skillsChanged_ = true;
+        for (; skill < Pathfinder::NUMBER_SKILLS; skill++)
+        {
+          if (temp_string.compare(std::string(Pathfinder::skillStrings[skill])) == 0)
+          {
+            break;
+          }
+        }
+        charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skill));
+      }
       charPtr_->addClassAbility(abilityIter->id());
       static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
       if (abilityIter->spellId() >= 0) {
@@ -424,7 +439,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   if (charPtr_->isFavoredClass(static_cast<Pathfinder::classMarker>(classIdx)))
   {
     /* Do favored class logic here */
-    wxMessageDialog choiceWindow(this, "You have added a level to a favored class, select either +1w hit point or +1 skill rank.", "caption string", wxYES_NO | wxCENTRE | wxSTAY_ON_TOP);
+    wxMessageDialog choiceWindow(this, wxString::Format(wxT("You have added a level to a favored class, select either +1 hit point (in addition to %d) or +1 skill rank (in addition to %d)."), hitPointsAdded, numPoints), "caption string", wxYES_NO | wxCENTRE | wxSTAY_ON_TOP);
     choiceWindow.SetYesNoLabels("Bonus Hit Point", "Bonus Skill Rank");
     int bonus_selection = choiceWindow.ShowModal();
     if (bonus_selection == wxID_YES)
@@ -524,6 +539,19 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
 
   std::vector<Pathfinder::ClassChoice> choiceVec = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(todoFeatures_[featIdx].categoryId());
 
+  /* Remove choices that would grant a feat you already have */
+  for (std::vector<Pathfinder::ClassChoice>::iterator iter = choiceVec.begin(); iter != choiceVec.end(); )
+  {
+    if (charPtr_->isFeatSelected(iter->featId()))
+    {
+      iter = choiceVec.erase(iter);
+    }
+    else
+    {
+      ++iter;
+    }
+  }
+
   this->MakeFeatureChoice(classIdx, classLvl, numChoices, choiceVec);
   /* remove this item from the list of features */
   todoFeatures_.erase(todoFeatures_.begin() + featIdx);
@@ -537,7 +565,7 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
   }
 
   featListBox->GetParent()->Layout();
-  if (grantedSpells_ || grantedFeats_)
+  if (grantedSpells_ || grantedFeats_ || skillsChanged_)
   {
     evt.Skip();
   }
@@ -581,6 +609,35 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
 
     if (choiceReturn == wxID_OK)
     {
+      if (choiceVec[choiceIdx].name().find("Opposition School:") != std::string::npos)
+      {
+        /* Really ugly but its a one-off : if choosing an opposition school then remove all spells of that school */
+        std::string temp_string = choiceVec[choiceIdx].name().substr(19);
+        int spellSchool = 0;
+        for (; spellSchool < Pathfinder::NUMBER_SPELL_SCHOOLS; spellSchool++)
+        {
+          if (temp_string.compare(std::string(Pathfinder::SPELL_SCHOOL_NAMES[spellSchool])) == 0)
+          {
+            break;
+          }
+        }
+        charPtr_->loseSpellSchool(Pathfinder::WIZARD, static_cast<Pathfinder::SpellSchoolMarker>(spellSchool));
+        grantedSpells_ = true;
+      }
+      else if (choiceVec[choiceIdx].name().find("Class Skill: ") != std::string::npos)
+      {
+        std::string temp_string = choiceVec[choiceIdx].name().substr(13);
+        int skill = 0;
+        skillsChanged_ = true;
+        for (; skill < Pathfinder::NUMBER_SKILLS; skill++)
+        {
+          if (temp_string.compare(std::string(Pathfinder::skillStrings[skill])) == 0)
+          {
+            break;
+          }
+        }
+        charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skill));
+      }
       featureNames_.push_back(choiceVec[choiceIdx].name());
       featureDescriptions_.push_back(choiceVec[choiceIdx].desc());
       featListBox->AppendString(choiceVec[choiceIdx].name());
@@ -605,6 +662,20 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
         for (unsigned int abilityIdx = 0; abilityIdx < abilityVec.size(); abilityIdx++) {
           if (abilityVec[abilityIdx].choicePrereqId() == choiceVec[choiceIdx].id()) {
             abilities_.push_back(abilityVec[abilityIdx]);
+            if (abilityVec[abilityIdx].name().find("Class Skill: ") != std::string::npos)
+            {
+              std::string temp_string = abilityVec[abilityIdx].name().substr(13);
+              int skill = 0;
+              skillsChanged_ = true;
+              for (; skill < Pathfinder::NUMBER_SKILLS; skill++)
+              {
+                if (temp_string.compare(std::string(Pathfinder::skillStrings[skill])) == 0)
+                {
+                  break;
+                }
+              }
+              charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skill));
+            }
             charPtr_->addClassAbility(abilityVec[abilityIdx].id());
             abilityListBox->AppendString(abilityVec[abilityIdx].name());
             if (abilityVec[abilityIdx].spellId() >= 0) {

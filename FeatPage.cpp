@@ -138,7 +138,7 @@ void FeatPage::UpdateFeatDescription(int featIdx)
 
   wxString descriptionText = "Description:\n" + currFeat.name() + "\n";
 
-  descriptionText += "\n" + currFeat.description();
+  descriptionText += "\n" + currFeat.benefits();
   if (!currFeat.prerequisites().empty())
   {
       descriptionText += "\nPrerequesites: " + currFeat.prerequisites();

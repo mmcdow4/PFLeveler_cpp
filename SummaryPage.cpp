@@ -524,6 +524,8 @@ void SummaryPage::PopulateAbilityScoreData(void)
     Pathfinder::abilityScoreMarker ability = static_cast<Pathfinder::abilityScoreMarker>(abilityScoreId);
     abilityScoreList->AppendString(wxString(Pathfinder::ABILITY_SCORE_ABBREVIATIONS[abilityScoreId]) + " = " + std::to_string(charPtr_->getAbilityScore(ability)) + " (Mod. " + std::to_string(charPtr_->abilityModifier(ability)) + ")");
   }
+
+  abilityScoreList->AppendString("Hit Points : " + std::to_string(charPtr_->hitpoints()));
   abilityScoreList->AppendString("Armor Class : " + std::to_string(charPtr_->getArmorClass()));
   abilityScoreList->AppendString("Touch AC : " + std::to_string(charPtr_->getTouchArmorClass()));
   abilityScoreList->AppendString("Flat-Footed AC : " + std::to_string(charPtr_->getFlatFootedArmorClass()));
