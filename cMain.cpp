@@ -79,7 +79,7 @@ void cMain::exportCharacter(void)
     wxMessageBox("A character has not been created yet");
     return;
   }
-  else if (!classPage_->IsReadyForLevel(0, errMsg))
+  else if (!classPage_->IsReadyForLevel(-10, errMsg))
   {
     wxMessageBox("Not ready to save the character: " + errMsg);
     return;
@@ -163,9 +163,19 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     summaryPage_->PopulateRaceData();
 
     break;
+  case RACE_BONUS_LANGUAGE_BTN_ID:
+    /* Propagate race information to the summary page */
+    summaryPage_->PopulateRaceData();
+
+    break;
   case ABSCR_ATTRIBUTE_LOCK_BUTTON:
     /* Propagate Ability Scores to the summary page */
     summaryPage_->PopulateAbilityScoreData();
+    if (currChar_->remainingBonusLanguages() > 0)
+    {
+      /* Tell the race page to open up language selection*/
+      racePage_->SetupBonusLanguages();
+    }
     break;
   case CLASS_FAVORED_CLASS_BUTTON_ID:
     /* Propagate favored classes to the summary page */
@@ -187,6 +197,11 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     {
       featPage_->GrantFeats();
       classPage_->grantedFeats_ = false;
+    }
+    if (classPage_->languageChange_)
+    {
+      racePage_->SetupBonusLanguages();
+      summaryPage_->PopulateRaceData();
     }
     summaryPage_->PopulateSpellData();
     summaryPage_->PopulateFeatData();

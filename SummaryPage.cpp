@@ -174,6 +174,12 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   hbox_favClass->Add(favClassLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
   vbox1->Add(hbox_favClass);
 
+  /* Languages */
+  wxBoxSizer* hbox_languages = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText* languagesLabel = new wxStaticText(this, SUMMARY_LANGUAGE_LABEL_ID, wxT("Languages:"));
+  hbox_languages->Add(languagesLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
+  vbox1->Add(hbox_languages);
+
   wxButton* summaryBtn = new wxButton(this, SUMMARY_BUTTON_ID, wxT("Lock Info"));
   summaryBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &SummaryPage::OnCharLocked, this);
   summaryBtn->Disable();
@@ -246,6 +252,13 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
   knownSpellsTable_.clear();
   classList_.clear();
 
+  if (languageTextWrapper_ != NULL)
+  {
+    delete languageTextWrapper_;
+  }
+  int maxWidth = 0;
+  wxWindow::FindWindowById(SUMMARY_CLASS_LEVEL_LIST_ID)->GetSize(&maxWidth, NULL);
+  languageTextWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(SUMMARY_LANGUAGE_LABEL_ID), "Languages: ", maxWidth);
 
   if (charPtr_->getCharacterLevel() > 0)
   {
@@ -298,6 +311,7 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
     wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Hide();
 
     this->PopulateSkillData();
+    this->PopulateSpellData();
     this->PopulateAbilityScoreData();
     this->PopulateFavoredClassData();
     this->PopulateRaceData();
@@ -508,6 +522,23 @@ void SummaryPage::PopulateRaceData(void)
   wxWindow::FindWindowById(SUMMARY_SIZE_LABEL_ID)->SetLabel("Size: " + charPtr_->race().charSize());
   wxWindow::FindWindowById(SUMMARY_SPEED_LABEL_ID)->SetLabel("Speed: " + std::to_string(charPtr_->race().speed()));
 
+  std::set<int> languageList = charPtr_->getKnownLanguages();
+
+  std::string languageString = "Languages: ";
+
+  for (std::set<int>::iterator iter = languageList.begin(); iter != languageList.end(); ++iter)
+  {
+    if(iter == languageList.begin())
+    {
+      languageString += Pathfinder::PFTable::get_language(*iter);
+    }
+    else
+    {
+      languageString += ", " + Pathfinder::PFTable::get_language(*iter);
+    }
+  }
+
+  wxWindow::FindWindowById(SUMMARY_LANGUAGE_LABEL_ID)->SetLabel(languageTextWrapper_->UpdateText(languageString));
   if (charPtr_->race().numFavoredClass() > 1)
   {
     wxWindow::FindWindowById(SUMMARY_FAV_CLASS_LABEL_ID)->SetLabel("Favored Classes: ");
@@ -572,6 +603,9 @@ void SummaryPage::PopulateSpellData(void)
   wxListBox* spellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SPELL_LIST_ID));
   wxListBox* spellSlotList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SPELL_SLOT_LIST_ID));
   wxChoice* classDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(SUMMARY_CLASS_DROPDOWN_ID));
+  spellList->Clear();
+  spellSlotList->Clear();
+  knownSpellsTable_.clear();
   int classChoice = classDropDown->GetSelection();
 
   for(int classId = 0; classId < Pathfinder::NUMBER_CLASSES; classId++)

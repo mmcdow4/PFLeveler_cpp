@@ -18,6 +18,9 @@
 #include <pf_include/Character.h>
 #include <pf_include/Class.h>
 
+#define LANGUAGE_KNOWN_FOUND 1
+#define LANGUAGE_AVAIL_FOUND 2
+#define LANGUAGE_NOT_FOUND -1
 
 ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar), skillsLocked_(true), spellsLeft_(false), featsLeft_(false), grantedSpells_(false), grantedFeats_(false), skillsChanged_(false)
 {
@@ -173,7 +176,7 @@ void ClassPage::ResetPage(Pathfinder::Character* currChar)
   this->featureNames_.clear();
   this->featureDescriptions_.clear();
   this->choicesMade_.clear();
-  this->toolTip_ = NULL;
+  //this->toolTip_ = NULL;
 
   /* feature description */
   wxWindow::FindWindowById(CLASS_FEATURE_DESCRIPTION_ID)->Show();
@@ -293,7 +296,7 @@ void ClassPage::OnFavoredClassAdded(wxCommandEvent& evt)
 
 bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
 {
-  if (classIdx < 0)
+  if (classIdx == wxNOT_FOUND)
   {
     errMsg = "First select a class from the dropdown menu.";
     return false;
@@ -306,6 +309,12 @@ bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
   else if (!charPtr_->abilityScoresSet()) // or if the ability scores haven't been set yet
   {
     errMsg ="Ability scores are not finalized yet.";
+    return false;
+  }
+  else if (classIdx == -10 && charPtr_->remainingBonusLanguages() > 0)
+  {
+    /* Only care about this for export, hence the classIdx == -10 */
+    errMsg = "You must finish learning bonus starting languages.";
     return false;
   }
   else if (charPtr_->numFavoredClassLeft() > 0)
@@ -388,6 +397,18 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
       featureDescriptions_.push_back(featIter->desc());
       charPtr_->addClassFeature(featIter->id());
       doneFeatList->AppendString(featIter->name());
+      int langIdx = -1;
+      int langCode = ParseNameForLanguage(featIter->name(), &langIdx);
+      if (langCode == LANGUAGE_KNOWN_FOUND)
+      {
+        charPtr_->grantLanguage(langIdx);
+        languageChange_ = true;
+      }
+      else if (langCode == LANGUAGE_AVAIL_FOUND)
+      {
+        charPtr_->addBonusLanguage(langIdx);
+        languageChange_ = true;
+      }
     }
   }
 
@@ -402,19 +423,11 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   {
     if(abilityIter->choicePrereqId() < 0 || charPtr_->checkForChoice(abilityIter->choicePrereqId())) {
       abilities_.push_back(*abilityIter);
-      if (abilityIter->name().find("Class Skill: ") != std::string::npos)
+      int skillIdx = ParseNameForSkill(abilityIter->name());
+      if (skillIdx > -1)
       {
-        std::string temp_string = abilityIter->name().substr(13);
-        int skill = 0;
         skillsChanged_ = true;
-        for (; skill < Pathfinder::NUMBER_SKILLS; skill++)
-        {
-          if (temp_string.compare(std::string(Pathfinder::skillStrings[skill])) == 0)
-          {
-            break;
-          }
-        }
-        charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skill));
+        charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skillIdx));
       }
       charPtr_->addClassAbility(abilityIter->id());
       static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID))->AppendString(abilityIter->name());
@@ -601,42 +614,26 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
     wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
       "Make selection " + wxString::Format(wxT("%d"), numChoicesMade + 1) + " out of " + wxString::Format(wxT("%d"), numChoices),
       "caption string", choiceStrings, NULL, wxOK | wxCANCEL);
-    /*choiceDialog->Bind(wxEVT_ENTER_WINDOW, &ClassPage::MouseOverEvent, this);
-    choiceDialog->Bind(wxEVT_LEAVE_WINDOW, &ClassPage::MouseOverEvent, this);
-    choiceDialog->Bind(wxEVT_MOTION, &ClassPage::MouseOverEvent, this);*/
+    //choiceDialog->Bind(wxEVT_ENTER_WINDOW, &ClassPage::MouseOverEvent, this);
+    //choiceDialog->Bind(wxEVT_LEAVE_WINDOW, &ClassPage::MouseOverEvent, this);
+    //choiceDialog->Bind(wxEVT_MOTION, &ClassPage::MouseOverEvent, this);
     int choiceReturn = choiceDialog->ShowModal();
     int choiceIdx = choiceDialog->GetSelection();
 
     if (choiceReturn == wxID_OK)
     {
-      if (choiceVec[choiceIdx].name().find("Opposition School:") != std::string::npos)
+      int skillIdx = ParseNameForSkill(choiceVec[choiceIdx].name());
+      int spellSchoolIdx = ParseNameForSpellSchool(choiceVec[choiceIdx].name());
+      if (spellSchoolIdx > -1)
       {
-        /* Really ugly but its a one-off : if choosing an opposition school then remove all spells of that school */
-        std::string temp_string = choiceVec[choiceIdx].name().substr(19);
-        int spellSchool = 0;
-        for (; spellSchool < Pathfinder::NUMBER_SPELL_SCHOOLS; spellSchool++)
-        {
-          if (temp_string.compare(std::string(Pathfinder::SPELL_SCHOOL_NAMES[spellSchool])) == 0)
-          {
-            break;
-          }
-        }
-        charPtr_->loseSpellSchool(Pathfinder::WIZARD, static_cast<Pathfinder::SpellSchoolMarker>(spellSchool));
+        /* If choosing an opposition school then remove all spells of that school */
+        charPtr_->loseSpellSchool(Pathfinder::WIZARD, static_cast<Pathfinder::SpellSchoolMarker>(spellSchoolIdx));
         grantedSpells_ = true;
       }
-      else if (choiceVec[choiceIdx].name().find("Class Skill: ") != std::string::npos)
+      else if (skillIdx > -1)
       {
-        std::string temp_string = choiceVec[choiceIdx].name().substr(13);
-        int skill = 0;
         skillsChanged_ = true;
-        for (; skill < Pathfinder::NUMBER_SKILLS; skill++)
-        {
-          if (temp_string.compare(std::string(Pathfinder::skillStrings[skill])) == 0)
-          {
-            break;
-          }
-        }
-        charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skill));
+        charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skillIdx));
       }
       featureNames_.push_back(choiceVec[choiceIdx].name());
       featureDescriptions_.push_back(choiceVec[choiceIdx].desc());
@@ -662,19 +659,11 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
         for (unsigned int abilityIdx = 0; abilityIdx < abilityVec.size(); abilityIdx++) {
           if (abilityVec[abilityIdx].choicePrereqId() == choiceVec[choiceIdx].id()) {
             abilities_.push_back(abilityVec[abilityIdx]);
-            if (abilityVec[abilityIdx].name().find("Class Skill: ") != std::string::npos)
+            int skillIdx = ParseNameForSkill(abilityVec[abilityIdx].name());
+            if (skillIdx > -1)
             {
-              std::string temp_string = abilityVec[abilityIdx].name().substr(13);
-              int skill = 0;
               skillsChanged_ = true;
-              for (; skill < Pathfinder::NUMBER_SKILLS; skill++)
-              {
-                if (temp_string.compare(std::string(Pathfinder::skillStrings[skill])) == 0)
-                {
-                  break;
-                }
-              }
-              charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skill));
+              charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skillIdx));
             }
             charPtr_->addClassAbility(abilityVec[abilityIdx].id());
             abilityListBox->AppendString(abilityVec[abilityIdx].name());
@@ -719,21 +708,90 @@ void ClassPage::ResizeCallback(wxSizeEvent& evt)
   evt.Skip();
 }
 
+int ClassPage::ParseNameForLanguage(std::string name, int* languageIdx)
+{
+  bool knownLanguage = (name.find("Known Language: ") != std::string::npos);
+  bool availLanguage = (name.find("Bonus Language: ") != std::string::npos);
+  if (knownLanguage || availLanguage)
+  {
+    std::string temp_string = name.substr(16);
+    int lang = 0;
+    for (; lang < Pathfinder::PFTable::get_num_languages(); lang++)
+    {
+      if (temp_string.compare(std::string(Pathfinder::PFTable::get_language(lang))) == 0)
+      {
+        break;
+      }
+    }
+    *languageIdx = lang;
+    if (knownLanguage)
+    {
+      return LANGUAGE_KNOWN_FOUND;
+    }
+    else if (availLanguage)
+    {
+      return LANGUAGE_AVAIL_FOUND;
+    }
+  }
+  return LANGUAGE_NOT_FOUND;
+}
+
+int ClassPage::ParseNameForSkill(std::string name)
+{
+  if (name.find("Class Skill: ") != std::string::npos)
+  {
+    std::string temp_string = name.substr(13);
+    int skill = 0;
+    for (; skill < Pathfinder::NUMBER_SKILLS; skill++)
+    {
+      if (temp_string.compare(std::string(Pathfinder::skillStrings[skill])) == 0)
+      {
+        break;
+      }
+    }
+    return skill;
+  }
+  return -1;
+}
+
+int ClassPage::ParseNameForSpellSchool(std::string name)
+{
+  if (name.find("Opposition School:") != std::string::npos)
+  {
+    /* Really ugly but its a one-off : if choosing an opposition school then remove all spells of that school */
+    std::string temp_string = name.substr(19);
+    int spellSchool = 0;
+    for (; spellSchool < Pathfinder::NUMBER_SPELL_SCHOOLS; spellSchool++)
+    {
+      if (temp_string.compare(std::string(Pathfinder::SPELL_SCHOOL_NAMES[spellSchool])) == 0)
+      {
+        break;
+      }
+    }
+    return spellSchool;
+  }
+  return -1;
+}
+
 void ClassPage::MouseOverEvent(wxMouseEvent& evt)
 {
+  wxSingleChoiceDialog* choiceWindow = static_cast<wxSingleChoiceDialog*>(wxWindow::FindWindowById(evt.GetId()));
   if(evt.Entering())
   {
     int item = HitTest(evt.GetPosition());
-    toolTip_ = new wxToolTip(choiceDescriptions_[item]);
+    choiceWindow->SetToolTip(choiceDescriptions_[item]);
+    //toolTip_ = new wxToolTip(choiceDescriptions_[item]);
   }
   else if (evt.Moving())
   {
     int item = HitTest(evt.GetPosition());
-    toolTip_->SetTip(choiceDescriptions_[item]);
+    choiceWindow->SetToolTip(choiceDescriptions_[item]);
+    //toolTip_->SetTip(choiceDescriptions_[item]);
   }
   else if (evt.Leaving())
   {
-    delete toolTip_;
-    toolTip_ = NULL;
+    choiceWindow->UnsetToolTip();
+    //delete toolTip_;
+    //toolTip_ = NULL;
   }
 }

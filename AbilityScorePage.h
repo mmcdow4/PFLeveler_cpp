@@ -92,6 +92,7 @@ public:
   void ApplyRacialBonuses();
   void UpdateFields();
   void UpdateAbilityScorePage(int classId);
+
 private:
   void populateScorePool(int modeIdx);
   int prevSelections_[Pathfinder::NUMBER_ABILITY_SCORES] = { 0, 0, 0, 0, 0, 0 };

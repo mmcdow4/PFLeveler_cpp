@@ -448,6 +448,8 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
       currDropDown->SetSelection(0);
       prevSelections_[ii] = 0;
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + ii)->Hide();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + ii)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + ii)->Hide();
     }
 
     static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_METHOD_DROPDOWN_LABEL_ID))->GetParent()->Layout();
@@ -455,12 +457,12 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
   case ABSCR_MODE_DICEPOOL:/*dice pool*/
     /* pool of 24d6 available. For each ability score, select a number of dice to roll (minimum 3).
     Once the pool is assigned, roll the dice for each ability score, record the sum the 3 highest values*/
-    wxMessageBox("Dice pool ability score generation is not implemented yet, come back in rev 2.0");
+    wxMessageBox("Dice pool ability score generation is not implemented yet.");
     break;
   case ABSCR_MODE_PURCHASE:/*purchase*/
     /* pool of points available and each ability score starts at 10. Spend points to raise ability score values or lower ability scores to get more points.
     Cannot lower ability scores below 7 or raise them above 18*/
-    wxMessageBox("Purchase ability score generation is not implemented yet, come back in rev 2.0");
+    wxMessageBox("Purchase ability score generation is not implemented yet.");
     break;
   case ABSCR_MODE_DIRECT_INPUT:/*direct input*/
     /* directly type in desired numerical values for each ability score */
@@ -475,6 +477,9 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Enable();
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx)->Show();
     }
+
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Enable();
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Show();
     Layout();
     break;
   default:
@@ -605,6 +610,11 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
     return;
   }
 
+  if (charPtr_->abilityScoresSet() == false && charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) > 0)
+  {
+    /* We are setting the initial ability scores, so indicate that there may be more starting languages to learn */
+    charPtr_->remainingBonusLanguages(charPtr_->abilityModifier(Pathfinder::INTELLIGENCE));
+  }
   charPtr_->abilityScoresSet(true);
 
   for (int abilityIdx = 0; abilityIdx < Pathfinder::NUMBER_ABILITY_SCORES; abilityIdx++)

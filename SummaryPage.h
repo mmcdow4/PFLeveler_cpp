@@ -7,6 +7,7 @@
 #include <wx/notebook.h>
 
 #include <pf_include/Character.h>
+#include "WrapText.h"
 
 #include <vector>
 
@@ -37,15 +38,16 @@
 #define SUMMARY_SIZE_LABEL_ID 1023
 #define SUMMARY_SPEED_LABEL_ID 1024
 #define SUMMARY_FAV_CLASS_LABEL_ID 1025
-#define SUMMARY_BUTTON_ID 1026
-#define SUMMARY_CLASS_LEVEL_LIST_ID 1027
-#define SUMMARY_ABILITY_SCORES_LIST_ID 1028
-#define SUMMARY_SKILL_LIST_ID 1029
-#define SUMMARY_FEAT_LIST_ID 1030
-#define SUMMARY_ABILITY_LIST_ID 1031
-#define SUMMARY_SPELL_SLOT_LIST_ID 1032
-#define SUMMARY_SPELL_LIST_ID 1033
-#define SUMMARY_CLASS_DROPDOWN_ID 1034
+#define SUMMARY_LANGUAGE_LABEL_ID 1026
+#define SUMMARY_BUTTON_ID 1027
+#define SUMMARY_CLASS_LEVEL_LIST_ID 1028
+#define SUMMARY_ABILITY_SCORES_LIST_ID 1029
+#define SUMMARY_SKILL_LIST_ID 1030
+#define SUMMARY_FEAT_LIST_ID 1031
+#define SUMMARY_ABILITY_LIST_ID 1032
+#define SUMMARY_SPELL_SLOT_LIST_ID 1033
+#define SUMMARY_SPELL_LIST_ID 1034
+#define SUMMARY_CLASS_DROPDOWN_ID 1035
 
 class SummaryPage : public wxPanel
 {
@@ -70,6 +72,8 @@ private:
   Pathfinder::Character* charPtr_ = NULL;
   std::map<wxString, int> knownSpellsTable_;
   std::vector<int> classList_;
+
+  HardBreakWrapper* languageTextWrapper_ = NULL;
 };
 
 #endif

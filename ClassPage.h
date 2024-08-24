@@ -47,6 +47,10 @@ public:
   void MouseOverEvent(wxMouseEvent& evt);
   bool IsReadyForLevel(int classIdx, std::string& errMsg);
 
+  int ParseNameForLanguage(std::string name, int* languageIdx);
+  int ParseNameForSkill(std::string name);
+  int ParseNameForSpellSchool(std::string name);
+
   bool skillsLocked_;
   bool spellsLeft_;
   bool featsLeft_;
@@ -54,6 +58,7 @@ public:
   bool grantedFeats_;
   bool grantedSpells_;
   bool skillsChanged_;
+  bool languageChange_;
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<Pathfinder::ClassFeature> todoFeatures_;
@@ -65,7 +70,7 @@ private:
 
   std::multiset<int> choicesMade_;
 
-  wxToolTip* toolTip_;
+  //wxToolTip* toolTip_;
 
   HardBreakWrapper* classDescWrapper_ = NULL;
   HardBreakWrapper* featureDescWrapper_ = NULL;

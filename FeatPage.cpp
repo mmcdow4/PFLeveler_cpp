@@ -1,4 +1,5 @@
 #include "FeatPage.h"
+#include <wx/tooltip.h>
 
 FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) : wxPanel(parentNotebook), charPtr_(currChar)
 {
@@ -20,6 +21,9 @@ FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
   vboxAvail->Add(availFeatsList, 1, wxEXPAND, 0);
 
   availFeatsList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &FeatPage::OnFeatSelected, this);
+  //availFeatsList->Bind(wxEVT_ENTER_WINDOW, &FeatPage::MouseOverEvent, this);
+  //availFeatsList->Bind(wxEVT_LEAVE_WINDOW, &FeatPage::MouseOverEvent, this);
+  //availFeatsList->Bind(wxEVT_MOTION, &FeatPage::MouseOverEvent, this);
 
   hbox1->Add(vboxAvail, 1, wxEXPAND | wxUP | wxDOWN | wxRIGHT, 10);
 
@@ -189,4 +193,26 @@ void FeatPage::SelectFeatButtonPress(wxCommandEvent& evt)
   }
 
   availListBox->GetParent()->Layout();
+}
+
+void FeatPage::MouseOverEvent(wxMouseEvent& evt)
+{
+  wxListBox* listBox = static_cast<wxListBox*>(wxWindow::FindWindowById(evt.GetId()));
+  int item = listBox->HitTest(evt.GetPosition());
+  if (evt.Entering())
+  {
+    listBox->SetToolTip(Pathfinder::PFTable::get_feat(availFeatIds_[item]).description());
+    //toolTip_ = new wxToolTip(choiceDescriptions_[item]);
+  }
+  else if (evt.Moving())
+  {
+    listBox->SetToolTip(Pathfinder::PFTable::get_feat(availFeatIds_[item]).description());
+    //toolTip_->SetTip(choiceDescriptions_[item]);
+  }
+  else if (evt.Leaving())
+  {
+    listBox->UnsetToolTip();
+    //delete toolTip_;
+    //toolTip_ = NULL;
+  }
 }

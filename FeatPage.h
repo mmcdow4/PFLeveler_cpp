@@ -28,6 +28,7 @@ public:
 
   void OnFeatSelected(wxCommandEvent& evt);
   void SelectFeatButtonPress(wxCommandEvent& evt);
+  void MouseOverEvent(wxMouseEvent& evt);
   
   void GrantFeats(void);
   void UpdateFeatDescription(int spellIndex);
