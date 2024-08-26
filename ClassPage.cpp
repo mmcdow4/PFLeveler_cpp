@@ -611,12 +611,10 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
 
   while (numChoicesMade < numChoices)
   {
-    wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
-      "Make selection " + wxString::Format(wxT("%d"), numChoicesMade + 1) + " out of " + wxString::Format(wxT("%d"), numChoices),
-      "caption string", choiceStrings, NULL, wxOK | wxCANCEL);
-    //choiceDialog->Bind(wxEVT_ENTER_WINDOW, &ClassPage::MouseOverEvent, this);
-    //choiceDialog->Bind(wxEVT_LEAVE_WINDOW, &ClassPage::MouseOverEvent, this);
-    //choiceDialog->Bind(wxEVT_MOTION, &ClassPage::MouseOverEvent, this);
+    //wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
+    myDialog* choiceDialog = new myDialog(this,
+      wxString::Format(wxT("Make selection %d out of %d"), numChoicesMade + 1, numChoices),
+      "caption string", choiceStrings, NULL, wxOK | wxCANCEL, wxDefaultPosition, choiceDescriptions_);
     int choiceReturn = choiceDialog->ShowModal();
     int choiceIdx = choiceDialog->GetSelection();
 
@@ -771,27 +769,4 @@ int ClassPage::ParseNameForSpellSchool(std::string name)
     return spellSchool;
   }
   return -1;
-}
-
-void ClassPage::MouseOverEvent(wxMouseEvent& evt)
-{
-  wxSingleChoiceDialog* choiceWindow = static_cast<wxSingleChoiceDialog*>(wxWindow::FindWindowById(evt.GetId()));
-  if(evt.Entering())
-  {
-    int item = HitTest(evt.GetPosition());
-    choiceWindow->SetToolTip(choiceDescriptions_[item]);
-    //toolTip_ = new wxToolTip(choiceDescriptions_[item]);
-  }
-  else if (evt.Moving())
-  {
-    int item = HitTest(evt.GetPosition());
-    choiceWindow->SetToolTip(choiceDescriptions_[item]);
-    //toolTip_->SetTip(choiceDescriptions_[item]);
-  }
-  else if (evt.Leaving())
-  {
-    choiceWindow->UnsetToolTip();
-    //delete toolTip_;
-    //toolTip_ = NULL;
-  }
 }

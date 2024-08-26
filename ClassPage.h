@@ -77,4 +77,61 @@ private:
   HardBreakWrapper* abilityDescWrapper_ = NULL;
 };
 
+
+class myDialog : public wxSingleChoiceDialog
+{
+public:
+  myDialog(wxWindow* parent,
+    const wxString& message,
+    const wxString& caption,
+    const wxArrayString& choices,
+    void** clientData = NULL,
+    long style = wxCHOICEDLG_STYLE,
+    const wxPoint& pos = wxDefaultPosition,
+    const std::vector<wxString>& descriptions = std::vector<wxString>()) : wxSingleChoiceDialog(parent, message, caption, choices, clientData, style, pos)
+  {
+    descriptions_ = descriptions;
+
+    m_listbox->Bind(wxEVT_LEAVE_WINDOW, &myDialog::MouseOverEvent, this);
+    m_listbox->Bind(wxEVT_MOTION, &myDialog::MouseOverEvent, this);
+  }
+
+  int myHitTest(wxPoint pos)
+  {
+    wxClientDC dc(m_listbox);
+    dc.SetFont(m_listbox->GetFont());
+    wxCoord itemHeight;
+    dc.GetTextExtent("W", nullptr, &itemHeight);  // "W" is a good character for height estimation
+
+    int scrollPos = m_listbox->GetScrollPos(wxVERTICAL);
+    
+    int itemIndex = std::floor(static_cast<double>(pos.y) / static_cast<double>(itemHeight)) + scrollPos;
+    itemIndex = std::max(0, itemIndex);
+    return std::min(itemIndex, static_cast<int>(m_listbox->GetCount()-1));
+  }
+
+  void MouseOverEvent(wxMouseEvent& evt)
+  {
+    wxPoint pos =evt.GetPosition();
+    
+    int item = myHitTest(pos);//m_listbox->HitTest(m_listbox->ClientToScreen(pos));
+    if(item != wxNOT_FOUND)
+    {
+      if (evt.Moving())
+      {
+        m_listbox->SetToolTip(descriptions_[item]);
+      }
+      else if (evt.Leaving())
+      {
+        m_listbox->UnsetToolTip();
+      }
+    }
+    else
+    {
+      m_listbox->UnsetToolTip();
+    }
+  }
+  private:
+    std::vector<wxString> descriptions_;
+};
 #endif
