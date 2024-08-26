@@ -27,6 +27,9 @@
 #define FILE_RESET_ID 102
 #define FILE_EXIT_ID 103
 
+/* Help Menu IDs */
+#define HELP_VERSION_ID 200
+
 
 
 class cMain : public wxFrame
@@ -40,6 +43,7 @@ public:
 
   wxMenuBar* menubar_;
   wxMenu* file_;
+  wxMenu* help_;
 
   wxNotebook* notebook_;
 

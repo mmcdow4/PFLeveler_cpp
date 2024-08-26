@@ -29,6 +29,10 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "char_generator", wxPoint(30, 30), w
   file_->Append(FILE_RESET_ID, wxString("New Character"), wxString("Discard the current character and start a new sheet"));
   file_->Append(FILE_EXIT_ID, wxString("Exit"), wxString("Close the window"));
 
+  help_ = new wxMenu;
+  menubar_->Append(help_, wxT("&Help"));
+  help_->Append(HELP_VERSION_ID, wxString("Version"), wxString("Get Current Version Number"));
+
   SetMenuBar(menubar_);
   menubar_->Bind(wxEVT_COMMAND_MENU_SELECTED, &cMain::menuCallback, this);
 
@@ -124,6 +128,9 @@ void cMain::menuCallback(wxCommandEvent& evt)
     break;
   case FILE_EXIT_ID:
     delete this;
+    break;
+  case HELP_VERSION_ID:
+    wxMessageBox("Current Version 0.2");
     break;
   default:
     wxMessageBox("Unknown file selection : " + std::to_string(origId));
