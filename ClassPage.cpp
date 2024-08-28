@@ -361,6 +361,12 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   /* increment the level */
   int classLevel = charPtr_->incrementClassLevel(classIdx);
 
+  if (charPtr_->getCharacterLevel() == 1)
+  {
+    /* First level added, roll for starting wealth */
+    charPtr_->rollWealth(classIdx);
+  }
+
   /* roll for new hit points */
   int hitPointsAdded = charPtr_->abilityModifier(Pathfinder::CONSTITUTION);
   if (charPtr_->getCharacterLevel() == 1)
@@ -487,6 +493,7 @@ void ClassPage::OnClassSelected(wxCommandEvent& evt)
   }
   classText += "hit die = d" + wxString::Format(wxT("%d"), chosenClass.hitDie());
   classText += ", alignment = " + chosenClass.alignmentReq();
+  classText += ", starting wealth = " + std::to_string(chosenClass.startingWealthD6()) + "d6 x 10 gp";
 
   wxStaticText* classDescBox = static_cast<wxStaticText*>(wxWindow::FindWindowById(CLASS_DESCRIPTION_ID));
   classDescBox->SetLabel(classDescWrapper_->UpdateText(classText));

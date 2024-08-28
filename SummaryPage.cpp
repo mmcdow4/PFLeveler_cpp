@@ -519,7 +519,7 @@ void SummaryPage::PopulateClassLevelData(void)
 void SummaryPage::PopulateRaceData(void)
 {
   wxWindow::FindWindowById(SUMMARY_RACE_LABEL_ID)->SetLabel("Race: " + charPtr_->race().raceName());
-  wxWindow::FindWindowById(SUMMARY_SIZE_LABEL_ID)->SetLabel("Size: " + charPtr_->race().charSize());
+  wxWindow::FindWindowById(SUMMARY_SIZE_LABEL_ID)->SetLabel("Size: " + std::string(Pathfinder::CHARACTER_SIZE_NAMES[charPtr_->race().charSize()]));
   wxWindow::FindWindowById(SUMMARY_SPEED_LABEL_ID)->SetLabel("Speed: " + std::to_string(charPtr_->race().speed()));
 
   std::set<int> languageList = charPtr_->getKnownLanguages();

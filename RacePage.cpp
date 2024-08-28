@@ -340,7 +340,7 @@ void RacePage::OnRacialSelected(wxCommandEvent& evt)
 wxString RacePage::populateRaceText(Pathfinder::Race chosenRace)
 {
   wxString raceText;
-  raceText += "Size: " + chosenRace.charSize();
+  raceText += "Size: " + std::string(Pathfinder::CHARACTER_SIZE_NAMES[chosenRace.charSize()]);
   raceText += "\nSpeed: " + std::to_string(chosenRace.speed());
   raceText += "\nAbilty Score Offsets:";
   for (int ii = 0; ii < Pathfinder::NUMBER_ABILITY_SCORES + 1; ii++)
