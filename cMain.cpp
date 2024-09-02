@@ -154,6 +154,8 @@ void cMain::InitializeNotebook()
   notebook_->AddPage(spellPage_, L"Spells");
   featPage_ = new FeatPage(notebook_, currChar_);
   notebook_->AddPage(featPage_, L"Feats");
+  equipmentPage_ = new EquipmentPage(notebook_, currChar_);
+  notebook_->AddPage(equipmentPage_, L"Equipment");
   InitializeFeatsPage();
 }
 
@@ -165,6 +167,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
   case RACE_SELECT_BTN_ID:
     /* Update racial bonuses on the ability scores page */
     abilityScorePage_->ApplyRacialBonuses();
+    equipmentPage_->UpdateEquipmentPage();
 
     /* Propagate race information to the summary page */
     summaryPage_->PopulateRaceData();
@@ -183,6 +186,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
       /* Tell the race page to open up language selection*/
       racePage_->SetupBonusLanguages();
     }
+    equipmentPage_->UpdateEquipmentPage();
     break;
   case CLASS_FAVORED_CLASS_BUTTON_ID:
     /* Propagate favored classes to the summary page */
@@ -210,6 +214,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
       racePage_->SetupBonusLanguages();
       summaryPage_->PopulateRaceData();
     }
+    equipmentPage_->UpdateEquipmentPage();
     summaryPage_->PopulateSpellData();
     summaryPage_->PopulateFeatData();
     summaryPage_->PopulateAbilityScoreData();
@@ -287,6 +292,7 @@ void cMain::ResetNotebook()
   skillPage_->ResetPage(currChar_);
   spellPage_->ResetPage(currChar_);
   featPage_->ResetPage(currChar_);
+  equipmentPage_->ResetPage(currChar_);
 }
 
 

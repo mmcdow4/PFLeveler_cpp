@@ -14,6 +14,7 @@
 #include "SkillPage.h"
 #include "SpellPage.h"
 #include "FeatPage.h"
+#include "EquipmentPage.h"
 
 #include <pf_include/Character.h>
 
@@ -72,6 +73,7 @@ private:
   SkillPage* skillPage_ = NULL;
   SpellPage* spellPage_ = NULL;
   FeatPage* featPage_ = NULL;
+  EquipmentPage* equipmentPage_ = NULL;
 };
 
 #endif
