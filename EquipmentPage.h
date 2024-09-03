@@ -63,10 +63,10 @@ private:
   void OnMasterworkBoxChecked(wxCommandEvent& evt);
 
   void UpdateItemDescription(std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool qualityOverride);
-  void SetupListBox(wxListCtrl* listBox);
+  void SetupListBox(wxListCtrl* listBox, bool defaultList = false);
   void InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool colorUnaffordable = true, std::string namePrefix = "", long index = wxNOT_FOUND);
-  void FilterAvailBox();
-  void FilterOwnedBox();
+  void PopulateAvailBox();
+  void PopulateOwnedBox();
   bool CheckFilterString(std::shared_ptr<const Pathfinder::Equipment> itemPtr);
   int FindOwnedIndex(std::shared_ptr<const Pathfinder::Equipment> itemPtr);
 

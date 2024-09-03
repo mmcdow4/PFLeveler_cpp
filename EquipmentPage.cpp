@@ -8,7 +8,8 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
 
   wxBoxSizer* vboxOverall = new wxBoxSizer(wxVERTICAL); /* will contain the various vertical sizers */ 
   wxBoxSizer* hbox0 = new wxBoxSizer(wxHORIZONTAL);/* category dropdown and label, search bar */
-  wxBoxSizer* hbox2 = new wxBoxSizer(wxHORIZONTAL);/* Description Text */
+  wxBoxSizer* hbox2 = new wxBoxSizer(wxHORIZONTAL);/* Equipment lists */
+  //wxFlexGridSizer* gridSizer = new wxFlexGridSizer(1, 2, 0, 10); // 1 row, 2 columns, no vertical gap, 10px horizontal gap. Equipment lists
 
   /* add a spacer */
   hbox0->Add(new wxPanel(this, wxID_ANY), 2, wxEXPAND);
@@ -61,6 +62,7 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   wxButton* addMoneyButton = new wxButton(this, EQUIPMENT_ADD_MONEY_BUTTON_ID, wxT("Add Money"));
   addMoneyButton->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &EquipmentPage::AddMoneyButtonPress, this);
   vboxAvail->Add(addMoneyButton);
+  //gridSizer->Add(vboxAvail, 1, wxEXPAND | wxALL, 10);
   hbox2->Add(vboxAvail, 1, wxEXPAND | wxUP | wxDOWN | wxRIGHT | wxFIXED_MINSIZE, 10);
 
   /* Owned Equipment List */
@@ -78,16 +80,21 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   hboxOwnedBtns->Add(sellButton);
   wxCheckBox* filterCheck = new wxCheckBox(this, EQUIPMENT_OWNED_LOCK_CHECKBOX_ID, wxT("Don't Apply Filters To Owned Equipment"));
   filterCheck->SetValue(true);
-  //filterCheck->Bind(wxEVT_CHECKBOX, &EquipmentPage::OnLockBoxChecked, this);
+  filterCheck->Bind(wxEVT_CHECKBOX, &EquipmentPage::OnLockBoxChecked, this);
   hboxOwnedBtns->Add(filterCheck);
 
   vboxOwned->Add(hboxOwnedBtns);
   wxStaticText* weightText = new wxStaticText(this, EQUIPMENT_WEIGHT_TEXT_ID, wxT("Total Weight Held: 0 lbs\nLight Load Capacity : 0 lbs\nMedium Load Capacity : 0 lbs\nHeavy Load Capacity : 0 lbs"));
   vboxOwned->Add(weightText);
 
+  //gridSizer->Add(vboxOwned, 1, wxEXPAND | wxALL, 10);
   hbox2->Add(vboxOwned, 1, wxEXPAND | wxUP | wxDOWN | wxLEFT | wxFIXED_MINSIZE, 10);
 
+  //gridSizer->AddGrowableCol(0, 1); // First column grows
+  //gridSizer->AddGrowableCol(1, 1); // Second column grows
+  
   vboxOverall->Add(hbox2, 5, wxEXPAND);
+  //vboxOverall->Add(gridSizer, 5, wxEXPAND);
 
   /* Description Box */
   wxStaticText* itemDescription = new wxStaticText(this, EQUIPMENT_DESCRIPTION_ID, wxT("Description:"));
@@ -138,12 +145,13 @@ void EquipmentPage::ResetPage(Pathfinder::Character* currChar)
   static_cast<wxButton*>(wxWindow::FindWindowById(EQUIPMENT_PURCHASE_BUTTON_ID))->Enable();
   static_cast<wxButton*>(wxWindow::FindWindowById(EQUIPMENT_SELL_BUTTON_ID))->Enable();
 
-  FilterAvailBox();
-  FilterOwnedBox();
+  PopulateAvailBox();
+  PopulateOwnedBox();
 }
 
 void EquipmentPage::UpdateEquipmentPage()
 {
+  int wealthVal = 0;
   std::string wealthStr = "0 cp";
   double lightCarryCapacity = 0.0;
   double mediumCarryCapacity = 0.0;
@@ -151,6 +159,7 @@ void EquipmentPage::UpdateEquipmentPage()
   double weightHeld = 0.0;
   if (charPtr_ != NULL)
   {
+    wealthVal = charPtr_->wealthCp();
     wealthStr = charPtr_->wealthString();
     weightHeld = charPtr_->weightHeld();
     if (charPtr_->race().id() != -1 && charPtr_->abilityScoresSet())
@@ -161,6 +170,20 @@ void EquipmentPage::UpdateEquipmentPage()
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(EQUIPMENT_WEALTH_TEXT_ID))->SetLabel("Wealth on Hand : " + wealthStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(EQUIPMENT_WEIGHT_TEXT_ID))->SetLabel(wxString::Format(wxT("Total Weight Held : %f lbs\nLight Load Capacity : %f lbs\nMedium Load Capacity : %f lbs\nHeavy Load Capacity : %f lbs"), weightHeld, lightCarryCapacity, mediumCarryCapacity, heavyCarryCapacity));
+
+  wxListCtrl* listBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID));
+  long item = -1;
+  while ((item = listBox->GetNextItem(item)) != wxNOT_FOUND) {
+     int item_val = Pathfinder::string_to_currency(listBox->GetItemText(item, PRICE_COLUMN).ToStdString());
+     if (item_val <= wealthVal)
+     {
+       listBox->SetItemTextColour(item, *wxBLACK);
+     }
+     else
+     {
+       listBox->SetItemTextColour(item, *wxRED);
+     }
+  }
 }
 
 void EquipmentPage::OnItemSelected(wxListEvent& evt)
@@ -179,18 +202,11 @@ void EquipmentPage::OnItemSelected(wxListEvent& evt)
       listBox->SetItemState(item, 0, wxLIST_STATE_SELECTED);
     }
     listBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID));
-    // Now deselect whatever was previously selected, maybe need to select the whole row in the table?
-    /*item = -1;
-    while ((item = listBox->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND) {
-      if(item != equipListIdx)
-        listBox->SetItemState(item, 0, wxLIST_STATE_SELECTED);
-    }*/
     itemPtr = equipMap_[availListIds_[equipListIdx]];
   }
   else if (evt.GetId() == EQUIPMENT_OWNED_LIST_ID)
   {
     /* Deselect the available equipment list */
-    wxMessageBox(wxString::Format(wxT("I think you selected item [%d] of the owned list"), equipListIdx));
     listBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID));
     long item = -1;
     while ((item = listBox->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND) {
@@ -310,13 +326,13 @@ void EquipmentPage::UpdateItemDescription(std::shared_ptr<const Pathfinder::Equi
   static_cast<wxStaticText*>(wxWindow::FindWindowById(EQUIPMENT_DESCRIPTION_ID))->SetLabel(descriptionText);
 }
 
-void EquipmentPage::SetupListBox(wxListCtrl* listBox)
+void EquipmentPage::SetupListBox(wxListCtrl* listBox, bool defaultList)
 {
   listBox->ClearAll();
   listBox->InsertColumn(NAME_COLUMN, "Name", wxLIST_FORMAT_LEFT, -1);
-  listBox->InsertColumn(WEIGHT_COLUMN, "Weight", wxLIST_FORMAT_LEFT, -1);
   listBox->InsertColumn(PRICE_COLUMN, "Price", wxLIST_FORMAT_LEFT, -1);
-  if (currentCategory_ == Pathfinder::WEAPONS)
+  listBox->InsertColumn(WEIGHT_COLUMN, "Weight", wxLIST_FORMAT_LEFT, -1);
+  if (!defaultList && currentCategory_ == Pathfinder::WEAPONS)
   {
     listBox->InsertColumn(WEAPON_CATEGORY_COLUMN, "Category", wxLIST_FORMAT_LEFT, -1);
     listBox->InsertColumn(WEAPON_DAMAGE_COLUMN, "Damage", wxLIST_FORMAT_LEFT, -1);
@@ -325,7 +341,7 @@ void EquipmentPage::SetupListBox(wxListCtrl* listBox)
     listBox->InsertColumn(WEAPON_TYPE_COLUMN, "Damage Type", wxLIST_FORMAT_LEFT, -1);
     listBox->InsertColumn(WEAPON_SPECIAL_COLUMN, "Special", wxLIST_FORMAT_LEFT, -1);
   }
-  else if (currentCategory_ == Pathfinder::ARMOR)
+  else if (!defaultList && currentCategory_ == Pathfinder::ARMOR)
   {
     listBox->InsertColumn(ARMOR_CATEGORY_COLUMN, "Category", wxLIST_FORMAT_LEFT, -1);
     listBox->InsertColumn(ARMOR_BONUS_COLUMN, "Armor Bonus", wxLIST_FORMAT_LEFT, -1);
@@ -366,15 +382,15 @@ void EquipmentPage::InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pa
   {
     listBox->SetItem(listItem);
   }
-  // Insert Weight
-  listItem.SetColumn(WEIGHT_COLUMN);
-  listItem.SetText(wxString::Format(wxT("%.6g Lbs."), itemPtr->getWeight(size)));
-  listBox->SetItem(listItem);
   // Insert Price
   listItem.SetColumn(PRICE_COLUMN);
   listItem.SetText(Pathfinder::currency_to_string(itemPtr->getPrice(size, qualityOverride)));
   listBox->SetItem(listItem);
-  if (currentCategory_ == Pathfinder::WEAPONS)
+  // Insert Weight
+  listItem.SetColumn(WEIGHT_COLUMN);
+  listItem.SetText(wxString::Format(wxT("%.6g Lbs."), itemPtr->getWeight(size)));
+  listBox->SetItem(listItem);
+  if (listBox->GetColumnCount() > WEAPON_CATEGORY_COLUMN && currentCategory_ == Pathfinder::WEAPONS)
   {
     std::shared_ptr<const Pathfinder::Weapon> weaponPtr = std::reinterpret_pointer_cast<const Pathfinder::Weapon>(itemPtr);
     // Insert Category
@@ -402,7 +418,7 @@ void EquipmentPage::InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pa
     listItem.SetText(weaponPtr->getSpecial());
     listBox->SetItem(listItem);
   }
-  else if (currentCategory_ == Pathfinder::ARMOR)
+  else if (listBox->GetColumnCount() > ARMOR_CATEGORY_COLUMN && currentCategory_ == Pathfinder::ARMOR)
   {
     std::shared_ptr<const Pathfinder::Armor> armorPtr = std::reinterpret_pointer_cast<const Pathfinder::Armor>(itemPtr);
     // Insert Category
@@ -451,7 +467,7 @@ void EquipmentPage::InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pa
   }
 }
 
-void EquipmentPage::FilterAvailBox()
+void EquipmentPage::PopulateAvailBox()
 {
   wxListCtrl* availList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID));
   availList->ClearAll();
@@ -473,7 +489,7 @@ void EquipmentPage::FilterAvailBox()
   availList->GetParent()->Layout();
 }
 
-void EquipmentPage::FilterOwnedBox()
+void EquipmentPage::PopulateOwnedBox()
 {
   if (charPtr_ == NULL)
   {
@@ -482,12 +498,12 @@ void EquipmentPage::FilterOwnedBox()
   }
 
   wxListCtrl* ownedList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LIST_ID));
-  bool filterOwned = true;//static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LOCK_CHECKBOX_ID))->GetValue() == 0;
+  bool skipFilter = static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LOCK_CHECKBOX_ID))->GetValue();
 
   ownedList->ClearAll();
   ownedItems_.clear();
 
-  this->SetupListBox(ownedList);
+  this->SetupListBox(ownedList, skipFilter);
 
   std::unordered_map<const Pathfinder::GeneralItem, int, Pathfinder::myItemHash> equipments;
   std::unordered_map<const Pathfinder::Weapon, int, Pathfinder::myWeaponHash> weapons;
@@ -499,7 +515,7 @@ void EquipmentPage::FilterOwnedBox()
   for (auto iter = equipments.begin(); iter != equipments.end(); ++iter)
   {
     std::shared_ptr<const Pathfinder::Equipment> tmpPtr = std::reinterpret_pointer_cast<const Pathfinder::Equipment>(std::make_shared<const Pathfinder::GeneralItem>(iter->first));
-    if (!filterOwned || ((currentCategory_ == Pathfinder::ALL_EQUIPMENT || static_cast<Pathfinder::equipmentCategoryMarker>(currentCategory_) == iter->first.getCategory()) &&
+    if (skipFilter || ((currentCategory_ == Pathfinder::ALL_EQUIPMENT || static_cast<Pathfinder::equipmentCategoryMarker>(currentCategory_) == iter->first.getCategory()) &&
         CheckFilterString(tmpPtr)))
     {
       std::string namePrefix = "";
@@ -513,12 +529,12 @@ void EquipmentPage::FilterOwnedBox()
   }
 
   /* Filter the weapons*/
-  if (!filterOwned || (currentCategory_ == Pathfinder::ALL_EQUIPMENT || static_cast<Pathfinder::equipmentCategoryMarker>(currentCategory_) == Pathfinder::WEAPONS))
+  if (skipFilter || (currentCategory_ == Pathfinder::ALL_EQUIPMENT || static_cast<Pathfinder::equipmentCategoryMarker>(currentCategory_) == Pathfinder::WEAPONS))
   {
     for (auto iter = weapons.begin(); iter != weapons.end(); ++iter)
     {
       std::shared_ptr<const Pathfinder::Equipment> tmpPtr = std::reinterpret_pointer_cast<const Pathfinder::Equipment>(std::make_shared<const Pathfinder::Weapon>(iter->first));
-      if(CheckFilterString(tmpPtr))
+      if(skipFilter || CheckFilterString(tmpPtr))
       {
         std::string namePrefix = "";
         if (iter->second > 1)
@@ -532,12 +548,12 @@ void EquipmentPage::FilterOwnedBox()
   }
 
   /* Filter the armor*/
-  if (!filterOwned || (currentCategory_ == Pathfinder::ALL_EQUIPMENT || static_cast<Pathfinder::equipmentCategoryMarker>(currentCategory_) == Pathfinder::ARMOR))
+  if (skipFilter || (currentCategory_ == Pathfinder::ALL_EQUIPMENT || static_cast<Pathfinder::equipmentCategoryMarker>(currentCategory_) == Pathfinder::ARMOR))
   {
     for (auto iter = armors.begin(); iter != armors.end(); ++iter)
     {
       std::shared_ptr<const Pathfinder::Equipment> tmpPtr = std::reinterpret_pointer_cast<const Pathfinder::Equipment>(std::make_shared<const Pathfinder::Armor>(iter->first));
-      if (CheckFilterString(tmpPtr))
+      if (skipFilter || CheckFilterString(tmpPtr))
       {
         std::string namePrefix = "";
         if (iter->second > 1)
@@ -741,10 +757,10 @@ void EquipmentPage::OnCategorySelected(wxCommandEvent& evt)
   }
   currentCategory_ = selection;
   
-  this->FilterAvailBox();
-  //if(static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LOCK_CHECKBOX_ID))->GetValue() == 1)
+  this->PopulateAvailBox();
+  if(!static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LOCK_CHECKBOX_ID))->GetValue())
   {
-    this->FilterOwnedBox();
+    this->PopulateOwnedBox();
   }
 }
 
@@ -758,10 +774,10 @@ void EquipmentPage::OnTextEntered(wxCommandEvent& evt)
 
   filterString_ = lower_str;
 
-  this->FilterAvailBox();
+  this->PopulateAvailBox();
   if (static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LOCK_CHECKBOX_ID))->GetValue() == 0)
   {
-    this->FilterOwnedBox();
+    this->PopulateOwnedBox();
   }
   return;
 }
@@ -799,11 +815,13 @@ bool EquipmentPage::CheckFilterString(std::shared_ptr<const Pathfinder::Equipmen
 
 void EquipmentPage::OnLockBoxChecked(wxCommandEvent& evt)
 {
-  bool filterActive = (currentCategory_ != Pathfinder::ALL_EQUIPMENT || !static_cast<wxTextCtrl*>(wxWindow::FindWindowById(EQUIPMENT_SEARCH_BAR_ID))->GetValue().IsEmpty());
-  if (filterActive)
+  bool filterActive = (currentCategory_ != Pathfinder::ALL_EQUIPMENT || !filterString_.empty());
+  /* If we are turning OFF filtering (i.e. clicking ON the button), and category is currently either weapons or armor, then we need to override the setup and just to default columns */
+
+  if(filterActive)
   {
     /* If filtering is being done, either need to apply it now or un-apply it */
-    this->FilterOwnedBox();
+    this->PopulateOwnedBox();
   }
 }
 
