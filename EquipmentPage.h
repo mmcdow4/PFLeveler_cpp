@@ -4,6 +4,7 @@
 #define EQUIPMENTPAGE_H
 
 #include <wx/wx.h>
+#include <wx/listctrl.h>
 #include <wx/notebook.h>
 
 #include <pf_include/Character.h>
@@ -29,31 +30,51 @@
 
 class EquipmentPage : public wxPanel
 {
+  const int NAME_COLUMN = 0;
+  const int PRICE_COLUMN = 1;
+  const int WEIGHT_COLUMN = 2;
+  const int WEAPON_CATEGORY_COLUMN = 3;
+  const int WEAPON_DAMAGE_COLUMN = 4;
+  const int WEAPON_CRIT_COLUMN = 5;
+  const int WEAPON_RANGE_COLUMN = 6;
+  const int WEAPON_TYPE_COLUMN = 7;
+  const int WEAPON_SPECIAL_COLUMN = 8;
+  const int ARMOR_CATEGORY_COLUMN = 3;
+  const int ARMOR_BONUS_COLUMN = 4;
+  const int ARMOR_MAX_DEX_BONUS_COLUMN = 5;
+  const int ARMOR_CHECK_PENALTY_COLUMN = 6;
+  const int ARMOR_SPELL_FAIL_CHANCE_COLUMN = 7;
+  const int ARMOR_SPEED_COLUMN = 8;
 public:
   EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar);
   ~EquipmentPage() {}
 
   void ResetPage(Pathfinder::Character* currChar);
   void UpdateEquipmentPage();
+private:
 
-  void OnItemSelected(wxCommandEvent& evt);
+  void OnItemSelected(wxListEvent& evt);
   void PurchaseItemButtonPress(wxCommandEvent& evt);
   void SellItemButtonPress(wxCommandEvent& evt);
   void AddMoneyButtonPress(wxCommandEvent& evt);
   void OnCategorySelected(wxCommandEvent& evt);
-  //void OnTextEntered(wxCommandEvent& evt);
+  void OnTextEntered(wxCommandEvent& evt);
   void OnLockBoxChecked(wxCommandEvent& evt);
-  //void OnMasterworkBoxChecked(wxCommandEvent& evt);
- 
-  void UpdateItemDescription(std::shared_ptr<const Pathfinder::Equipment> itemPtr);
+  void OnMasterworkBoxChecked(wxCommandEvent& evt);
+
+  void UpdateItemDescription(std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool qualityOverride);
+  void SetupListBox(wxListCtrl* listBox);
+  void InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool colorUnaffordable = true, std::string namePrefix = "", long index = wxNOT_FOUND);
   void FilterAvailBox();
   void FilterOwnedBox();
-private:
+  bool CheckFilterString(std::shared_ptr<const Pathfinder::Equipment> itemPtr);
+  int FindOwnedIndex(std::shared_ptr<const Pathfinder::Equipment> itemPtr);
+
   Pathfinder::Character* charPtr_ = NULL;
   int currentCategory_ = Pathfinder::ALL_EQUIPMENT;
+  std::string filterString_ = "";
   std::map<int, std::shared_ptr<const Pathfinder::Equipment>> equipMap_ = Pathfinder::PFTable::get_equipment_map();
   std::vector<int> availListIds_;
-  std::map<std::string, int> ownedListContents_;
   std::vector<std::shared_ptr<const Pathfinder::Equipment>> ownedItems_;
 };
 
