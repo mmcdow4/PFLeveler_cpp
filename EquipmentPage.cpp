@@ -110,6 +110,7 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   }
 
   this->SetSizer(vboxOverall);
+
 }
 
 void EquipmentPage::ResetPage(Pathfinder::Character* currChar)
@@ -228,7 +229,7 @@ void EquipmentPage::OnItemSelected(wxListEvent& evt)
 
   UpdateItemDescription(itemPtr, qualityOverride);
   
-  listBox->GetParent()->Layout();
+  this->myLayout();
 }
 
 int EquipmentPage::FindOwnedIndex(std::shared_ptr<const Pathfinder::Equipment> itemPtr)
@@ -351,7 +352,7 @@ void EquipmentPage::SetupListBox(wxListCtrl* listBox, bool defaultList)
     listBox->InsertColumn(ARMOR_SPEED_COLUMN, "Speed", wxLIST_FORMAT_LEFT, -1);
   }
 
-  listBox->GetParent()->Layout();
+  this->myLayout();
 }
 
 void EquipmentPage::InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool colorUnaffordable, std::string namePrefix, long index)
@@ -486,7 +487,7 @@ void EquipmentPage::PopulateAvailBox()
       availListIds_.push_back(equipIter->first);
     }
   }
-  availList->GetParent()->Layout();
+  this->myLayout();
 }
 
 void EquipmentPage::PopulateOwnedBox()
@@ -653,7 +654,7 @@ void EquipmentPage::PurchaseItemButtonPress(wxCommandEvent& evt)
   }
 
   this->UpdateEquipmentPage();
-  ownedBox->GetParent()->Layout();
+  this->myLayout();
 }
 
 void EquipmentPage::SellItemButtonPress(wxCommandEvent& evt)
@@ -726,7 +727,7 @@ void EquipmentPage::SellItemButtonPress(wxCommandEvent& evt)
   }
 
   this->UpdateEquipmentPage();
-  ownedBox->GetParent()->Layout();
+  this->myLayout();
 }
 
 void EquipmentPage::AddMoneyButtonPress(wxCommandEvent& evt)
@@ -834,4 +835,28 @@ void EquipmentPage::OnMasterworkBoxChecked(wxCommandEvent& evt)
     /* Just repopulate the whole available equipment list, forcing the recalc of prices and recoloring */
     this->InsertListItem(availList, equipMap_[availListIds_[index]], true, "", index);
   }
+}
+
+void EquipmentPage::myLayout()
+{
+  int totalWidth = GetClientSize().GetWidth();
+
+  int width = totalWidth/2 - 5;
+  wxListCtrl* availList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID));
+  wxListCtrl* ownedList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LIST_ID));
+
+  if (availList == NULL || ownedList == NULL)
+  {
+    return;
+  }
+  wxPoint ownedPos;
+  ownedList->GetPosition(&(ownedPos.x), &(ownedPos.y));
+  availList->GetParent()->Layout();
+  wxSize availSize = availList->GetSize();
+  availSize.SetWidth(width);
+  availList->SetSize(availSize);
+  wxSize ownedSize = ownedList->GetSize();
+  ownedSize.SetWidth(width);
+  ownedList->SetPosition(ownedPos);
+  ownedList->SetSize(ownedSize);
 }

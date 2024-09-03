@@ -69,6 +69,7 @@ private:
   void PopulateOwnedBox();
   bool CheckFilterString(std::shared_ptr<const Pathfinder::Equipment> itemPtr);
   int FindOwnedIndex(std::shared_ptr<const Pathfinder::Equipment> itemPtr);
+  void myLayout();
 
   Pathfinder::Character* charPtr_ = NULL;
   int currentCategory_ = Pathfinder::ALL_EQUIPMENT;
