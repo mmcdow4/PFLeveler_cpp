@@ -186,6 +186,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
       /* Tell the race page to open up language selection*/
       racePage_->SetupBonusLanguages();
     }
+    featPage_->UpdateFeatPage(wxNOT_FOUND);
     equipmentPage_->UpdateEquipmentPage();
     break;
   case CLASS_FAVORED_CLASS_BUTTON_ID:
@@ -242,6 +243,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
   case SKILL_LOCK_BUTTON_ID:
     /* Propagate skills to the summary page */
     summaryPage_->PopulateSkillData();
+    featPage_->UpdateFeatPage(wxNOT_FOUND);
     classPage_->skillsLocked_ = true;
     break;
   case SPELL_LEARN_BUTTON_ID:

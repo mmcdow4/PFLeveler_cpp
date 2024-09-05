@@ -562,8 +562,10 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
   /* Remove choices that would grant a feat you already have */
   for (std::vector<Pathfinder::ClassChoice>::iterator iter = choiceVec.begin(); iter != choiceVec.end(); )
   {
-    if (charPtr_->isFeatSelected(iter->featId()))
+    std::string dummy;
+    if (charPtr_->isFeatSelected(iter->featId()) || !charPtr_->checkFeatPrereqs(iter->featId(), dummy))
     {
+      /* Already have this feat or don't meet the prerequisites */
       iter = choiceVec.erase(iter);
     }
     else

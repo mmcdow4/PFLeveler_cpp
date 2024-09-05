@@ -258,7 +258,8 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
   }
   int maxWidth = 0;
   wxWindow::FindWindowById(SUMMARY_CLASS_LEVEL_LIST_ID)->GetSize(&maxWidth, NULL);
-  languageTextWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(SUMMARY_LANGUAGE_LABEL_ID), "Languages: ", maxWidth);
+  languageTextWrapper_ = new HardBreakWrapper(wxWindow::FindWindowById(SUMMARY_LANGUAGE_LABEL_ID), "", maxWidth);
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_LANGUAGE_LABEL_ID))->SetLabel(languageTextWrapper_->UpdateText("Languages: "));
 
   if (charPtr_->getCharacterLevel() > 0)
   {
@@ -306,6 +307,7 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
     static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_AGE_LABEL_ID))->SetLabel(wxT("Age: " + charPtr_->age()));
     wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Disable();
     wxWindow::FindWindowById(SUMMARY_AGE_INPUT_ID)->Hide();
+
 
     wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Disable();
     wxWindow::FindWindowById(SUMMARY_BUTTON_ID)->Hide();

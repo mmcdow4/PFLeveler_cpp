@@ -4,6 +4,7 @@
 #define FEATPAGE_H
 
 #include <wx/wx.h>
+#include <wx/listctrl.h>
 #include <wx/notebook.h>
 
 #include <pf_include/Character.h>
@@ -26,16 +27,19 @@ public:
   void ResetPage(Pathfinder::Character* currChar);
   bool UpdateFeatPage(int classId);
 
-  void OnFeatSelected(wxCommandEvent& evt);
+  void OnAvailFeatSelected(wxListEvent& evt);
+  void OnTakenFeatSelected(wxCommandEvent& evt);
   void SelectFeatButtonPress(wxCommandEvent& evt);
   void MouseOverEvent(wxMouseEvent& evt);
   
   void GrantFeats(void);
-  void UpdateFeatDescription(int spellIndex);
+  void UpdateFeatDescription(int featIndex);
+  bool CheckFeatPrereqs(int featIndex, std::string& missingPrereqs);
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<int> availFeatIds_;
-  int featsRemaining_;
+  std::vector<std::string> availFeatMissingPrereqs_;
+  int featsRemaining_ = 0;
 };
 
 #endif
