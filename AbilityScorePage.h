@@ -20,6 +20,8 @@
 #define ABSCR_MODE_PURCHASE 4
 #define ABSCR_MODE_DIRECT_INPUT 5
 
+#define ABSCR_OUT_OF_RANGE_COST 1000
+
 #define ABSCR_METHOD_DROPDOWN_LABEL_ID 2000
 #define ABSCR_METHOD_DROPDOWN_ID 2001
 #define ABSCR_METHOD_BTN_ID 2002
@@ -92,13 +94,17 @@ public:
   void ApplyRacialBonuses();
   void UpdateFields();
   void UpdateAbilityScorePage(int classId);
-
 private:
   void populateScorePool(int modeIdx);
+  int calculatePointCost(int value, bool minus);
   int prevSelections_[Pathfinder::NUMBER_ABILITY_SCORES] = { 0, 0, 0, 0, 0, 0 };
+  const int valueCosts_[12] = {-4, -2, -1, 0, 1, 2, 3, 5, 7, 10, 13, 17};
   bool flexibleApplied_ = false;
   bool newPoint_ = false;
   bool newPointUsed_ = false;
+  int modeChosen_ = -1;
+  int pointsRemaining_ = 0;
+  int diceRemaining_ = 0;
 
   Pathfinder::Character* charPtr_ = NULL;
 };

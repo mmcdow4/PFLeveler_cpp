@@ -315,24 +315,23 @@ void AbilityScorePage::ResetPage(Pathfinder::Character* currChar)
 {
   charPtr_ = currChar;
 
+  int modeChosen_ = -1;
+  int pointsRemaining_ = 0;
+  int diceRemaining_ = 0;
   if (charPtr_->getCharacterLevel() > 0)
   {
     flexibleApplied_ = true;
     for (int abilityIdx = 0; abilityIdx < Pathfinder::NUMBER_ABILITY_SCORES; abilityIdx++)
     {
-      wxChoice* currDropdown = static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx));
-      wxTextCtrl* currTextInput = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx));
-
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->Show();
       Pathfinder::abilityScoreMarker ability_marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
-      int raw_score_val = charPtr_->getAbilityScore(ability_marker) - charPtr_->racialAbilityScoreBonus(ability_marker);
-      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(wxString::Format(wxT(" %d "), raw_score_val));
-      currDropdown->Disable();
-      currDropdown->Hide();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx)->SetLabel(wxString::Format(wxT(" %d "), charPtr_->getRawAbilityScore(ability_marker)));
       prevSelections_[abilityIdx] = -1;
 
-      currTextInput->Disable();
-      currTextInput->Hide();
+      static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->Disable();
+      static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + abilityIdx))->Hide();
+      static_cast<wxTextCtrl*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx))->Disable();
+      static_cast<wxTextCtrl*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + abilityIdx))->Hide();
       static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Disable();
       static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->Hide();
       static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Disable();
@@ -434,11 +433,16 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
     static_cast<wxChoice*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + ii))->AppendString(" ");
     prevSelections_[ii] = 0;
   }
+  wxTextEntryDialog* dialog = new wxTextEntryDialog(this,
+    "Enter number of starting points: \n~10 points is low power\n~15 points is standard\n~20 points is high power\n~25 points is very high power", "Starting Points", wxEmptyString, wxTextEntryDialogStyle);
   switch (modeIdx)
   {
   case ABSCR_MODE_STANDARD:/* roll 4d6 and discard lowest die roll, repeat 6 times, assign scores*/
+    modeChosen_ = ABSCR_MODE_STANDARD;
   case ABSCR_MODE_CLASSIC:/* roll 3d6, repeat 6 times, assign scores */
+    modeChosen_ = ABSCR_MODE_CLASSIC;
   case ABSCR_MODE_HEROIC:/* roll 2d6 and add 6, repeat 6 times, and assign scores*/
+    modeChosen_ = ABSCR_MODE_HEROIC;
     populateScorePool(modeIdx);
     for (int ii = 0; ii < 6; ii++)
     {
@@ -462,7 +466,36 @@ void AbilityScorePage::OnAttributeModeSelected(wxCommandEvent& evt)
   case ABSCR_MODE_PURCHASE:/*purchase*/
     /* pool of points available and each ability score starts at 10. Spend points to raise ability score values or lower ability scores to get more points.
     Cannot lower ability scores below 7 or raise them above 18*/
-    wxMessageBox("Purchase ability score generation is not implemented yet.");
+    dialog->ShowModal();
+    pointsRemaining_ = std::stoi(dialog->GetValue().ToStdString());
+    if (pointsRemaining_ <= 0)
+    {
+      pointsRemaining_ = 0;
+      return;
+    }
+    modeChosen_ = ABSCR_MODE_PURCHASE;
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(wxString::Format(wxT("Remaining Points : %d"), pointsRemaining_));
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->Show();
+
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Enable();
+    static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON))->Show();
+    for (int ii = 0; ii < 6; ii++)
+    {
+      wxButton* currButton = static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + ii));
+      currButton->Enable();
+      currButton->Show();
+      currButton = static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + ii));
+      currButton->Enable();
+      currButton->Show();
+
+      charPtr_->setAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(ii), 10);
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + ii)->Show();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + ii)->SetLabel(" 10 ");
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + ii)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT + ii)->Hide();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN+ ii)->Disable();
+      wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN + ii)->Hide();
+    }
     break;
   case ABSCR_MODE_DIRECT_INPUT:/*direct input*/
     /* directly type in desired numerical values for each ability score */
@@ -536,22 +569,15 @@ void AbilityScorePage::OnAbilityScoreSelected(wxCommandEvent& evt)
 void AbilityScorePage::ApplyRacialBonuses()
 {
   bool hasFlexibleBonus = charPtr_->race().abilityOffset(Pathfinder::NUMBER_ABILITY_SCORES) > 0;
-  for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
+  if(charPtr_->race().abilityOffset(Pathfinder::NUMBER_ABILITY_SCORES) > 0) // This race has a flexible racial ability score bonus, activate the radio buttons to apply this
   {
-    Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
-    int newTot = charPtr_->incrementAbilityScore(marker, charPtr_->race().abilityOffset(marker));
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx))->SetLabel(
-      " " + wxString::Format(wxT("%+i"), charPtr_->racialAbilityScoreBonus(marker)) + " ");
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx))->SetLabel(
-      " " + wxString::Format(wxT("%i"), newTot) + " ");
-    if (hasFlexibleBonus)
+    for (int abilityIdx = 0; abilityIdx < 6; abilityIdx++)
     {
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Enable();
       wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx)->Show();
       static_cast<wxRadioButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIAL_RADIO + abilityIdx))->SetValue(false);
     }
   }
-
   /* update all of the fields */
   UpdateFields();
 }
@@ -588,13 +614,19 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
     wxMessageBox("You must select a race before locking ability scores.");
     return;
   }
-  //else if (wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_DROPDOWN)->IsEnabled() == false && wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_INPUT)->IsEnabled() == false)
-  //{
-  //  wxMessageBox("You must assign ability scores.");
-  //  return;
-  //}
-  else if ((prevSelections_[0] == 0) || (prevSelections_[1] == 0) || (prevSelections_[2] == 0) ||
-    (prevSelections_[3] == 0) || (prevSelections_[4] == 0) || (prevSelections_[5] == 0))/* if any ability scores are unassigned */
+  else if (modeChosen_ == ABSCR_MODE_DICEPOOL && diceRemaining_ > 0)
+  {
+    wxMessageBox("You must use all of your dice first.");
+    return;
+  }
+  else if (modeChosen_ == ABSCR_MODE_PURCHASE && pointsRemaining_ > 0)
+  {
+    wxMessageBox("You must spend all of your points first.");
+    return;
+  }
+  else if ((modeChosen_ == ABSCR_MODE_STANDARD || modeChosen_ == ABSCR_MODE_CLASSIC || modeChosen_ == ABSCR_MODE_HEROIC) && //Fixed dice roll mode is being used
+    ((prevSelections_[0] == 0) || (prevSelections_[1] == 0) || (prevSelections_[2] == 0) ||
+    (prevSelections_[3] == 0) || (prevSelections_[4] == 0) || (prevSelections_[5] == 0)))/* if any ability scores are unassigned */
   {
     wxMessageBox("You must set a base value for every ability score.");
     return;
@@ -666,14 +698,13 @@ void AbilityScorePage::UpdateFields()
   {
     Pathfinder::abilityScoreMarker marker = static_cast<Pathfinder::abilityScoreMarker>(abilityIdx);
     int modValue = charPtr_->getAbilityScore(marker) >= 3 ? charPtr_->abilityModifier(marker) : 0;
-    wxString modString = " " + wxString::Format(wxT("%+i"), modValue) + " ";
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_VALUE_TEXT + abilityIdx))->SetLabel(
-      " " + wxString::Format(wxT("%d"), charPtr_->getAbilityScore(marker) - charPtr_->racialAbilityScoreBonus(marker)) + " ");
+      wxString::Format(wxT(" %d "), charPtr_->getRawAbilityScore(marker)));
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_RACIALS + abilityIdx))->SetLabel(
-      " " + wxString::Format(wxT("%+i"), charPtr_->racialAbilityScoreBonus(marker)) + " ");
+      wxString::Format(wxT(" %+i "), charPtr_->racialAbilityScoreBonus(marker)));
     static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_TOTALS + abilityIdx))->SetLabel(
-      " " + wxString::Format(wxT("%i"), charPtr_->getAbilityScore(marker)) + " ");
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx))->SetLabel(modString);
+      wxString::Format(wxT(" %i "), charPtr_->getAbilityScore(marker)));
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MODIFIERS + abilityIdx))->SetLabel(wxString::Format(wxT(" %+i "), modValue));
   }
 
   int strMod = (charPtr_->getAbilityScore(Pathfinder::STRENGTH) >= 3 ? charPtr_->abilityModifier(Pathfinder::STRENGTH) : 0);
@@ -843,6 +874,13 @@ void AbilityScorePage::UpdateAbilityScorePage(int classId)
   UpdateFields();
 }
 
+int AbilityScorePage::calculatePointCost(int value, bool minus)
+{
+  int idx = value - 7;
+  int nextIdx = idx + (1 - 2*minus);
+  //wxMessageBox(wxString::Format(wxT("I calculate the cost of going from [%d] to [%d] is [%d] (idx[%d] nextIdx[%d]"), value, value + (minus ? -1 : +1), (valueCosts_[nextIdx] - valueCosts_[idx]), idx, nextIdx));
+  return (valueCosts_[nextIdx] - valueCosts_[idx]);
+}
 void AbilityScorePage::OnPlusButtonPress(wxCommandEvent& evt)
 {
   Pathfinder::abilityScoreMarker abilityIdx = static_cast<Pathfinder::abilityScoreMarker>(evt.GetId() - ABSCR_ATTRIBUTE_PLUS_BTN);
@@ -857,9 +895,27 @@ void AbilityScorePage::OnPlusButtonPress(wxCommandEvent& evt)
       static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Disable();
       static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Enable();
     }
-
-    UpdateFields();
   }
+  else if (modeChosen_ == ABSCR_MODE_PURCHASE && pointsRemaining_ > 0)
+  {
+    int currVal = charPtr_->getRawAbilityScore(abilityIdx);
+    if (currVal == 18)
+    {
+      wxMessageBox("You cannot increase any ability score above 18 with the purchase method");
+      return;
+    }
+    int cost = calculatePointCost(currVal, false);
+    if (cost > pointsRemaining_)
+    {
+      wxMessageBox(wxString::Format(wxT("You cannot afford this increase : %d"), cost));
+      return;
+    }
+    charPtr_->incrementAbilityScore(abilityIdx);
+    pointsRemaining_ -= cost;
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(wxString::Format(wxT("Remaining Points : %d"), pointsRemaining_));
+  }
+
+  UpdateFields();
 }
 
 void AbilityScorePage::OnMinusButtonPress(wxCommandEvent& evt)
@@ -876,7 +932,20 @@ void AbilityScorePage::OnMinusButtonPress(wxCommandEvent& evt)
       static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_PLUS_BTN + abilityIdx))->Enable();
       static_cast<wxButton*>(wxWindow::FindWindowById(ABSCR_ATTRIBUTE_MINUS_BTN + abilityIdx))->Disable();
     }
-
-    UpdateFields();
   }
+  else if (modeChosen_ == ABSCR_MODE_PURCHASE)
+  {
+    int currVal = charPtr_->getRawAbilityScore(abilityIdx);
+    if (currVal == 7)
+    {
+      wxMessageBox("You cannot decrease any ability score below 7 with the purchase method");
+      return;
+    }
+    int cost = calculatePointCost(currVal, true);
+    charPtr_->decrementAbilityScore(abilityIdx);
+    pointsRemaining_ -= cost;
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_SCORES_REMAINING_TEXT_ID))->SetLabel(wxString::Format(wxT("Remaining Points : %d"), pointsRemaining_));
+  }
+
+  UpdateFields();
 }
