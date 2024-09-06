@@ -37,41 +37,42 @@
 #define ABSCR_ATTRIBUTE_VALUE_DROPDOWN 2016 /* range from 2016 for strength to 2021 for charisma */
 #define ABSCR_ATTRIBUTE_VALUE_INPUT 2022 /* range form 2022 to 2027*/
 #define ABSCR_ATTRIBUTE_VALUE_TEXT 2028 /* range from 2028 to 2033 */
-#define ABSCR_ATTRIBUTE_PLUS_BTN 2034 /* range from 2034 to 2039 */
-#define ABSCR_ATTRIBUTE_RACIALS 2040 /* range from 2040 to 2045 */
-#define ABSCR_ATTRIBUTE_RACIAL_RADIO 2046 /* range from 2046 to 2051 */
-#define ABSCR_ATTRIBUTE_TOTALS 2052 /* range from 2052 to 2057 */
-#define ABSCR_ATTRIBUTE_MODIFIERS 2058 /* range from 2058 to 2063 */
-#define ABSCR_AC_TOTAL 2064
-#define ABSCR_AC_ARMOR_VAL 2065
-#define ABSCR_AC_SHIELD_VAL 2066
-#define ABSCR_AC_DEX_MOD 2067
-#define ABSCR_AC_SIZE_MOD 2068
-#define ABSCR_AC_NATURAL_ARMOR 2069
-#define ABSCR_AC_DEFLECT_MOD 2070
-#define ABSCR_AC_MISC_BONUS 2071
-#define ABSCR_MISC_TOUCH_VALUE 2072
-#define ABSCR_MISC_FLATFOOT_VALUE 2073
-#define ABSCR_MISC_INITMOD_VALUE 2074
-#define ABSCR_SAVES_NAME 2075 /* name range from 2075 to 2077 */
-#define ABSCR_SAVES_TOTAL 2078 /* range from 2078 to 2080 */
-#define ABSCR_SAVES_BASE 2081 /* range from 2081 to 2083 */
-#define ABSCR_SAVES_ABILITY_MOD 2084 /* range from 2084 to 2086 */
-#define ABSCR_SAVES_MAGIC_MOD 2087 /* range from 2087 to 2089 */
-#define ABSCR_SAVES_MISC_MOD 2090 /* range from 2090 to 2092 */
-#define ABSCR_SAVES_TEMP_MOD 2093 /* range from 2093 to 2095 */
-#define ABSCR_COMBAT_CMB_LABEL 2096
-#define ABSCR_COMBAT_CMB_TOTAL 2097
-#define ABSCR_COMBAT_CMB_BAB 2098
-#define ABSCR_COMBAT_CMB_STR 2099
-#define ABSCR_COMBAT_CMB_SIZE 2100
-#define ABSCR_COMBAT_CMD_LABEL 2101
-#define ABSCR_COMBAT_CMD_TOTAL 2102
-#define ABSCR_COMBAT_CMD_BAB 2103
-#define ABSCR_COMBAT_CMD_STR 2104
-#define ABSCR_COMBAT_CMD_DEX 2105
-#define ABSCR_COMBAT_CMD_SIZE 2106
-#define ABSCR_ATTRIBUTE_LOCK_BUTTON 2107
+#define ABSCR_ATTRIBUTE_VALUE_ROLL_BTN 2034 /* range from 2034 to 2039 */
+#define ABSCR_ATTRIBUTE_PLUS_BTN 2040 /* range from 2040 to 2045 */
+#define ABSCR_ATTRIBUTE_RACIALS 2046 /* range from 2046 to 2051 */
+#define ABSCR_ATTRIBUTE_RACIAL_RADIO 2052 /* range from 2052 to 2057 */
+#define ABSCR_ATTRIBUTE_TOTALS 2058 /* range from 2058 to 2063 */
+#define ABSCR_ATTRIBUTE_MODIFIERS 2064 /* range from 2064 to 2069 */
+#define ABSCR_AC_TOTAL 2070
+#define ABSCR_AC_ARMOR_VAL 2071
+#define ABSCR_AC_SHIELD_VAL 2072
+#define ABSCR_AC_DEX_MOD 2073
+#define ABSCR_AC_SIZE_MOD 2074
+#define ABSCR_AC_NATURAL_ARMOR 2075
+#define ABSCR_AC_DEFLECT_MOD 2076
+#define ABSCR_AC_MISC_BONUS 2077
+#define ABSCR_MISC_TOUCH_VALUE 2078
+#define ABSCR_MISC_FLATFOOT_VALUE 2079
+#define ABSCR_MISC_INITMOD_VALUE 2080
+#define ABSCR_SAVES_NAME 2081 /* name range from 2081 to 2083 */
+#define ABSCR_SAVES_TOTAL 2084 /* range from 2084 to 2086 */
+#define ABSCR_SAVES_BASE 2087 /* range from 2087 to 2089 */
+#define ABSCR_SAVES_ABILITY_MOD 2090 /* range from 2090 to 2092 */
+#define ABSCR_SAVES_MAGIC_MOD 2093 /* range from 2093 to 2095 */
+#define ABSCR_SAVES_MISC_MOD 2096 /* range from 2096 to 2098 */
+#define ABSCR_SAVES_TEMP_MOD 2099 /* range from 2099 to 2101 */
+#define ABSCR_COMBAT_CMB_LABEL 2101
+#define ABSCR_COMBAT_CMB_TOTAL 2102
+#define ABSCR_COMBAT_CMB_BAB 2103
+#define ABSCR_COMBAT_CMB_STR 2104
+#define ABSCR_COMBAT_CMB_SIZE 2105
+#define ABSCR_COMBAT_CMD_LABEL 2106
+#define ABSCR_COMBAT_CMD_TOTAL 2107
+#define ABSCR_COMBAT_CMD_BAB 2108
+#define ABSCR_COMBAT_CMD_STR 2109
+#define ABSCR_COMBAT_CMD_DEX 2110
+#define ABSCR_COMBAT_CMD_SIZE 2111
+#define ABSCR_ATTRIBUTE_LOCK_BUTTON 2112
 
 class AbilityScorePage : public wxPanel
 {
@@ -83,13 +84,15 @@ public:
   void ResetPage(Pathfinder::Character* currChar);
 
   /* ability score page functions */
-  void OnAttributeModeSelected(wxCommandEvent& evt);
+  void OnAttributeModeSelectButtonPressed(wxCommandEvent& evt);
   void OnAbilityScoreSelected(wxCommandEvent& evt);
   void OnRacialRadioSelected(wxCommandEvent& evt);
   void OnAttributesLocked(wxCommandEvent& evt);
   void OnTextInput(wxCommandEvent& evt);
   void OnPlusButtonPress(wxCommandEvent& evt);
   void OnMinusButtonPress(wxCommandEvent& evt);
+  void OnAbilityRollButtonClicked(wxCommandEvent& evt);
+  void OnAttributeModeSelected(wxCommandEvent& evt);
 
   void ApplyRacialBonuses();
   void UpdateFields();
