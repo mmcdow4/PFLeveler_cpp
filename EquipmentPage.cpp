@@ -655,6 +655,11 @@ void EquipmentPage::PurchaseItemButtonPress(wxCommandEvent& evt)
 
   this->UpdateEquipmentPage();
   this->myLayout();
+  if (itemPtr->getCategory() == Pathfinder::ARMOR)
+  {
+    /* May need to update the AC values on other pages */
+    evt.Skip();
+  }
 }
 
 void EquipmentPage::SellItemButtonPress(wxCommandEvent& evt)
@@ -728,6 +733,12 @@ void EquipmentPage::SellItemButtonPress(wxCommandEvent& evt)
 
   this->UpdateEquipmentPage();
   this->myLayout();
+
+  if (itemPtr->getCategory() == Pathfinder::ARMOR)
+  {
+    /* May need to update the AC values on other pages */
+    evt.Skip();
+  }
 }
 
 void EquipmentPage::AddMoneyButtonPress(wxCommandEvent& evt)

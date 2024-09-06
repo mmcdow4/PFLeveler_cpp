@@ -699,7 +699,29 @@ void AbilityScorePage::UpdateFields()
   wxString ACTotStr = " " + wxString::Format(wxT("%i"), charPtr_->getArmorClass()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_TOTAL))->SetLabel(ACTotStr);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_SIZE_MOD))->SetLabel(wxString::Format(wxT(" %+i "), Pathfinder::SIZE_AC_MODIFIER[size]));
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_DEX_MOD))->SetLabel(dexMod_str);
+  std::shared_ptr<const Pathfinder::Armor> armorPtr = charPtr_->getBestArmor();
+  std::shared_ptr<const Pathfinder::Armor> shieldPtr = charPtr_->getBestShield();
+  int alteredDexMod = dexMod;
+  if (armorPtr != nullptr && armorPtr->getMaxDexBonus() < alteredDexMod)
+  {
+    alteredDexMod = armorPtr->getMaxDexBonus();
+  }
+  if (shieldPtr != nullptr && shieldPtr->getMaxDexBonus() < alteredDexMod)
+  {
+    alteredDexMod = shieldPtr->getMaxDexBonus();
+  }
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_DEX_MOD))->SetLabel(wxString::Format(wxT(" %+i "), alteredDexMod));
+  if (alteredDexMod < dexMod)
+  {
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_DEX_MOD))->SetForegroundColour(*wxRED);
+  }
+  else
+  {
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_DEX_MOD))->SetForegroundColour(*wxBLACK);
+  }
+
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_ARMOR_VAL))->SetLabel(wxString::Format(wxT(" %+i "), charPtr_->getArmorVal()));
+  static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_AC_SHIELD_VAL))->SetLabel(wxString::Format(wxT(" %+i "), charPtr_->getShieldVal()));
 
   wxString touchACTotStr = " " + wxString::Format(wxT("%i"), charPtr_->getTouchArmorClass()) + " ";
   static_cast<wxStaticText*>(wxWindow::FindWindowById(ABSCR_MISC_TOUCH_VALUE))->SetLabel(touchACTotStr);

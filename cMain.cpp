@@ -256,6 +256,11 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     summaryPage_->PopulateFeatData();
     classPage_->featsLeft_ = false;
     break;
+  case EQUIPMENT_PURCHASE_BUTTON_ID:
+  case EQUIPMENT_SELL_BUTTON_ID:
+    abilityScorePage_->UpdateFields();
+    summaryPage_->PopulateAbilityScoreData();
+    break;
   default:
     wxMessageBox("Unknown button ID passed up to cMain [" + std::to_string(evt.GetId()) + "]");
     break;
