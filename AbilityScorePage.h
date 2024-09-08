@@ -9,6 +9,7 @@
 #include <pf_include/Attributes.h>
 #include <pf_include/Race.h>
 #include <pf_include/Character.h>
+#include "WrapText.h"
 
 #include <vector>
 
@@ -110,6 +111,7 @@ private:
   int diceRemaining_ = 0;
 
   Pathfinder::Character* charPtr_ = NULL;
+  HardBreakWrapper* modeDescWrapper_ = NULL;
 };
 
 #endif

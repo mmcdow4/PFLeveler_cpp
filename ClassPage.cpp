@@ -111,7 +111,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxStaticText* feature_description = new wxStaticText(this, CLASS_FEATURE_DESCRIPTION_ID, wxT("Feature Description:"));
   feature_description->SetBackgroundColour(*wxWHITE);
   //feature_description->Bind(wxEVT_SIZE, &ClassPage::ResizeCallback, this);
-  vbox1->Add(feature_description, 1, wxALL, 10);
+  vbox1->Add(feature_description, 1, wxALL | wxEXPAND, 10);
 
   wxButton* addFeatureBtn = new wxButton(this, CLASS_FEATURE_BUTTON_ID, wxT("Choose Selected Feature"));
   addFeatureBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ClassPage::SelectFeatureButtonPress, this);

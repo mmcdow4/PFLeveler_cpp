@@ -66,7 +66,7 @@ RacePage::RacePage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
 
   /* add a select button */
   /* first add a spacer so it will appear on the far right */
-  hbox_name->Add(new wxPanel(this, wxID_ANY), 1, wxEXPAND);
+  hbox_name->AddStretchSpacer(1);
 
   wxButton* selectBtn = new wxButton(this, RACE_SELECT_BTN_ID, wxT("Lock Race Selection"));
   selectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &RacePage::OnRaceLocked, this);
@@ -237,6 +237,7 @@ void RacePage::SetupBonusLanguages(void)
     langDropDown->Show();
     langDropDown->Clear();
     std::set<int> langList = charPtr_->getBonusLanguages();
+    availBonusLanguages_.clear();
     for (std::set<int>::iterator langIter = langList.begin(); langIter != langList.end(); ++langIter)
     {
       availBonusLanguages_.push_back(*langIter);

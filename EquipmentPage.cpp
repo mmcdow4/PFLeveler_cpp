@@ -12,7 +12,7 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   //wxFlexGridSizer* gridSizer = new wxFlexGridSizer(1, 2, 0, 10); // 1 row, 2 columns, no vertical gap, 10px horizontal gap. Equipment lists
 
   /* add a spacer */
-  hbox0->Add(new wxPanel(this, wxID_ANY), 2, wxEXPAND);
+  hbox0->AddStretchSpacer(2);
 
   /* Add the category dropdown and label */
   wxStaticText* categoryLabel = new wxStaticText(this, EQUIPMENT_CATEGORY_LABEL_ID, wxT("Category:"));
@@ -26,7 +26,7 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   categoryDropDown->Bind(wxEVT_CHOICE, &EquipmentPage::OnCategorySelected, this);
   hbox0->Add(categoryDropDown, 1, wxEXPAND | wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 10);
   /* add a spacer to separate the two */
-  hbox0->Add(new wxPanel(this, wxID_ANY), 2, wxEXPAND);
+  hbox0->AddStretchSpacer(2);//(new wxPanel(this, wxID_ANY), 2, wxEXPAND);
   /* Add the search bar and label */
   wxStaticText* searchLabel = new wxStaticText(this, EQUIPMENT_SEARCH_LABEL_ID, wxT("Search:"));
   hbox0->Add(searchLabel, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 10);
@@ -35,7 +35,7 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   hbox0->Add(searchTxt, 1, wxEXPAND | wxALIGN_LEFT, 10);
 
   /* add a spacer */
-  hbox0->Add(new wxPanel(this, wxID_ANY), 2, wxEXPAND);
+  hbox0->AddStretchSpacer(2);//(new wxPanel(this, wxID_ANY), 2, wxEXPAND);
   
   vboxOverall->Add(hbox0, 0, wxALIGN_LEFT | wxBOTTOM, 15);
 

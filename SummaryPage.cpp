@@ -168,28 +168,36 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   hbox_speed->Add(speedLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
   vbox1->Add(hbox_speed);
 
-  /* Favored Class(es) */
-  wxBoxSizer* hbox_favClass = new wxBoxSizer(wxHORIZONTAL);
-  wxStaticText* favClassLabel = new wxStaticText(this, SUMMARY_FAV_CLASS_LABEL_ID, wxT("Favored Class:"));
-  hbox_favClass->Add(favClassLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
-  vbox1->Add(hbox_favClass);
-
   /* Languages */
   wxBoxSizer* hbox_languages = new wxBoxSizer(wxHORIZONTAL);
   wxStaticText* languagesLabel = new wxStaticText(this, SUMMARY_LANGUAGE_LABEL_ID, wxT("Languages:"));
   hbox_languages->Add(languagesLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
   vbox1->Add(hbox_languages);
 
+  /* Favored Class(es) */
+  wxBoxSizer* hbox_favClass = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText* favClassLabel = new wxStaticText(this, SUMMARY_FAV_CLASS_LABEL_ID, wxT("Favored Class:"));
+  hbox_favClass->Add(favClassLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
+  vbox1->Add(hbox_favClass);
+
+  /* Class label summary*/
+  wxBoxSizer* hbox_class_and_button = new wxBoxSizer(wxHORIZONTAL);
+  wxStaticText* classLevelLabel = new wxStaticText(this, wxID_ANY, wxT("Class Levels:"));
+  hbox_class_and_button->Add(classLevelLabel, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
+  /* Add a spacer to break it up*/
+  hbox_class_and_button->AddStretchSpacer(1);
+  /* Lock info button */
   wxButton* summaryBtn = new wxButton(this, SUMMARY_BUTTON_ID, wxT("Lock Info"));
   summaryBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &SummaryPage::OnCharLocked, this);
   summaryBtn->Disable();
   summaryBtn->Hide();
-  vbox1->Add(summaryBtn, 0, wxALIGN_RIGHT, 0);
+  hbox_class_and_button->Add(summaryBtn, 0, wxRIGHT | wxTOP | wxBOTTOM, summarySpacing);
+  vbox1->Add(hbox_class_and_button, 1, wxEXPAND);
 
   /* Class Levels */
   wxString* dummyStr = NULL;
   wxListBox* classLevelList = new wxListBox(this, SUMMARY_CLASS_LEVEL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
-  vbox1->Add(classLevelList, 1, wxEXPAND, 0);
+  vbox1->Add(classLevelList, 10, wxEXPAND, 0);
 
   /* Summary Box Finished */
   hbox1->Add(vbox1, 1, wxEXPAND | wxRIGHT, 10);
