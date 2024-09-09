@@ -10,6 +10,7 @@
 #include <pf_include/Character.h>
 #include <pf_include/Race.h>
 #include <pf_include/Equipment.h>
+#include "wrapText.h"
 
 #define EQUIPMENT_CATEGORY_LABEL_ID 8000
 #define EQUIPMENT_CATEGORY_DROPDOWN_ID 8001
@@ -61,6 +62,7 @@ private:
   void OnTextEntered(wxCommandEvent& evt);
   void OnLockBoxChecked(wxCommandEvent& evt);
   void OnMasterworkBoxChecked(wxCommandEvent& evt);
+  void ResizeCallback(wxSizeEvent& evt);
 
   void UpdateItemDescription(std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool qualityOverride);
   void SetupListBox(wxListCtrl* listBox, bool defaultList = false);
@@ -72,6 +74,7 @@ private:
   void myLayout();
 
   Pathfinder::Character* charPtr_ = NULL;
+  HardBreakWrapper* itemDescWrapper_ = NULL;
   int currentCategory_ = Pathfinder::ALL_EQUIPMENT;
   std::string filterString_ = "";
   std::map<int, std::shared_ptr<const Pathfinder::Equipment>> equipMap_ = Pathfinder::PFTable::get_equipment_map();

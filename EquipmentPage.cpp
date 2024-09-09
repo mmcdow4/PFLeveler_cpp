@@ -97,9 +97,12 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   //vboxOverall->Add(gridSizer, 5, wxEXPAND);
 
   /* Description Box */
-  wxStaticText* itemDescription = new wxStaticText(this, EQUIPMENT_DESCRIPTION_ID, wxT("Description:"));
+  wxTextCtrl* itemDescription = new wxTextCtrl(this, EQUIPMENT_DESCRIPTION_ID, wxT("Description:"), wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP);
   itemDescription->SetBackgroundColour(*wxWHITE);
-  vboxOverall->Add(itemDescription, 1, wxEXPAND, 10);
+  itemDescription->Bind(wxEVT_SIZE, &EquipmentPage::ResizeCallback, this);
+  vboxOverall->Add(itemDescription, 2, wxEXPAND, 10);
+  itemDescWrapper_ = new HardBreakWrapper(itemDescription, wxT("Description:"), GetClientSize().GetWidth() - 20);
+  itemDescription->SetLabelText(itemDescWrapper_->GetWrapped());
 
   /* Populate the available equipment box */
   equipMap_ = Pathfinder::PFTable::get_equipment_map();
@@ -119,6 +122,15 @@ void EquipmentPage::ResetPage(Pathfinder::Character* currChar)
 
   currentCategory_ = Pathfinder::ALL_EQUIPMENT;
   ownedItems_.clear();
+
+  if (itemDescWrapper_ != NULL)
+  {
+    delete itemDescWrapper_;
+  }
+
+  wxTextCtrl* itemDesc = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(EQUIPMENT_DESCRIPTION_ID));
+  itemDescWrapper_ = new HardBreakWrapper(itemDesc, wxT("Description:"), GetClientSize().GetWidth() - 20);
+  itemDesc->SetLabelText(itemDescWrapper_->GetWrapped());
 
   std::string wealthStr = "0 cp";
   double lightCarryCapacity = 0.0;
@@ -270,6 +282,39 @@ int EquipmentPage::FindOwnedIndex(std::shared_ptr<const Pathfinder::Equipment> i
   return retValue;
 }
 
+void EquipmentPage::ResizeCallback(wxSizeEvent& evt)
+{
+  if (itemDescWrapper_ != NULL)
+  {
+    int maxWidth = 0;
+    wxTextCtrl* itemDescBox = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(EQUIPMENT_DESCRIPTION_ID));
+    itemDescBox->GetSize(&maxWidth, NULL);
+    itemDescBox->Clear();
+    *itemDescBox << itemDescWrapper_->UpdateWidth(maxWidth - 20);
+
+    int item = wxNOT_FOUND;
+    bool qualityOverride = false;
+    std::shared_ptr<const Pathfinder::Equipment> itemPtr = nullptr;
+    wxListCtrl* availList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID));
+    wxListCtrl* ownedList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LIST_ID));
+    if (/*!availList->IsEmpty() && */(item = availList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
+    {
+      itemPtr = equipMap_[availListIds_[item]];
+      qualityOverride = static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_MASTERWORK_CHECKBOX_ID))->GetValue();
+    }
+    else if (/*!ownedList->IsEmpty() &&*/ (item = ownedList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
+    {
+      itemPtr = ownedItems_[item];
+    }
+
+    if (itemPtr != nullptr)
+    {
+      UpdateItemDescription(itemPtr, qualityOverride);
+    }
+  }
+  evt.Skip();
+}
+
 void EquipmentPage::UpdateItemDescription(std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool qualityOverride)
 {
   std::string categoryName(Pathfinder::EQUIPMENT_CATEGORY_NAMES[itemPtr->getCategory()]);
@@ -324,7 +369,10 @@ void EquipmentPage::UpdateItemDescription(std::shared_ptr<const Pathfinder::Equi
   wxString descriptionText = "Description:\n" + name + "\n" + categoryName + " | " + weightStr + " | " +
     priceString + extraInfo + "\n" + itemPtr->getDescription();
   
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(EQUIPMENT_DESCRIPTION_ID))->SetLabel(descriptionText);
+  wxTextCtrl* itemDescription = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(EQUIPMENT_DESCRIPTION_ID));
+  itemDescription->Clear();
+  *itemDescription << itemDescWrapper_->UpdateText(descriptionText);
+  
 }
 
 void EquipmentPage::SetupListBox(wxListCtrl* listBox, bool defaultList)

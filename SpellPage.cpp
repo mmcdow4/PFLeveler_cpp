@@ -18,7 +18,7 @@ SpellPage::SpellPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   classDropDown->Bind(wxEVT_CHOICE, &SpellPage::OnClassSelected, this);
   vbox1->Add(classDropDown, 0, wxLEFT | wxRIGHT | wxFIXED_MINSIZE, 10);
   hbox1->Add(vbox1);
-  vboxOverall->Add(hbox1, 1, wxEXPAND | wxALIGN_LEFT, 10);
+  vboxOverall->Add(hbox1, 0, wxEXPAND | wxALIGN_LEFT, 10);
 
 
   /* Available Spells List */
@@ -46,9 +46,10 @@ SpellPage::SpellPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
 
   vboxOverall->Add(hbox2, 5, wxEXPAND);
   /* Description Box */
-  wxStaticText* spellDescription = new wxStaticText(this, SPELL_SELECTED_DESCRIPTION_ID, wxT("Description:"));
+  wxTextCtrl* spellDescription = new wxTextCtrl(this, SPELL_SELECTED_DESCRIPTION_ID, wxT("Description:"), wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP);
   spellDescription->SetBackgroundColour(*wxWHITE);
-  vboxOverall->Add(spellDescription, 1, wxEXPAND, 10);
+  spellDescription->Bind(wxEVT_SIZE, &SpellPage::ResizeCallback, this);
+  vboxOverall->Add(spellDescription, 2, wxEXPAND, 10);
 
   /* learn/unlearn buttons */
   wxButton* learnBtn = new wxButton(this, SPELL_LEARN_BUTTON_ID, wxT("Learn Selected Spell"));
@@ -69,10 +70,18 @@ void SpellPage::ResetPage(Pathfinder::Character* currChar)
   knownSpellsTable_.clear();
   classList_.clear();
 
+  if (spellDescWrapper_ != NULL)
+  {
+    delete spellDescWrapper_;
+  }
+
+  wxTextCtrl* spellDesc = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID));
+  spellDescWrapper_ = new HardBreakWrapper(spellDesc, wxT("Description:"), GetClientSize().GetWidth() - 20);
+  spellDesc->SetLabelText(spellDescWrapper_->GetWrapped());
+
   static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID))->Clear();
   static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->Clear();
   static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Spells Left to Learn");
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID))->SetLabel("Description:");
 
   wxChoice* classDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(SPELL_CLASS_DROPDOWN_ID));
   classDropDown->Clear();
@@ -270,7 +279,43 @@ void SpellPage::UpdateSpellDescription(int spellIdx)
   }
   descriptionText += "\n" + currSpell.description();
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID))->SetLabel(descriptionText);
+  wxTextCtrl* spellDescription = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID));
+
+  spellDescription->Clear();
+  *spellDescription << spellDescWrapper_->UpdateText(descriptionText);
+}
+
+void SpellPage::ResizeCallback(wxSizeEvent& evt)
+{
+  if (spellDescWrapper_ != NULL)
+  {
+    int maxWidth = 0;
+    wxTextCtrl* spellDescBox = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(SPELL_SELECTED_DESCRIPTION_ID));
+    spellDescBox->GetSize(&maxWidth, NULL);
+    spellDescBox->Clear();
+    *spellDescBox << spellDescWrapper_->UpdateWidth(maxWidth);
+
+    wxString selectedSpell = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID))->GetStringSelection();
+    int spellId = wxNOT_FOUND;
+    if (!selectedSpell.empty())
+    {
+      spellId = knownSpellsTable_[selectedSpell];
+    }
+    else
+    {
+      selectedSpell = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->GetStringSelection();
+      if (!selectedSpell.empty())
+      {
+        spellId = availSpellsTable_[selectedSpell];
+      }
+    }
+
+    if (spellId != wxNOT_FOUND)
+    {
+      UpdateSpellDescription(spellId);
+    }
+  }
+  evt.Skip();
 }
 
 void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)

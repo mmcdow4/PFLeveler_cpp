@@ -8,6 +8,7 @@
 
 #include <pf_include/Character.h>
 #include <pf_include/Class.h>
+#include "wrapText.h"
 
 #define SPELL_REMAINING_COUNTER_TEXT_ID 6000
 #define SPELL_AVAIL_SPELL_LIST_ID 6001
@@ -41,12 +42,14 @@ public:
   void OnSpellSelected(wxCommandEvent& evt);
   void LearnSpellButtonPress(wxCommandEvent& evt);
   void OnClassSelected(wxCommandEvent& evt);
+  void ResizeCallback(wxSizeEvent& evt);
   
   void GrantSpells(int classId);
   void UpdateSpellDescription(int spellIndex);
   bool UpdateSpellsRemainingText(void);
 private:
   Pathfinder::Character* charPtr_ = NULL;
+  HardBreakWrapper* spellDescWrapper_ = NULL;
   std::map<int, std::vector<int>> availSpellIds_;
   std::map<int, std::vector<int>> spellsLeft_;
   std::map<wxString, int> availSpellsTable_;
