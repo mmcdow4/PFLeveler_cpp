@@ -9,6 +9,7 @@
 
 #include <pf_include/Character.h>
 #include <pf_include/Feat.h>
+#include "WrapText.h"
 
 #define FEAT_REMAINING_COUNTER_TEXT_ID 7000
 #define FEAT_AVAIL_FEAT_LIST_ID 7001
@@ -31,7 +32,8 @@ public:
   void OnTakenFeatSelected(wxCommandEvent& evt);
   void SelectFeatButtonPress(wxCommandEvent& evt);
   void MouseOverEvent(wxMouseEvent& evt);
-  
+  void ResizeCallback(wxSizeEvent& evt);
+
   void GrantFeats(void);
   void UpdateFeatDescription(int featIndex);
   bool CheckFeatPrereqs(int featIndex, std::string& missingPrereqs);
@@ -40,6 +42,7 @@ private:
   std::vector<int> availFeatIds_;
   std::vector<std::string> availFeatMissingPrereqs_;
   int featsRemaining_ = 0;
+  HardBreakWrapper* featDescWrapper_ = NULL;
 };
 
 #endif

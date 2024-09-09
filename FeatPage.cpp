@@ -11,7 +11,7 @@ FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
   wxBoxSizer* hbox1 = new wxBoxSizer(wxHORIZONTAL); /* Feat lists */
 
   wxStaticText* featsLeftText = new wxStaticText(this, FEAT_REMAINING_COUNTER_TEXT_ID, wxT("No Feat Picks Remaining"));
-  vboxOverall->Add(featsLeftText, 1, wxEXPAND | wxALIGN_LEFT, 10);
+  vboxOverall->Add(featsLeftText, 0, wxALIGN_LEFT, 10);
 
 
   /* Available Feats List */
@@ -43,12 +43,12 @@ FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
 
   hbox1->Add(vboxKnown, 1, wxEXPAND | wxUP | wxDOWN | wxLEFT, 10);
 
-  vboxOverall->Add(hbox1, 10, wxEXPAND);
+  vboxOverall->Add(hbox1, 4, wxEXPAND);
   /* Description Box */
-  wxStaticText* featDescription = new wxStaticText(this, FEAT_SELECTED_DESCRIPTION_ID, wxT("Description:"));
+  wxTextCtrl* featDescription = new wxTextCtrl(this, FEAT_SELECTED_DESCRIPTION_ID, wxT("Description:"), wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP);
   featDescription->SetBackgroundColour(*wxWHITE);
-  vboxOverall->Add(featDescription, 1, wxEXPAND, 10);
-
+  featDescription->Bind(wxEVT_SIZE, &FeatPage::ResizeCallback, this);
+  vboxOverall->Add(featDescription, 2, wxEXPAND | wxALL, 10);
   /* learn/unlearn buttons */
   wxButton* learnBtn = new wxButton(this, FEAT_SELECT_BUTTON_ID, wxT("Select Feat"));
   learnBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &FeatPage::SelectFeatButtonPress, this);
@@ -65,6 +65,14 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
   featsRemaining_ = 0;
   availFeatIds_.clear();
 
+  if (featDescWrapper_ != NULL)
+  {
+    delete featDescWrapper_;
+  }
+
+  wxTextCtrl* featDesc = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID));
+  featDescWrapper_ = new HardBreakWrapper(featDesc, wxT("Description:"), GetClientSize().GetWidth()-20);
+  featDesc->SetLabelText(featDescWrapper_->GetWrapped());
   wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
   knownListBox->Clear();
   wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
@@ -100,7 +108,6 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
     }
   }
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID))->SetLabel("Description:");
   static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Feat Picks Remaining");
 
 }
@@ -190,6 +197,35 @@ void FeatPage::GrantFeats(void)
   }
 }
 
+void FeatPage::ResizeCallback(wxSizeEvent& evt)
+{
+  if (featDescWrapper_ != NULL)
+  {
+    int maxWidth = 0;
+    wxTextCtrl *featDescBox = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID));
+    featDescBox->GetSize(&maxWidth, NULL);
+    featDescBox->Clear();
+    *featDescBox << featDescWrapper_->UpdateWidth(maxWidth);
+
+    int item = wxNOT_FOUND;
+    int featIdx = wxNOT_FOUND;
+    if ((item = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID))->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
+    {
+      featIdx = availFeatIds_[item];
+    }
+    else if ((item = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID))->GetSelection()) != wxNOT_FOUND)
+    {
+      featIdx = charPtr_->selectedFeat(item);
+    }
+
+    if (featIdx != wxNOT_FOUND)
+    {
+      UpdateFeatDescription(featIdx);
+    }
+  }
+  evt.Skip();
+}
+
 void FeatPage::UpdateFeatDescription(int featIdx)
 {
   Pathfinder::Feat currFeat = Pathfinder::PFTable::get_feat(featIdx);
@@ -199,14 +235,16 @@ void FeatPage::UpdateFeatDescription(int featIdx)
   descriptionText += "\n" + currFeat.benefits();
   if (!currFeat.prerequisites().empty())
   {
-      descriptionText += "\nPrerequesites: " + currFeat.prerequisites();
+    descriptionText += "\nPrerequesites: " + currFeat.prerequisites();
   }
   if (!currFeat.prereqFeats().empty())
   {
-      descriptionText += "\nPrerequesite Feats: " + currFeat.prereqFeats();
+    descriptionText += "\nPrerequesite Feats: " + currFeat.prereqFeats();
   }
+  
+  static_cast<wxTextCtrl*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID))->Clear();
+  *static_cast<wxTextCtrl*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID)) << featDescWrapper_->UpdateText(descriptionText);
 
-  static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID))->SetLabel(descriptionText);
 }
 
 void FeatPage::SelectFeatButtonPress(wxCommandEvent& evt)
@@ -267,28 +305,12 @@ void FeatPage::MouseOverEvent(wxMouseEvent& evt)
 
   if (flags == wxLIST_HITTEST_ONITEMLABEL && evt.Moving() && item != wxNOT_FOUND && !availFeatMissingPrereqs_[item].empty())
   {
-    listBox->SetToolTip(availFeatMissingPrereqs_[item]);//Pathfinder::PFTable::get_feat(availFeatIds_[item]).description());
+    listBox->SetToolTip(availFeatMissingPrereqs_[item]);
   }
   else
   {
     listBox->UnsetToolTip();
   }
-  //if (evt.Entering())
-  //{
-  //  listBox->SetToolTip(Pathfinder::PFTable::get_feat(availFeatIds_[item]).description());
-  //  //toolTip_ = new wxToolTip(choiceDescriptions_[item]);
-  //}
-  //else if (evt.Moving() && !availFeatMissingPrereqs_[item].empty())
-  //{
-  //  listBox->SetToolTip(availFeatMissingPrereqs_[item]);//Pathfinder::PFTable::get_feat(availFeatIds_[item]).description());
-  //  //toolTip_->SetTip(choiceDescriptions_[item]);
-  //}
-  //else if (evt.Leaving())
-  //{
-  //  listBox->UnsetToolTip();
-  //  //delete toolTip_;
-  //  //toolTip_ = NULL;
-  //}
 }
 
 bool FeatPage::CheckFeatPrereqs(int featIndex, std::string &missingPrereqs)
@@ -298,224 +320,4 @@ bool FeatPage::CheckFeatPrereqs(int featIndex, std::string &missingPrereqs)
     return true;
   }
   return (charPtr_->checkFeatPrereqs(featIndex, missingPrereqs));
-  //std::string dummy;
-  //bool testRet = (charPtr_->checkFeatPrereqs(featIndex, dummy));
-  //std::vector<std::string> prereq_tokens;
-  //if (!Pathfinder::PFTable::get_feat(featIndex).prerequisites().empty())
-  //{
-  //  prereq_tokens = split(Pathfinder::PFTable::get_feat(featIndex).prerequisites());
-  //} 
-  //std::vector<std::string> prereq_feat_tokens;
-  //if (!Pathfinder::PFTable::get_feat(featIndex).prereqFeats().empty())
-  //{
-  //  prereq_feat_tokens = split(Pathfinder::PFTable::get_feat(featIndex).prereqFeats());
-  //} 
-
-  //std::vector<bool> prereqs_met;
-  //if(prereq_tokens.empty())
-  //{
-  //  prereqs_met.push_back(true);
-  //}
-  //else
-  //{
-  //  prereqs_met.assign(prereq_tokens.size(), false);
-  //}
-
-  //std::vector<bool> prereq_feats_met;
-  //if(prereq_feat_tokens.empty())
-  //{
-  //  prereq_feats_met.push_back(true);
-  //}
-  //else
-  //{
-  //  prereq_feats_met.assign(prereq_feat_tokens.size(), false);
-  //}
-
-  //for (size_t token_idx = 0; token_idx < prereq_tokens.size(); token_idx++)
-  //{
-  //  /* Validate this token */
-  //  bool category_found = false;
-
-  //  /* Just assume weapon proficiency for now */
-  //  if (prereq_tokens[token_idx].find("proficient with weapon") != std::string::npos)
-  //  {
-  //    prereqs_met[token_idx] = true;
-  //  }
-
-  //  /* See if it's an ability score requirement */
-  //  for (size_t attributeIdx = 0; attributeIdx < static_cast<size_t>(Pathfinder::NUMBER_ABILITY_SCORES); attributeIdx++)
-  //  {
-  //    if (prereq_tokens[token_idx].find(std::string(Pathfinder::ABILITY_SCORE_ABBREVIATIONS[attributeIdx])) != std::string::npos)
-  //    {
-  //      category_found = false;
-  //      int prereq_val = std::stoi(prereq_tokens[token_idx].substr(4));
-  //      prereqs_met[token_idx] = (charPtr_->getAbilityScore(static_cast<Pathfinder::abilityScoreMarker>(attributeIdx)) >= prereq_val);
-  //      break;
-  //    }
-  //  }
-  //  
-  //  if(category_found)
-  //  {
-  //    continue;
-  //  }
-
-  //  /* See if it's a base attack bonus requirement */
-  //  if (prereq_tokens[token_idx].find("base attack bonus") != std::string::npos)
-  //  {
-  //    size_t pos = prereq_tokens[token_idx].find("base attack bonus");
-  //    int prereq_val = std::stoi(prereq_tokens[token_idx].substr(pos+18));
-  //    prereqs_met[token_idx] = (charPtr_->getBaseAttackBonus() >= prereq_val);
-  //    continue;
-  //  }
-
-  //  /* See if it's a class level requirement */
-  //  for (int classIdx = 0; classIdx < Pathfinder::PFTable::get_num_classes(); classIdx++)
-  //  {
-  //    size_t pos = prereq_tokens[token_idx].find("-level " + lower_string(Pathfinder::PFTable::get_class(classIdx).name()));
-  //    if (pos != std::string::npos)
-  //    {
-  //      category_found = true;
-  //      int prereq_val = std::stoi(prereq_tokens[token_idx].substr(0, pos-2));
-  //      prereqs_met[token_idx] = (charPtr_->getClassLevel(classIdx) >= prereq_val);
-  //    }
-  //  }
-
-  //  if (category_found)
-  //  {
-  //    continue;
-  //  }
-
-  //  /* See if it's a character level requirement */
-  //  if (prereq_tokens[token_idx].find("-level Character") != std::string::npos)
-  //  {
-  //    size_t pos = prereq_tokens[token_idx].find("-level Charracter");
-  //    int prereq_val = std::stoi(prereq_tokens[token_idx].substr(0, pos - 2));
-  //    prereqs_met[token_idx] = (charPtr_->getCharacterLevel() >= prereq_val);
-  //    continue;
-  //  }
-
-  //  /* See if it's a caster level requirement */
-  //  if (prereq_tokens[token_idx].find("-level Caster") != std::string::npos)
-  //  {
-  //    size_t pos = prereq_tokens[token_idx].find("-level Caster");
-  //    int prereq_val = std::stoi(prereq_tokens[token_idx].substr(0, pos-2));
-  //    prereqs_met[token_idx] = (charPtr_->getCasterLevel() >= prereq_val);
-  //    continue;
-  //  }
-
-  //  /* See if it's a skill rank requirement */
-  //  if (prereq_tokens[token_idx].find(" rank") != std::string::npos)
-  //  {
-  //    std::vector<std::string> optionList = split(prereq_tokens[token_idx], "|");
-  //    for (std::vector<std::string>::iterator optionIter = optionList.begin(); optionIter != optionList.end() &&
-  //      !prereqs_met[token_idx]; ++optionIter)
-  //    {
-  //      for (int skillIdx = 0; skillIdx < Pathfinder::NUMBER_SKILLS && !prereqs_met[token_idx]; skillIdx++)
-  //      {
-  //        size_t pos = optionIter->find(std::string(Pathfinder::skillStrings[skillIdx]));
-  //        if (pos != std::string::npos)
-  //        {
-  //          int prereq_val = std::stoi(optionIter->substr(0, pos-1));
-  //          prereqs_met[token_idx] = (charPtr_->rawSkillRank(static_cast<Pathfinder::skillMarker>(skillIdx)) >= prereq_val);
-  //        }
-  //      }
-  //    }
-  //    continue;
-  //  }
-
-  //  /* See if it's a class feature requirement */
-  //  if (prereq_tokens[token_idx].find("class feature") != std::string::npos)
-  //  {
-  //    size_t pos = prereq_tokens[token_idx].find("class feature");
-  //    std::string featureName = prereq_tokens[token_idx].substr(0, pos-1);
-  //    featureName = trim(featureName);
-  //    std::vector<int> featureVec = charPtr_->getClassFeatures();
-  //    for (std::vector<int>::iterator iter = featureVec.begin(); iter != featureVec.end() && !prereqs_met[token_idx]; ++iter)
-  //    {
-  //      prereqs_met[token_idx] = (Pathfinder::PFTable::get_class_feature(*iter).name().find(featureName) != std::string::npos);
-  //    }
-  //    featureVec = charPtr_->getClassAbilities();
-  //    for (std::vector<int>::iterator iter = featureVec.begin(); iter != featureVec.end() && !prereqs_met[token_idx]; ++iter)
-  //    {
-  //      prereqs_met[token_idx] = (Pathfinder::PFTable::get_class_ability(*iter).name().find(featureName) != std::string::npos);
-  //    }
-  //    featureVec = charPtr_->getClassChoices();
-  //    for (std::vector<int>::iterator iter = featureVec.begin(); iter != featureVec.end() && !prereqs_met[token_idx]; ++iter)
-  //    {
-  //      prereqs_met[token_idx] = (Pathfinder::PFTable::get_class_choice(*iter).name().find(featureName) != std::string::npos);
-  //    }
-  //    continue;
-  //  }
-  //}
-
-  ///* Loop through the required feats list */
-  //std::vector<int> takenFeats = charPtr_->getSelectedFeats();
-  //for (size_t token_idx = 0; token_idx < prereq_feat_tokens.size(); token_idx++)
-  //{
-  //  /* Validate this token */
-  //  std::vector<std::string> optionList = split(prereq_feat_tokens[token_idx], "|");
-  //  int num_required = 1;
-  //  int num_matched = 0;
-  //  if (prereq_feat_tokens[token_idx].compare("any two critical feats") == 0)
-  //  {
-  //    /* Ugly one off for Critical Mastery */
-  //    num_required = 2;
-  //    optionList.clear();
-  //    for (int feat_idx = 0; feat_idx < Pathfinder::PFTable::get_num_feats(); feat_idx++)
-  //    {
-  //      std::string name = Pathfinder::PFTable::get_feat(feat_idx).name();
-  //      if (name.find("Critical") != std::string::npos)
-  //      {
-  //        optionList.push_back(name);
-  //      }
-  //    }
-  //  }
-  //  
-  //  for(std::vector<std::string>::iterator optionIter = optionList.begin(); optionIter != optionList.end(); ++optionIter)
-  //  {
-  //    for(std::vector<int>::iterator iter = takenFeats.begin(); iter != takenFeats.end(); ++iter)
-  //    {
-  //      if (optionIter->compare(Pathfinder::PFTable::get_feat(*iter).name()) == 0)
-  //      {
-  //        /* You have the named feat */
-  //        num_matched++;
-  //      }
-  //    }
-  //  }
-
-  //  prereq_feats_met[token_idx] = (num_matched >= num_required);
-  //}
-
-  //bool retVal = true;
-  //for (size_t idx = 0; idx < prereqs_met.size(); idx++)
-  //{
-  //  if (!prereqs_met[idx])
-  //  {
-  //    retVal = false;
-  //    if (!missingPrereqs.empty())
-  //    {
-  //      missingPrereqs += ", ";
-  //    }
-  //    missingPrereqs += prereq_tokens[idx];
-  //  }
-  //}
-  //for (size_t idx = 0; idx < prereq_feats_met.size(); idx++)
-  //{
-  //  if (!prereq_feats_met[idx])
-  //  {
-  //    retVal = false;
-  //    if (!missingPrereqs.empty())
-  //    {
-  //      missingPrereqs += ", ";
-  //    }
-  //    missingPrereqs += prereq_feat_tokens[idx];
-  //  }
-  //}
-
-  //if (testRet != retVal || missingPrereqs.compare(dummy) != 0)
-  //{
-  //  wxMessageBox(wxString::Format(wxT("Error testing prereqs for [%d] [%s] : char said [%d] [%s] and page said [%d] [%s]"),
-  //    featIndex, Pathfinder::PFTable::get_feat(featIndex).name().c_str(), static_cast<int>(testRet), dummy.c_str(), static_cast<int>(retVal), missingPrereqs.c_str()));
-  //}
-  //return retVal;
 }
