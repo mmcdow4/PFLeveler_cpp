@@ -292,17 +292,15 @@ void EquipmentPage::ResizeCallback(wxSizeEvent& evt)
     itemDescBox->Clear();
     *itemDescBox << itemDescWrapper_->UpdateWidth(maxWidth - 20);
 
-    int item = wxNOT_FOUND;
+    /*int item = wxNOT_FOUND;
     bool qualityOverride = false;
     std::shared_ptr<const Pathfinder::Equipment> itemPtr = nullptr;
-    wxListCtrl* availList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID));
-    wxListCtrl* ownedList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LIST_ID));
-    if (/*!availList->IsEmpty() && */(item = availList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
+    if ((item = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_AVAILABLE_LIST_ID))->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
     {
       itemPtr = equipMap_[availListIds_[item]];
       qualityOverride = static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_MASTERWORK_CHECKBOX_ID))->GetValue();
     }
-    else if (/*!ownedList->IsEmpty() &&*/ (item = ownedList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
+    else if ((item = static_cast<wxListCtrl*>(wxWindow::FindWindowById(EQUIPMENT_OWNED_LIST_ID))->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
     {
       itemPtr = ownedItems_[item];
     }
@@ -310,7 +308,7 @@ void EquipmentPage::ResizeCallback(wxSizeEvent& evt)
     if (itemPtr != nullptr)
     {
       UpdateItemDescription(itemPtr, qualityOverride);
-    }
+    }*/
   }
   evt.Skip();
 }

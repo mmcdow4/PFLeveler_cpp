@@ -30,7 +30,8 @@ public:
   wxString UpdateWidth(int widthMax)
   {
     m_widthMax = widthMax;
-    return(UpdateText(m_text));
+    wxString textCopy = m_text;
+    return(UpdateText(textCopy));
   }
 
 protected:

@@ -207,21 +207,21 @@ void FeatPage::ResizeCallback(wxSizeEvent& evt)
     featDescBox->Clear();
     *featDescBox << featDescWrapper_->UpdateWidth(maxWidth);
 
-    int item = wxNOT_FOUND;
-    int featIdx = wxNOT_FOUND;
-    if ((item = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID))->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
-    {
-      featIdx = availFeatIds_[item];
-    }
-    else if ((item = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID))->GetSelection()) != wxNOT_FOUND)
-    {
-      featIdx = charPtr_->selectedFeat(item);
-    }
+    //int item = wxNOT_FOUND;
+    //int featIdx = wxNOT_FOUND;
+    //if ((item = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID))->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
+    //{
+    //  featIdx = availFeatIds_[item];
+    //}
+    //else if ((item = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID))->GetSelection()) != wxNOT_FOUND)
+    //{
+    //  featIdx = charPtr_->selectedFeat(item);
+    //}
 
-    if (featIdx != wxNOT_FOUND)
-    {
-      UpdateFeatDescription(featIdx);
-    }
+    //if (featIdx != wxNOT_FOUND)
+    //{
+    //  UpdateFeatDescription(featIdx);
+    //}
   }
   evt.Skip();
 }

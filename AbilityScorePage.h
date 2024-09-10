@@ -94,6 +94,7 @@ public:
   void OnMinusButtonPress(wxCommandEvent& evt);
   void OnAbilityRollButtonClicked(wxCommandEvent& evt);
   void OnAttributeModeSelected(wxCommandEvent& evt);
+  void ResizeCallback(wxSizeEvent& evt);
 
   void ApplyRacialBonuses();
   void UpdateFields();

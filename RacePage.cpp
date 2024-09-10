@@ -123,8 +123,9 @@ RacePage::RacePage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
   //vbox2->Add(raceAbilityList, 2, wxEXPAND, 0);
 
   wxString racialDesc = "Description:";
-  wxStaticText* raceAbilitiesDesc = new wxStaticText(this, RACE_RACIAL_BONUS_DESC_ID, wxT("Description:"));
+  wxTextCtrl* raceAbilitiesDesc = new wxTextCtrl(this, RACE_RACIAL_BONUS_DESC_ID, wxT("Description:"), wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_MULTILINE | wxTE_DONTWRAP);
   raceAbilitiesDesc->SetBackgroundColour(*wxWHITE);
+  raceAbilitiesDesc->Bind(wxEVT_SIZE, &RacePage::ResizeCallback, this);
   vbox2->Add(raceAbilitiesDesc, 1, wxEXPAND, 0);
 
   //raceAbilityDesc->Wrap(raceAbilityDesc->GetClientSize().GetWidth());
@@ -209,7 +210,7 @@ void RacePage::ResetPage(Pathfinder::Character* currChar)
     wxWindow::FindWindowById(RACE_BONUS_LANGUAGE_DROPDOWN_ID)->Disable();
     wxWindow::FindWindowById(RACE_BONUS_LANGUAGE_DROPDOWN_ID)->Hide();
 
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(RACE_TEXT_ID))->SetLabel(raceText);
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(RACE_TEXT_ID))->SetLabel(raceTextWrapper_->UpdateText(raceText));
 
     /* On the right of the screen show a list of all abilities above and description */
 
@@ -333,9 +334,29 @@ void RacePage::OnRacialSelected(wxCommandEvent& evt)
    }
   int racialId = evt.GetSelection();
   wxString racialTxt = "Description:\n" + Pathfinder::PFTable::get_race(raceId).getRacial(racialId).description();
-  wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->SetLabel(racialDescWrapper_->UpdateText(racialTxt));
+  wxTextCtrl* raceAbilitiesDesc = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID));
+  raceAbilitiesDesc->Clear();
+  *raceAbilitiesDesc << racialDescWrapper_->UpdateText(racialTxt);
 
-  wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID)->GetParent()->Layout();
+  raceAbilitiesDesc->GetParent()->Layout();
+}
+
+void RacePage::ResizeCallback(wxSizeEvent& evt)
+{
+  if (racialDescWrapper_ != NULL)
+  {
+    int maxWidth = 0;
+    wxTextCtrl* resourcesTextBox = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(RACE_RACIAL_BONUS_DESC_ID));
+    resourcesTextBox->GetSize(&maxWidth, NULL);
+    resourcesTextBox->Clear();
+    *resourcesTextBox << racialDescWrapper_->UpdateWidth(maxWidth - 20);
+
+    wxStaticText* raceTextBox = static_cast<wxStaticText*>(wxWindow::FindWindowById(RACE_TEXT_ID));
+    raceTextBox->GetSize(&maxWidth, NULL);
+    raceTextBox->SetLabel(raceTextWrapper_->UpdateWidth(maxWidth));
+
+  }
+  evt.Skip();
 }
 
 wxString RacePage::populateRaceText(Pathfinder::Race chosenRace)

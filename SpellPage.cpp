@@ -108,8 +108,6 @@ bool SpellPage::UpdateSpellPage(int classId)
   wxChoice* classDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(SPELL_CLASS_DROPDOWN_ID));
   wxListBox* availSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
   wxListBox* knownSpellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
-  
-  int classChoice = classDropDown->GetSelection();
 
   availSpellList->Clear();
   knownSpellList->Clear();
@@ -295,25 +293,25 @@ void SpellPage::ResizeCallback(wxSizeEvent& evt)
     spellDescBox->Clear();
     *spellDescBox << spellDescWrapper_->UpdateWidth(maxWidth);
 
-    wxString selectedSpell = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID))->GetStringSelection();
-    int spellId = wxNOT_FOUND;
-    if (!selectedSpell.empty())
-    {
-      spellId = knownSpellsTable_[selectedSpell];
-    }
-    else
-    {
-      selectedSpell = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->GetStringSelection();
-      if (!selectedSpell.empty())
-      {
-        spellId = availSpellsTable_[selectedSpell];
-      }
-    }
+    //wxString selectedSpell = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID))->GetStringSelection();
+    //int spellId = wxNOT_FOUND;
+    //if (!selectedSpell.empty())
+    //{
+    //  spellId = knownSpellsTable_[selectedSpell];
+    //}
+    //else
+    //{
+    //  selectedSpell = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID))->GetStringSelection();
+    //  if (!selectedSpell.empty())
+    //  {
+    //    spellId = availSpellsTable_[selectedSpell];
+    //  }
+    //}
 
-    if (spellId != wxNOT_FOUND)
-    {
-      UpdateSpellDescription(spellId);
-    }
+    //if (spellId != wxNOT_FOUND)
+    //{
+    //  UpdateSpellDescription(spellId);
+    //}
   }
   evt.Skip();
 }

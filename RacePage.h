@@ -38,6 +38,7 @@ public:
   void OnRacialSelected(wxCommandEvent& evt);
   void OnRaceLocked(wxCommandEvent& evt);
   void LearnLanguageButtonPress(wxCommandEvent& evt);
+  void ResizeCallback(wxSizeEvent& evt);
 
   wxString populateRaceText(Pathfinder::Race chosenRace);
   void populateRacialTable(wxListBox* racialAbilityList, Pathfinder::Race raceObj);
