@@ -4,6 +4,7 @@
 #define SUMMARYPAGE_H
 
 #include <wx/wx.h>
+#include <wx/listctrl.h>
 #include <wx/notebook.h>
 
 #include <pf_include/Character.h>

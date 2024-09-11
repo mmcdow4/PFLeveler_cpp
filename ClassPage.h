@@ -42,7 +42,7 @@ public:
   void OnUnselectedFeatureSelected(wxCommandEvent& evt);
   void OnFinishedFeatureSelected(wxCommandEvent& evt);
   void SelectFeatureButtonPress(wxCommandEvent& evt);
-  void MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec);
+  bool MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec);
   void ResizeCallback(wxSizeEvent& evt);
   void MouseOverEvent(wxMouseEvent& evt);
   bool IsReadyForLevel(int classIdx, std::string& errMsg);
@@ -66,7 +66,6 @@ private:
 
   std::vector<wxString> featureNames_;
   std::vector<wxString> featureDescriptions_;
-  std::vector<wxString> choiceDescriptions_;
 
   std::multiset<int> choicesMade_;
 

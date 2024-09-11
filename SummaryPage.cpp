@@ -239,7 +239,20 @@ SummaryPage::SummaryPage(wxNotebook* parentNotebook, Pathfinder::Character* curr
   /* Spell Slot List */
   wxStaticText* spellSlotLabel = new wxStaticText(this, wxID_ANY, wxT("Spell Slots:"));
   vbox4->Add(spellSlotLabel, 0, wxBOTTOM, 5);
-  wxListBox* spellSlotList = new wxListBox(this, SUMMARY_SPELL_SLOT_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
+  wxListCtrl* spellSlotList = new wxListCtrl(this, SUMMARY_SPELL_SLOT_LIST_ID, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
+  wxClientDC dc(spellSlotList);
+  dc.SetFont(spellSlotList->GetFont());
+  wxCoord textWidth;
+  dc.GetTextExtent("Spells Known", &textWidth, nullptr);
+  spellSlotList->InsertColumn(0, "Spells Known", wxLIST_FORMAT_CENTER, textWidth);
+  dc.GetTextExtent("Spell Save DC", &textWidth, nullptr);
+  spellSlotList->InsertColumn(1, "Spell Save DC", wxLIST_FORMAT_CENTER, textWidth);
+  dc.GetTextExtent("Level", &textWidth, nullptr);
+  spellSlotList->InsertColumn(2, "Level", wxLIST_FORMAT_CENTER, textWidth);
+  dc.GetTextExtent("Spells Per Day", &textWidth, nullptr);
+  spellSlotList->InsertColumn(3, "Spells Per Day", wxLIST_FORMAT_CENTER, textWidth);
+  dc.GetTextExtent("Bonus Spells", &textWidth, nullptr);
+  spellSlotList->InsertColumn(4, "Bonus Spells", wxLIST_FORMAT_CENTER, textWidth);
   vbox4->Add(spellSlotList, 1, wxEXPAND, 0);
 
   /* Spell List */
@@ -425,8 +438,7 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   /* Save the values to the character class */
   charPtr_->name(std::string(name.mb_str()));
   charPtr_->player(std::string(playerName.mb_str()));
-  charPtr_->geAlignment(ge);
-  charPtr_->lcAlignment(lc);
+  charPtr_->setAlignment(ge, lc);
   charPtr_->height(std::string(height.mb_str()));
   charPtr_->weight(std::string(weight.mb_str()));
   charPtr_->hair(std::string(hair.mb_str()));
@@ -611,10 +623,10 @@ void SummaryPage::OnClassSelected(wxCommandEvent& evt)
 void SummaryPage::PopulateSpellData(void)
 {
   wxListBox* spellList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SPELL_LIST_ID));
-  wxListBox* spellSlotList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_SPELL_SLOT_LIST_ID));
+  wxListCtrl* spellSlotList = static_cast<wxListCtrl*>(wxWindow::FindWindowById(SUMMARY_SPELL_SLOT_LIST_ID));
   wxChoice* classDropDown = static_cast<wxChoice*>(wxWindow::FindWindowById(SUMMARY_CLASS_DROPDOWN_ID));
   spellList->Clear();
-  spellSlotList->Clear();
+  spellSlotList->DeleteAllItems();
   knownSpellsTable_.clear();
   int classChoice = classDropDown->GetSelection();
 
@@ -632,17 +644,36 @@ void SummaryPage::PopulateSpellData(void)
       else if (classChoice != wxNOT_FOUND && classList_[classChoice] == classId)
       {
         /* We have this class selected - update the spell list */
-        spellList->Clear();
-        spellSlotList->Clear();
-        knownSpellsTable_.clear();
         int classLevel = charPtr_->getClassLevel(classId);
         for (int spellLevel = 0; spellLevel <= 9; spellLevel++)
         {
-          /* TODO:Add the relevant spell slot modifier here! */
-          int slotCount = charPtr_->getNumSpellSlots(classId, spellLevel);//Pathfinder::PFTable::get_class(classId).levelItem(classLevel, static_cast<Pathfinder::lvlUpMarker>(Pathfinder::SPELLS_PER_DAY_0 + spellLevel));
+          int slotCount = charPtr_->getNumSpellSlots(classId, spellLevel);
+          int spellsKnown = Pathfinder::PFTable::get_class(classId).levelItem(classLevel, static_cast<Pathfinder::lvlUpMarker>(static_cast<int>(Pathfinder::SPELLS_KNOWN_0) + spellLevel));
+          int spellDC = 10 + spellLevel + charPtr_->abilityModifier(Pathfinder::PFTable::get_class(classId).casterAbility());
+          int bonusSlots = charPtr_->getNumBonusSpellSlots(classId, spellLevel);
           if (slotCount > 0)
           {
-            spellSlotList->AppendString(wxString::Format(wxT("%d level %d spell slots"), slotCount, spellLevel));
+            wxListItem item;
+            item.SetId(spellSlotList->GetItemCount());
+            item.SetColumn(0);
+            item.SetText((spellsKnown > 0 ? std::to_string(spellsKnown) : "-"));
+            spellSlotList->InsertItem(item);
+
+            item.SetColumn(1);
+            item.SetText(std::to_string(spellDC));
+            spellSlotList->SetItem(item);
+
+            item.SetColumn(2);
+            item.SetText(std::to_string(spellLevel));
+            spellSlotList->SetItem(item);
+
+            item.SetColumn(3);
+            item.SetText(std::to_string(slotCount));
+            spellSlotList->SetItem(item);
+
+            item.SetColumn(4);
+            item.SetText((bonusSlots > 0 ? std::to_string(bonusSlots) : "-"));
+            spellSlotList->SetItem(item);
           }
         }
 

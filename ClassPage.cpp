@@ -567,11 +567,13 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
 
   std::vector<Pathfinder::ClassChoice> choiceVec = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(todoFeatures_[featIdx].categoryId());
 
-  this->MakeFeatureChoice(classIdx, classLvl, numChoices, choiceVec);
-  /* remove this item from the list of features */
-  todoFeatures_.erase(todoFeatures_.begin() + featIdx);
+  if(this->MakeFeatureChoice(classIdx, classLvl, numChoices, choiceVec))
+  {
+    /* A choice was successfully made: remove this item from the list of features */
+    todoFeatures_.erase(todoFeatures_.begin() + featIdx);
 
-  featListBox->Delete(featIdx);
+    featListBox->Delete(featIdx);
+  }
 
   /* if there aren't any features left to choose, turn off the button for now */
   if (todoFeatures_.empty())
@@ -586,9 +588,10 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
   }
 }
 
-void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice> &choiceVec)
+bool ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice> &choiceVec)
 {
-  choiceDescriptions_.clear();
+  std::vector<wxString> choiceDescriptions;
+  bool status = true; // Indicate on return whether choice was successfully made or not
   wxListBox* featListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID));
   wxListBox* abilityListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_ABILITIES_LIST_ID));
 
@@ -603,7 +606,14 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
     {
       /* If you meet the level requirement, haven't chosen this too many times already, and it doesn't grant a feat you've already taken, and either has no prereq or you made the prereq choice */
       choiceStrings.Add(choiceIter->name());
-      choiceDescriptions_.push_back(choiceIter->desc());
+      if(choiceIter->featId() == -1)
+      {
+        choiceDescriptions.push_back(choiceIter->desc());
+      }
+      else
+      {
+        choiceDescriptions.push_back(Pathfinder::PFTable::get_feat(choiceIter->featId()).description());
+      }
       ++choiceIter;
     }
     else
@@ -614,19 +624,57 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
 
   int numChoicesMade = 0;
 
+  /* Record all local choices */
+  std::vector<int> currentChoicesMade;
   while (numChoicesMade < numChoices)
   {
-    //wxSingleChoiceDialog* choiceDialog = new wxSingleChoiceDialog(this,
     myDialog* choiceDialog = new myDialog(this,
       wxString::Format(wxT("Make selection %d out of %d"), numChoicesMade + 1, numChoices),
-      "caption string", choiceStrings, NULL, wxOK | wxCANCEL, wxDefaultPosition, choiceDescriptions_);
+      "caption string", choiceStrings, NULL, wxOK | wxCANCEL, wxDefaultPosition, choiceDescriptions);
     int choiceReturn = choiceDialog->ShowModal();
     int choiceIdx = choiceDialog->GetSelection();
-
     if (choiceReturn == wxID_OK)
     {
-      int skillIdx = ParseNameForSkill(choiceVec[choiceIdx].name());
-      int spellSchoolIdx = ParseNameForSpellSchool(choiceVec[choiceIdx].name());
+      if (choiceVec[choiceIdx].numSubsequentChoices() > 0)
+      {
+        std::vector<Pathfinder::ClassChoice> subsequentChoices = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(choiceVec[choiceIdx].subsequentChoiceCategory());
+        status = this->MakeFeatureChoice(classIdx, classLvl, choiceVec[choiceIdx].numSubsequentChoices(), subsequentChoices);
+        if (!status)
+        {
+          /* Subsequent choice failed, just back out and retry the previous level choice */
+          continue;
+        }
+      }
+
+      //Record this choice
+      choicesMade_.insert(choiceVec[choiceIdx].id());
+      currentChoicesMade.push_back(choiceVec[choiceIdx].id());
+
+      //Record the choice within the character class
+      charPtr_->makeClassChoice(choiceVec[choiceIdx].id());
+      if (choicesMade_.count(choiceVec[choiceIdx].id()) == choiceVec[choiceIdx].maxNumSelections())
+      {
+        choiceVec.erase(choiceVec.begin() + choiceIdx);
+        choiceStrings.RemoveAt(choiceIdx);
+      }
+      numChoicesMade++;
+    }
+    else
+    {
+      /* Choice cancelled */
+      status = false;
+      break;
+    }
+  }// While more choices left
+
+  for (std::vector<int>::iterator iter = currentChoicesMade.begin(); iter != currentChoicesMade.end(); ++iter)
+  {
+    if(status)
+    {
+      // All choices were successfully made, finalize those decisions
+      Pathfinder::ClassChoice choice = Pathfinder::PFTable::get_class_choice(*iter);
+      int skillIdx = ParseNameForSkill(choice.name());
+      int spellSchoolIdx = ParseNameForSpellSchool(choice.name());
       if (spellSchoolIdx > -1)
       {
         /* If choosing an opposition school then remove all spells of that school */
@@ -638,29 +686,20 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
         skillsChanged_ = true;
         charPtr_->addClassSkill(static_cast<Pathfinder::skillMarker>(skillIdx));
       }
-      featureNames_.push_back(choiceVec[choiceIdx].name());
-      featureDescriptions_.push_back(choiceVec[choiceIdx].desc());
-      featListBox->AppendString(choiceVec[choiceIdx].name());
-      if (choiceVec[choiceIdx].numSubsequentChoices() > 0)
+
+      if (choice.featId() >= 0)
       {
-        std::vector<Pathfinder::ClassChoice> subsequentChoices = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(choiceVec[choiceIdx].subsequentChoiceCategory());
-        this->MakeFeatureChoice(classIdx, classLvl, choiceVec[choiceIdx].numSubsequentChoices(), subsequentChoices);
-      }
-
-      //Record this choice
-      choicesMade_.insert(choiceVec[choiceIdx].id());
-
-      //Record the choice within the character class
-      charPtr_->makeClassChoice(choiceVec[choiceIdx].id());
-      if (choiceVec[choiceIdx].featId() >= 0) {
         grantedFeats_ = true;
-        charPtr_->selectFeat(choiceVec[choiceIdx].featId());
+        charPtr_->selectFeat(choice.featId());
       }
+      featureNames_.push_back(choice.name());
+      featureDescriptions_.push_back(choice.desc());
+      featListBox->AppendString(choice.name());
       //Go add any class abilities that had this choice as a prerequisite
       for (int classLevel = 0; classLevel <= charPtr_->getClassLevel(classIdx); classLevel++) {
         std::vector<Pathfinder::ClassAbility> abilityVec = Pathfinder::PFTable::get_class(classIdx).getAbilityVec(classLevel);
         for (unsigned int abilityIdx = 0; abilityIdx < abilityVec.size(); abilityIdx++) {
-          if (abilityVec[abilityIdx].choicePrereqId() == choiceVec[choiceIdx].id()) {
+          if (abilityVec[abilityIdx].choicePrereqId() == choice.id()) {
             abilities_.push_back(abilityVec[abilityIdx]);
             int skillIdx = ParseNameForSkill(abilityVec[abilityIdx].name());
             if (skillIdx > -1)
@@ -678,17 +717,19 @@ void ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
               charPtr_->selectFeat(abilityVec[abilityIdx].featId());
               grantedFeats_ = true;
             }
-          }
-        }
-      }
-      if (choicesMade_.count(choiceVec[choiceIdx].id()) == choiceVec[choiceIdx].maxNumSelections())
-      {
-        choiceVec.erase(choiceVec.begin() + choiceIdx);
-        choiceStrings.RemoveAt(choiceIdx);
-      }
-      numChoicesMade++;
+          }//If this choice was a prereq for this ability
+        }//For each ability
+      }//For each class level
+    }//If the choice was successful
+    else
+    {
+      /* Unmake all previous choices */
+      choicesMade_.erase(*iter);
+      charPtr_->removeClassChoice(*iter);
     }
-  }
+  }// For each choice in the process of being made
+
+  return status;
 }
 
 void ClassPage::ResizeCallback(wxSizeEvent& evt)
