@@ -320,6 +320,11 @@ bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
     errMsg = "You must finish learning bonus starting languages.";
     return false;
   }
+  else if (charPtr_->geAlignment() == Pathfinder::GE_ANY)
+  {
+    errMsg = "You must finish inputting your character's biographical information.";
+    return false;
+  }
   else if (charPtr_->numFavoredClassLeft() > 0)
   {
     errMsg ="Favored class(es) are not finalized yet.";
@@ -358,6 +363,12 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   if (!this->IsReadyForLevel(classIdx, errMsg))
   {
     wxMessageBox("Unable to level up yet: " + errMsg);
+    return;
+  }
+
+  if (!charPtr_->classAlignmentMatch(classIdx))
+  {
+    wxMessageBox(wxString::Format(wxT("You cannot add a %s level due to alignment requirements"), Pathfinder::CLASS_NAMES[classIdx]));
     return;
   }
 

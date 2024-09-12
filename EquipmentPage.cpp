@@ -46,6 +46,8 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   wxListCtrl* availEquipList = new wxListCtrl(this, EQUIPMENT_AVAILABLE_LIST_ID, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
   this->SetupListBox(availEquipList);
   availEquipList->Bind(wxEVT_LIST_ITEM_SELECTED, &EquipmentPage::OnItemSelected, this);
+  availEquipList->Bind(wxEVT_MOTION, &EquipmentPage::MouseOverEvent, this);
+  availEquipList->Bind(wxEVT_LEAVE_WINDOW, &EquipmentPage::MouseOverEvent, this);
   vboxAvail->Add(availEquipList, 1, wxEXPAND, 0);
 
   wxBoxSizer* hboxAvailBtns = new wxBoxSizer(wxHORIZONTAL);
@@ -72,6 +74,8 @@ EquipmentPage::EquipmentPage(wxNotebook* parentNotebook, Pathfinder::Character* 
   wxListCtrl* ownedEquipmentList = new wxListCtrl(this, EQUIPMENT_OWNED_LIST_ID, wxDefaultPosition, wxDefaultSize, wxLC_REPORT);
   this->SetupListBox(ownedEquipmentList);
   ownedEquipmentList->Bind(wxEVT_LIST_ITEM_SELECTED, &EquipmentPage::OnItemSelected, this);
+  ownedEquipmentList->Bind(wxEVT_MOTION, &EquipmentPage::MouseOverEvent, this);
+  ownedEquipmentList->Bind(wxEVT_LEAVE_WINDOW, &EquipmentPage::MouseOverEvent, this);
   vboxOwned->Add(ownedEquipmentList, 1, wxEXPAND, 0);
   wxBoxSizer* hboxOwnedBtns = new wxBoxSizer(wxHORIZONTAL);
   wxButton* sellButton = new wxButton(this, EQUIPMENT_SELL_BUTTON_ID, wxT("Sell"));
@@ -382,6 +386,7 @@ void EquipmentPage::SetupListBox(wxListCtrl* listBox, bool defaultList)
   if (!defaultList && currentCategory_ == Pathfinder::WEAPONS)
   {
     listBox->InsertColumn(WEAPON_CATEGORY_COLUMN, "Category", wxLIST_FORMAT_LEFT, -1);
+    listBox->InsertColumn(WEAPON_PROFICIENCY_COLUMN, "Proficiency", wxLIST_FORMAT_LEFT, -1);
     listBox->InsertColumn(WEAPON_DAMAGE_COLUMN, "Damage", wxLIST_FORMAT_LEFT, -1);
     listBox->InsertColumn(WEAPON_CRIT_COLUMN, "Crit", wxLIST_FORMAT_LEFT, -1);
     listBox->InsertColumn(WEAPON_RANGE_COLUMN, "Range", wxLIST_FORMAT_LEFT, -1);
@@ -406,6 +411,7 @@ void EquipmentPage::InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pa
   Pathfinder::characterSizeMarker size = (charPtr_ != NULL && charPtr_->race().id() != -1 ? charPtr_->race().charSize() : Pathfinder::SIZE_MEDIUM);
   bool qualityOverride = colorUnaffordable && static_cast<wxCheckBox*>(wxWindow::FindWindowById(EQUIPMENT_MASTERWORK_CHECKBOX_ID))->GetValue();
   bool canAfford = (charPtr_ == NULL || charPtr_->wealthCp() >= itemPtr->getPrice(size, qualityOverride));
+  bool proficient = (charPtr_ == NULL || charPtr_->checkProficiency(itemPtr));
   if (index == wxNOT_FOUND)
   {
     index = listBox->GetItemCount();
@@ -416,9 +422,17 @@ void EquipmentPage::InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pa
   listItem.SetColumn(NAME_COLUMN);
   listItem.SetText(namePrefix + itemPtr->getName(size, qualityOverride));
   listItem.SetTextColour(*wxBLACK);
-  if(colorUnaffordable && !canAfford)
+  if(colorUnaffordable && !canAfford && proficient)
   {
     listItem.SetTextColour(*wxRED);
+  }
+  else if (colorUnaffordable && !canAfford && !proficient)
+  {
+    listItem.SetTextColour(*wxBLUE);
+  }
+  else if (!proficient)
+  {
+    listItem.SetTextColour(*wxLIGHT_GREY);
   }
 
   if (index == listBox->GetItemCount())
@@ -443,6 +457,10 @@ void EquipmentPage::InsertListItem(wxListCtrl* listBox, std::shared_ptr<const Pa
     // Insert Category
     listItem.SetColumn(WEAPON_CATEGORY_COLUMN);
     listItem.SetText(Pathfinder::WEAPON_CATEGORY_NAMES[weaponPtr->getWeaponCategory()]);
+    listBox->SetItem(listItem);
+    // Insert Proficiency
+    listItem.SetColumn(WEAPON_PROFICIENCY_COLUMN);
+    listItem.SetText(Pathfinder::WEAPON_PROFICIENCY_NAMES[weaponPtr->getWeaponProficiency()]);
     listBox->SetItem(listItem);
     //Insert Damage
     listItem.SetColumn(WEAPON_DAMAGE_COLUMN);
@@ -891,6 +909,46 @@ void EquipmentPage::OnMasterworkBoxChecked(wxCommandEvent& evt)
   {
     /* Just repopulate the whole available equipment list, forcing the recalc of prices and recoloring */
     this->InsertListItem(availList, equipMap_[availListIds_[index]], true, "", index);
+  }
+}
+
+void EquipmentPage::MouseOverEvent(wxMouseEvent& evt)
+{
+  wxListCtrl* listBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(evt.GetId()));
+  wxPoint pos = evt.GetPosition();
+  int flags = wxLIST_HITTEST_ONITEM;
+  int item = listBox->HitTest(pos, flags);
+  if (item != wxNOT_FOUND)
+  {
+    if (evt.Moving())
+    {
+      wxColour color = listBox->GetItemTextColour(item);
+      wxString tooltipText = "";
+      if (color == *wxRED)
+      {
+        listBox->SetToolTip("You cannot afford this item");
+      }
+      else if (color == *wxLIGHT_GREY)
+      {
+        listBox->SetToolTip("You are not proficient with this type of item");
+      }
+      else if (color == *wxBLUE)
+      {
+        listBox->SetToolTip("You cannot afford this item, and you are not proficient with this type of item");
+      }
+      else
+      {
+        listBox->UnsetToolTip();
+      } 
+    }
+    else if (evt.Leaving())
+    {
+      listBox->UnsetToolTip();
+    }
+  }
+  else
+  {
+    listBox->UnsetToolTip();
   }
 }
 

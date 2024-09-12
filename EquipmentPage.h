@@ -35,11 +35,12 @@ class EquipmentPage : public wxPanel
   const int PRICE_COLUMN = 1;
   const int WEIGHT_COLUMN = 2;
   const int WEAPON_CATEGORY_COLUMN = 3;
-  const int WEAPON_DAMAGE_COLUMN = 4;
-  const int WEAPON_CRIT_COLUMN = 5;
-  const int WEAPON_RANGE_COLUMN = 6;
-  const int WEAPON_TYPE_COLUMN = 7;
-  const int WEAPON_SPECIAL_COLUMN = 8;
+  const int WEAPON_PROFICIENCY_COLUMN = 4;
+  const int WEAPON_DAMAGE_COLUMN = 5;
+  const int WEAPON_CRIT_COLUMN = 6;
+  const int WEAPON_RANGE_COLUMN = 7;
+  const int WEAPON_TYPE_COLUMN = 8;
+  const int WEAPON_SPECIAL_COLUMN = 9;
   const int ARMOR_CATEGORY_COLUMN = 3;
   const int ARMOR_BONUS_COLUMN = 4;
   const int ARMOR_MAX_DEX_BONUS_COLUMN = 5;
@@ -62,6 +63,7 @@ private:
   void OnTextEntered(wxCommandEvent& evt);
   void OnLockBoxChecked(wxCommandEvent& evt);
   void OnMasterworkBoxChecked(wxCommandEvent& evt);
+  void MouseOverEvent(wxMouseEvent& evt);
   void ResizeCallback(wxSizeEvent& evt);
 
   void UpdateItemDescription(std::shared_ptr<const Pathfinder::Equipment> itemPtr, bool qualityOverride);

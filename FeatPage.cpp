@@ -88,12 +88,18 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
       listItem.SetColumn(0);
       listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).name());
       std::string missingPrereqs;
-      if (this->CheckFeatPrereqs(featIdx, missingPrereqs))
+      if (charPtr_->checkProficiency(featIdx))
+      {
+        /* This proficiency is redundant for your class */
+        listItem.SetTextColour(*wxLIGHT_GREY);
+      }
+      else if (this->CheckFeatPrereqs(featIdx, missingPrereqs))
       {
         listItem.SetTextColour(*wxBLACK);
       }
       else
       {
+        /* Don't have the prerequisites */
         listItem.SetTextColour(*wxRED);
       }
       availListBox->InsertItem(listItem);
@@ -129,6 +135,13 @@ bool FeatPage::UpdateFeatPage(int classId)
   wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
   for (int idx = 0; idx < availListBox->GetItemCount(); idx++)
   {
+    if (availListBox->GetItemTextColour(idx) != *wxLIGHT_GREY && charPtr_->checkProficiency(availFeatIds_[idx]))
+    {
+      /* This feat is a proficiency feat which became redundant */
+      availListBox->SetItemTextColour(idx, *wxLIGHT_GREY);
+      availFeatMissingPrereqs_[idx] = "";
+    }
+
     if (!availFeatMissingPrereqs_[idx].empty())
     {
       
