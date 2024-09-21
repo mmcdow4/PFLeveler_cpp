@@ -82,16 +82,17 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
 
   for (int featIdx = 0; featIdx < Pathfinder::PFTable::get_num_feats(); featIdx++) {
     if (!charPtr_->isFeatSelected(featIdx) || Pathfinder::PFTable::get_feat(featIdx).multiple()) {
-      availFeatIds_.push_back(featIdx);
       wxListItem listItem;
-      listItem.SetId(availFeatIds_.size()-1);
+      listItem.SetId(availFeatIds_.size());
       listItem.SetColumn(0);
       listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).name());
       std::string missingPrereqs;
       if (charPtr_->checkProficiency(featIdx))
       {
-        /* This proficiency is redundant for your class */
-        listItem.SetTextColour(*wxLIGHT_GREY);
+        /* This proficiency is granted by a class */
+        charPtr_->selectFeat(featIdx);
+        knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
+        continue;
       }
       else if (this->CheckFeatPrereqs(featIdx, missingPrereqs))
       {
@@ -102,13 +103,14 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
         /* Don't have the prerequisites */
         listItem.SetTextColour(*wxRED);
       }
+      availFeatIds_.push_back(featIdx);
       availListBox->InsertItem(listItem);
       listItem.SetColumn(1);
       listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).type());
       availListBox->SetItem(listItem);
       availFeatMissingPrereqs_.push_back(missingPrereqs);
     }
-    if (charPtr_->isFeatSelected(featIdx))
+    else if (charPtr_->isFeatSelected(featIdx))
     {
       knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
     }
@@ -133,24 +135,30 @@ bool FeatPage::UpdateFeatPage(int classId)
 
   /* Re-evaluate feat pre-requisites */
   wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
-  for (int idx = 0; idx < availListBox->GetItemCount(); idx++)
+  wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
+  for (int idx = 0; idx < availListBox->GetItemCount(); )
   {
-    if (availListBox->GetItemTextColour(idx) != *wxLIGHT_GREY && charPtr_->checkProficiency(availFeatIds_[idx]))
+    if (charPtr_->checkProficiency(availFeatIds_[idx]))
     {
       /* This feat is a proficiency feat which became redundant */
-      availListBox->SetItemTextColour(idx, *wxLIGHT_GREY);
-      availFeatMissingPrereqs_[idx] = "";
+      charPtr_->selectFeat(availFeatIds_[idx]);
+      knownListBox->AppendString(Pathfinder::PFTable::get_feat(availFeatIds_[idx]).name());
+      availListBox->DeleteItem(idx);
+      availFeatIds_.erase(availFeatIds_.begin() + idx);
+      availFeatMissingPrereqs_.erase(availFeatMissingPrereqs_.begin() + idx);
     }
-
-    if (!availFeatMissingPrereqs_[idx].empty())
+    else
     {
-      
-      std::string missingPrereqs;
-      if (this->CheckFeatPrereqs(availFeatIds_[idx], missingPrereqs))
+      if (!availFeatMissingPrereqs_[idx].empty())
       {
-        availListBox->SetItemTextColour(idx, *wxBLACK);
+        std::string missingPrereqs;
+        if (this->CheckFeatPrereqs(availFeatIds_[idx], missingPrereqs))
+        {
+          availListBox->SetItemTextColour(idx, *wxBLACK);
+        }
+        availFeatMissingPrereqs_[idx] = missingPrereqs;
       }
-      availFeatMissingPrereqs_[idx] = missingPrereqs;
+      idx++;
     }
   }
 
