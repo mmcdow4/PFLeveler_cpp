@@ -15,7 +15,7 @@
 #include <pf_include/Race.h>
 
 
-cMain::cMain() : wxFrame(nullptr, wxID_ANY, "char_generator", wxPoint(30, 30), wxSize(DEFAULT_WINDOW_SIZE_X, DEFAULT_WINDOW_SIZE_Y))
+cMain::cMain() : wxFrame(nullptr, wxID_ANY, "PFMaker", wxPoint(30, 30), wxSize(DEFAULT_WINDOW_SIZE_X, DEFAULT_WINDOW_SIZE_Y))
 {
   /* create a row of boxes along the top of the window, to switch between tabs */
   /* TODO: look into wxNotebook*/

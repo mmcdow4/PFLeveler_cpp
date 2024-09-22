@@ -12,11 +12,12 @@
 #include "WrapText.h"
 
 #define FEAT_REMAINING_COUNTER_TEXT_ID 7000
-#define FEAT_AVAIL_FEAT_LIST_ID 7001
-#define FEAT_SELECT_BUTTON_ID 7002
-#define FEAT_REMOVE_BUTTON_ID 7003
-#define FEAT_KNOWN_FEAT_LIST_ID 7004
-#define FEAT_SELECTED_DESCRIPTION_ID 7005
+#define FEAT_FILTER_CHECKBOX_ID 7001
+#define FEAT_AVAIL_FEAT_LIST_ID 7002
+#define FEAT_SELECT_BUTTON_ID 7003
+#define FEAT_REMOVE_BUTTON_ID 7004
+#define FEAT_KNOWN_FEAT_LIST_ID 7005
+#define FEAT_SELECTED_DESCRIPTION_ID 7006
 
 class FeatPage : public wxPanel
 {
@@ -31,6 +32,7 @@ public:
   void OnAvailFeatSelected(wxListEvent& evt);
   void OnTakenFeatSelected(wxCommandEvent& evt);
   void SelectFeatButtonPress(wxCommandEvent& evt);
+  void OnFilterBoxChecked(wxCommandEvent& evt);
   void MouseOverEvent(wxMouseEvent& evt);
   void ResizeCallback(wxSizeEvent& evt);
 

@@ -12,6 +12,10 @@ FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
 
   wxStaticText* featsLeftText = new wxStaticText(this, FEAT_REMAINING_COUNTER_TEXT_ID, wxT("No Feat Picks Remaining"));
   vboxOverall->Add(featsLeftText, 0, wxALIGN_LEFT, 10);
+  wxCheckBox* filterCheck = new wxCheckBox(this, FEAT_FILTER_CHECKBOX_ID, wxT("Hide Feats With Missing Prereqs"));
+  filterCheck->Bind(wxEVT_CHECKBOX, &FeatPage::OnFilterBoxChecked, this);
+  filterCheck->Disable();
+  vboxOverall->Add(filterCheck, 0, wxALIGN_LEFT, 10);
 
 
   /* Available Feats List */
@@ -70,6 +74,9 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
     delete featDescWrapper_;
   }
 
+  wxCheckBox* filterCheck = static_cast<wxCheckBox*>(wxWindow::FindWindowById(FEAT_FILTER_CHECKBOX_ID));
+  filterCheck->Enable();
+  filterCheck->SetValue(false);
   wxTextCtrl* featDesc = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID));
   featDescWrapper_ = new HardBreakWrapper(featDesc, wxT("Description:"), GetClientSize().GetWidth()-20);
   featDesc->SetLabelText(featDescWrapper_->GetWrapped());
@@ -90,9 +97,17 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
       if (charPtr_->checkProficiency(featIdx))
       {
         /* This proficiency is granted by a class */
-        charPtr_->selectFeat(featIdx);
-        knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
-        continue;
+        if (Pathfinder::PFTable::get_feat(featIdx).name().find("Weapon Proficiency") != std::string::npos)
+        {
+          /* A weapon proficiency - mark the feat as redundant */
+          listItem.SetTextColour(*wxLIGHT_GREY);
+        }
+        else
+        {
+          charPtr_->selectFeat(featIdx);
+          knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
+          continue;
+        }
       }
       else if (this->CheckFeatPrereqs(featIdx, missingPrereqs))
       {
@@ -141,11 +156,22 @@ bool FeatPage::UpdateFeatPage(int classId)
     if (charPtr_->checkProficiency(availFeatIds_[idx]))
     {
       /* This feat is a proficiency feat which became redundant */
-      charPtr_->selectFeat(availFeatIds_[idx]);
-      knownListBox->AppendString(Pathfinder::PFTable::get_feat(availFeatIds_[idx]).name());
-      availListBox->DeleteItem(idx);
-      availFeatIds_.erase(availFeatIds_.begin() + idx);
-      availFeatMissingPrereqs_.erase(availFeatMissingPrereqs_.begin() + idx);
+      if (Pathfinder::PFTable::get_feat(availFeatIds_[idx]).name().find("Weapon Proficiency") != std::string::npos)
+      {
+        /* A weapon proficiency - mark the feat as redundant */
+        availListBox->SetItemTextColour(idx, *wxLIGHT_GREY);
+        availFeatMissingPrereqs_[idx].clear();
+        idx++;
+      }
+      else
+      {
+        /* An armor proficiency - grant the feat */
+        charPtr_->selectFeat(availFeatIds_[idx]);
+        knownListBox->AppendString(Pathfinder::PFTable::get_feat(availFeatIds_[idx]).name());
+        availListBox->DeleteItem(idx);
+        availFeatIds_.erase(availFeatIds_.begin() + idx);
+        availFeatMissingPrereqs_.erase(availFeatMissingPrereqs_.begin() + idx);
+      }
     }
     else
     {
@@ -316,6 +342,59 @@ void FeatPage::SelectFeatButtonPress(wxCommandEvent& evt)
   this->UpdateFeatPage(wxNOT_FOUND);
 
   availListBox->GetParent()->Layout();
+}
+
+void FeatPage::OnFilterBoxChecked(wxCommandEvent& evt)
+{
+  if(featDescWrapper_ != NULL)
+  {
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID))->SetLabelText(featDescWrapper_->UpdateText("Description: "));
+  }
+
+  wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
+  availListBox->ClearAll();
+  availListBox->InsertColumn(0, "Name", wxLIST_FORMAT_LEFT, 150);
+  availListBox->InsertColumn(1, "Type", wxLIST_FORMAT_LEFT, 150);
+  availFeatIds_.clear();
+  availFeatMissingPrereqs_.clear();
+
+  bool hideMissingPrereqs = static_cast<wxCheckBox*>(wxWindow::FindWindowById(FEAT_FILTER_CHECKBOX_ID))->GetValue();
+
+  for (int featIdx = 0; featIdx < Pathfinder::PFTable::get_num_feats(); featIdx++) {
+    if (!charPtr_->isFeatSelected(featIdx) || Pathfinder::PFTable::get_feat(featIdx).multiple()) {
+      wxListItem listItem;
+      listItem.SetId(availFeatIds_.size());
+      listItem.SetColumn(0);
+      listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).name());
+      std::string missingPrereqs;
+      if (charPtr_->checkProficiency(featIdx))
+      {
+        /* This feat is a proficiency feat which is redundant */
+        listItem.SetTextColour(*wxLIGHT_GREY);
+      }
+      else if (this->CheckFeatPrereqs(featIdx, missingPrereqs))
+      {
+        listItem.SetTextColour(*wxBLACK);
+      }
+      else if (!hideMissingPrereqs)
+      {
+        /* Write feats with missing prereqs in red */
+        listItem.SetTextColour(*wxRED);
+      }
+      else
+      {
+        /* Don't show feats with missing prereqs */
+        continue;
+      }
+
+      availListBox->InsertItem(listItem);
+      listItem.SetColumn(1);
+      listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).type());
+      availListBox->SetItem(listItem);
+      availFeatIds_.push_back(featIdx);
+      availFeatMissingPrereqs_.push_back(missingPrereqs);
+    }
+  }
 }
 
 void FeatPage::MouseOverEvent(wxMouseEvent& evt)
