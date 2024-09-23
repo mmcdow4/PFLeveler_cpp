@@ -190,13 +190,13 @@ bool SpellPage::UpdateSpellPage(int classId)
   std::vector<int> spellVec = charPtr_->getKnownSpells(classId);
   for(std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
   {
-    wxString spellName = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
+    wxString spellName = Pathfinder::PFTable::get_spell(*spellIter).name(classId);
     knownSpellList->AppendString(spellName);
     knownSpellsTable_.emplace(spellName, *spellIter);
   }
   for (std::vector<int>::iterator spellIter = availSpellIds_[classId].begin(); spellIter != availSpellIds_[classId].end(); ++spellIter)
   {
-    wxString spellName = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
+    wxString spellName = Pathfinder::PFTable::get_spell(*spellIter).name(classId);
     availSpellList->AppendString(spellName);
     availSpellsTable_.emplace(spellName, *spellIter);
   }
@@ -249,7 +249,7 @@ void SpellPage::GrantSpells(int classId)
   for (auto spellIter = knownSpells.begin(); spellIter != knownSpells.end(); ++spellIter)
   {
     /* Repopulate the known spells list */
-    wxString spell_name = wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classId), Pathfinder::PFTable::get_spell(*spellIter).name());
+    wxString spell_name = Pathfinder::PFTable::get_spell(*spellIter).name(classId);
     knownListBox->AppendString(spell_name);
     knownSpellsTable_.emplace(spell_name, *spellIter);
 
@@ -355,8 +355,8 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
   wxListBox* availListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_AVAIL_SPELL_LIST_ID));
   wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(SPELL_KNOWN_SPELL_LIST_ID));
   knownListBox->AppendString(availListBox->GetString(spellListIdx));
-  knownSpellsTable_.emplace(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(spellIdx).requiredClassLevel(classIdx), Pathfinder::PFTable::get_spell(spellIdx).name()), spellIdx);
-  availSpellsTable_.erase(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(spellIdx).requiredClassLevel(classIdx), Pathfinder::PFTable::get_spell(spellIdx).name()));
+  knownSpellsTable_.emplace(Pathfinder::PFTable::get_spell(spellIdx).name(classIdx), spellIdx);
+  availSpellsTable_.erase(Pathfinder::PFTable::get_spell(spellIdx).name(classIdx));
   availListBox->DeselectAll();
   availListBox->Delete(spellListIdx);
 
@@ -374,7 +374,7 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
         int spellIdx = availSpellIds_[classIdx][spellIter];
         availSpellIds_[classIdx].erase(availSpellIds_[classIdx].begin() + spellIter);
         availListBox->Delete(spellIter);
-        availSpellsTable_.erase(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(spellIdx).requiredClassLevel(classIdx), Pathfinder::PFTable::get_spell(spellIdx).name()));
+        availSpellsTable_.erase(Pathfinder::PFTable::get_spell(spellIdx).name(classIdx));
       }
       else
       {
@@ -410,14 +410,14 @@ void SpellPage::OnClassSelected(wxCommandEvent& evt)
     std::vector<int> spellList = charPtr_->getKnownSpells(classIdx);
     for (std::vector<int>::iterator spellIter = spellList.begin(); spellIter != spellList.end(); ++spellIter)
     {
-      knownListBox->AppendString(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classIdx), Pathfinder::PFTable::get_spell(*spellIter).name()));
-      knownSpellsTable_.emplace(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classIdx), Pathfinder::PFTable::get_spell(*spellIter).name()), *spellIter);
+      knownListBox->AppendString(Pathfinder::PFTable::get_spell(*spellIter).name(classIdx));
+      knownSpellsTable_.emplace(Pathfinder::PFTable::get_spell(*spellIter).name(classIdx), *spellIter);
     }
     /* do the available spells now*/
     for (std::vector<int>::iterator spellIter = availSpellIds_[classIdx].begin(); spellIter != availSpellIds_[classIdx].end(); ++spellIter)
     {
-      availListBox->AppendString(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classIdx), Pathfinder::PFTable::get_spell(*spellIter).name()));
-      availSpellsTable_.emplace(wxString::Format(wxT("level %d spell: %s"), Pathfinder::PFTable::get_spell(*spellIter).requiredClassLevel(classIdx), Pathfinder::PFTable::get_spell(*spellIter).name()), *spellIter);
+      availListBox->AppendString(Pathfinder::PFTable::get_spell(*spellIter).name(classIdx));
+      availSpellsTable_.emplace(Pathfinder::PFTable::get_spell(*spellIter).name(classIdx), *spellIter);
     }
   }
 }

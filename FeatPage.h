@@ -28,6 +28,7 @@ public:
 
   void ResetPage(Pathfinder::Character* currChar);
   bool UpdateFeatPage(int classId);
+  void PopulateFeatLists();
 
   void OnAvailFeatSelected(wxListEvent& evt);
   void OnTakenFeatSelected(wxCommandEvent& evt);

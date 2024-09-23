@@ -347,7 +347,35 @@ bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
   }
   else if (!todoFeatures_.empty())
   {
-    errMsg ="You have not finished making choices for your class features yet.";
+    bool onlyOptional = true;
+    for (std::vector<Pathfinder::ClassFeature>::iterator iter = todoFeatures_.begin(); iter != todoFeatures_.end(); ++iter)
+    {
+      onlyOptional &= iter->optional();
+    }
+    
+    if (onlyOptional)
+    {
+      /* Are you sure you want to lose optional features? */
+      wxMessageDialog choiceWindow(this, wxString::Format(wxT("You will lose your unselected optional class features if you proceed, do you still want to continue?")), "Optional Feature Warning", wxYES_NO | wxCENTRE/* | wxSTAY_ON_TOP*/);
+      choiceWindow.SetYesNoLabels("Continue", "Cancel");
+      int selection = choiceWindow.ShowModal();
+      if (selection == wxID_YES)
+      {
+        todoFeatures_.clear();
+        static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_TODO_FEATURE_LIST_ID))->Clear();
+        static_cast<wxButton*>(wxWindow::FindWindowById(CLASS_FEATURE_BUTTON_ID))->Disable();
+        return true;
+      }
+      else
+      {
+        errMsg = "";
+        return false;
+      }
+    }
+    else
+    {
+      errMsg ="You have not finished making choices for your class features yet.";
+    }
     return false;
   }
 
@@ -362,7 +390,10 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   std::string errMsg = "";
   if (!this->IsReadyForLevel(classIdx, errMsg))
   {
-    wxMessageBox("Unable to level up yet: " + errMsg);
+    if(!errMsg.empty())
+    {
+      wxMessageBox("Unable to level up yet: " + errMsg);
+    }
     return;
   }
 
@@ -409,7 +440,7 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     if (featIter->numChoices() > 0)
     {
       todoFeatures_.push_back(*featIter);
-      todoFeatList->AppendString(featIter->name());
+      todoFeatList->AppendString(featIter->name() + (featIter->optional() ? " (OPTIONAL)" : ""));
     }
     else
     {
@@ -576,9 +607,31 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
     return;
   }
 
-  std::vector<Pathfinder::ClassChoice> choiceVec = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(todoFeatures_[featIdx].categoryId());
+  std::vector<Pathfinder::ClassChoice> choiceVec;
+  bool status = false;
+  if (todoFeatures_[featIdx].name().find("Swap") == std::string::npos)
+  {
+    choiceVec = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(todoFeatures_[featIdx].categoryId());
+    status = this->MakeFeatureChoice(classIdx, classLvl, numChoices, choiceVec);
+  }
+  else if (todoFeatures_[featIdx].name().find("Swap Spell") != std::string::npos)
+  {
+    status = this->MakeSpellSwapChoice(classIdx);
+    if(status)
+    {
+      grantedSpells_ = true;
+    }
+  }
+  else if (todoFeatures_[featIdx].name().find("Swap Feat") != std::string::npos)
+  {
+    status = this->MakeFeatSwapChoice(classIdx);
+    if (status)
+    {
+      grantedFeats_ = true;
+    }
+  }
 
-  if(this->MakeFeatureChoice(classIdx, classLvl, numChoices, choiceVec))
+  if(status)
   {
     /* A choice was successfully made: remove this item from the list of features */
     todoFeatures_.erase(todoFeatures_.begin() + featIdx);
@@ -599,6 +652,182 @@ void ClassPage::SelectFeatureButtonPress(wxCommandEvent& evt)
   }
 }
 
+bool ClassPage::MakeFeatSwapChoice(int classIdx)
+{
+  int loseId = -1;
+  int loseChoiceId = -1;
+  int gainId = -1;
+  int gainChoiceId = -1;
+  int choiceCategory = -1;
+  wxListBox* featListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(CLASS_SELECTED_FEATURE_LIST_ID));
+
+  /* Prepare the list of feats you can lose */
+  std::vector<int> swappableFeatChoices = charPtr_->getSwappableFeats(classIdx);
+  std::vector<wxString> choiceDescriptions;
+  wxArrayString choiceStrings;
+  for (std::vector<int>::iterator choiceIter = swappableFeatChoices.begin(); choiceIter != swappableFeatChoices.end(); ++choiceIter)
+  {
+    choiceCategory = Pathfinder::PFTable::get_class_choice(*choiceIter).categoryId();
+    Pathfinder::Feat feat = Pathfinder::PFTable::get_feat(Pathfinder::PFTable::get_class_choice(*choiceIter).featId());
+    choiceDescriptions.push_back(feat.description());
+    choiceStrings.Add(feat.name());
+  }
+
+  /* Choose which feat to lose */
+  myDialog* choiceDialog = new myDialog(this,
+    "Choose Which Feat To Forget",
+    "caption string", choiceStrings, NULL, wxOK | wxCANCEL, wxDefaultPosition, choiceDescriptions);
+  int choiceReturn = choiceDialog->ShowModal();
+  int choiceIdx = choiceDialog->GetSelection();
+  if (choiceReturn == wxID_OK)
+  {
+    loseChoiceId = swappableFeatChoices[choiceIdx];
+    loseId = Pathfinder::PFTable::get_class_choice(loseChoiceId).featId();
+    /* Verify that this isn't a prerequsite for another feat */
+    std::vector<int> allCharFeats = charPtr_->getSelectedFeats();
+    Pathfinder::Feat loseFeat = Pathfinder::PFTable::get_feat(loseId);
+    for (std::vector<int>::iterator featIter = allCharFeats.begin(); featIter != allCharFeats.end(); ++featIter)
+    {
+      if (Pathfinder::PFTable::get_feat(*featIter).isPrereq(loseFeat))
+      {
+        //FIXME: For feats that only require N of M feats, this may prohibit losing a feat despite still having enough other feats to satisfy the prerequisite
+        wxMessageBox(wxString::Format(wxT("You cannot forget feat %s because it is a prerequisite for another feat: %s"), loseFeat.name().c_str(), Pathfinder::PFTable::get_feat(*featIter).name().c_str()));
+        return false;
+      }
+    }
+  }
+  else
+  {
+    return false;
+  }
+
+  /* Prepare the list of feats you can learn */
+  std::vector<Pathfinder::ClassChoice> choiceVec = Pathfinder::PFTable::get_class(classIdx).getChoiceVec(choiceCategory);
+  choiceDescriptions.clear();
+  choiceStrings.Clear();
+
+  for (std::vector<Pathfinder::ClassChoice>::iterator choiceIter = choiceVec.begin(); choiceIter != choiceVec.end(); )
+  {
+    std::string dummy;
+    if (!charPtr_->isFeatSelected(choiceIter->featId()) && charPtr_->checkFeatPrereqs(choiceIter->featId(), dummy) && !charPtr_->checkProficiency(choiceIter->featId()))
+    {
+      choiceDescriptions.push_back(Pathfinder::PFTable::get_feat(choiceIter->featId()).description());
+      choiceStrings.Add(Pathfinder::PFTable::get_feat(choiceIter->featId()).name());
+      choiceIter++;
+    }
+    else
+    {
+      choiceIter = choiceVec.erase(choiceIter);
+    }
+  }
+
+  /* Choose which feat to learn */
+  delete choiceDialog;
+  choiceDialog = new myDialog(this,
+    "Choose Which Feat To Learn",
+    "caption string", choiceStrings, NULL, wxOK | wxCANCEL, wxDefaultPosition, choiceDescriptions);
+  choiceReturn = choiceDialog->ShowModal();
+  choiceIdx = choiceDialog->GetSelection();
+  if (choiceReturn == wxID_OK)
+  {
+    gainChoiceId = choiceVec[choiceIdx].id();
+    gainId = choiceVec[choiceIdx].featId();
+  }
+  else
+  {
+    return false;
+  }
+
+  /* Swap the feats */
+  charPtr_->loseFeat(loseId);
+  charPtr_->removeClassChoice(loseChoiceId);
+  choicesMade_.erase(loseChoiceId);
+  charPtr_->selectFeat(gainId);
+  charPtr_->makeClassChoice(gainChoiceId);
+
+  /* Update the class feature table */
+  int pos = featListBox->FindString(Pathfinder::PFTable::get_class_choice(loseChoiceId).name());
+  featureNames_.erase(featureNames_.begin() + pos);
+  featureDescriptions_.erase(featureDescriptions_.begin() + pos);
+  featListBox->Delete(pos);
+  featureNames_.push_back(Pathfinder::PFTable::get_class_choice(gainChoiceId).name());
+  featureDescriptions_.push_back(Pathfinder::PFTable::get_class_choice(gainChoiceId).desc());
+  featListBox->AppendString(Pathfinder::PFTable::get_class_choice(gainChoiceId).name());
+  return true;
+}
+
+bool ClassPage::MakeSpellSwapChoice(int classIdx)
+{
+  int loseId = -1;
+  int gainId = -1;
+
+  /* Prepare the list of spells you can lose */
+  std::vector<int> swappableSpells = charPtr_->getSwappableSpells(classIdx);
+  std::vector<wxString> choiceDescriptions;
+  wxArrayString choiceStrings;
+  for (std::vector<int>::iterator spellIter = swappableSpells.begin(); spellIter != swappableSpells.end(); ++spellIter)
+  {
+    choiceDescriptions.push_back(Pathfinder::PFTable::get_spell(*spellIter).description());
+    choiceStrings.Add(Pathfinder::PFTable::get_spell(*spellIter).name(classIdx));
+  }
+
+  /* Choose which spell to lose */
+  myDialog* choiceDialog = new myDialog(this,
+    "Choose Which Spell To Forget",
+    "caption string", choiceStrings, NULL, wxOK | wxCANCEL, wxDefaultPosition, choiceDescriptions);
+  int choiceReturn = choiceDialog->ShowModal();
+  int choiceIdx = choiceDialog->GetSelection();
+  if (choiceReturn == wxID_OK)
+  {
+    loseId = swappableSpells[choiceIdx];
+  }
+  else
+  {
+    return false;
+  }
+
+  /* Prepare the list of spells you can learn */
+  int spellLevel = Pathfinder::PFTable::get_spell(loseId).requiredClassLevel(classIdx);
+
+  std::vector<int> learnableSpells = Pathfinder::PFTable::get_spell_list(classIdx, spellLevel);
+  choiceDescriptions.clear();
+  choiceStrings.Clear();
+  for (std::vector<int>::iterator spellIter = learnableSpells.begin(); spellIter != learnableSpells.end(); )
+  {
+    if(!charPtr_->isSpellKnown(classIdx, *spellIter))
+    {
+      choiceDescriptions.push_back(Pathfinder::PFTable::get_spell(*spellIter).description());
+      choiceStrings.Add(Pathfinder::PFTable::get_spell(*spellIter).name(classIdx));
+      ++spellIter;
+    }
+    else
+    {
+      spellIter = learnableSpells.erase(spellIter);
+    }
+  }
+
+  /* Choose which spell to learn */
+  delete choiceDialog;
+  choiceDialog = new myDialog(this,
+    "Choose Which Spell To Learn",
+    "caption string", choiceStrings, NULL, wxOK | wxCANCEL, wxDefaultPosition, choiceDescriptions);
+  choiceReturn = choiceDialog->ShowModal();
+  choiceIdx = choiceDialog->GetSelection();
+  if (choiceReturn == wxID_OK)
+  {
+    gainId = learnableSpells[choiceIdx];
+  }
+  else
+  {
+    return false;
+  }
+
+  /* Swap the spells */
+  charPtr_->loseSpell(classIdx, loseId);
+  charPtr_->learnSpell(classIdx, gainId);
+  return true; 
+}
+
 bool ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice> &choiceVec)
 {
   std::vector<wxString> choiceDescriptions;
@@ -611,7 +840,7 @@ bool ClassPage::MakeFeatureChoice(int classIdx, int classLvl, int numChoices, st
   for (auto choiceIter = choiceVec.begin(); choiceIter != choiceVec.end(); )
   {
     std::string dummy;
-    if(choiceIter->lvlReq() <= classLvl && choicesMade_.count(choiceIter->id()) < choiceIter->maxNumSelections() &&
+    if(choiceIter->lvlReq() <= classLvl && (choiceIter->id() == -1 /* indicates a swap choice */ || choicesMade_.count(choiceIter->id()) < choiceIter->maxNumSelections()) &&
       !charPtr_->isFeatSelected(choiceIter->featId()) && charPtr_->checkFeatPrereqs(choiceIter->featId(), dummy) &&
       (choiceIter->prereqId() == -1 || charPtr_->checkForChoice(choiceIter->prereqId())))
     {

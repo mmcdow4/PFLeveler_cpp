@@ -651,7 +651,7 @@ void SummaryPage::PopulateSpellData(void)
           int spellsKnown = Pathfinder::PFTable::get_class(classId).levelItem(classLevel, static_cast<Pathfinder::lvlUpMarker>(static_cast<int>(Pathfinder::SPELLS_KNOWN_0) + spellLevel));
           int spellDC = 10 + spellLevel + charPtr_->abilityModifier(Pathfinder::PFTable::get_class(classId).casterAbility());
           int bonusSlots = charPtr_->getNumBonusSpellSlots(classId, spellLevel);
-          if (slotCount > 0)
+          if (slotCount + bonusSlots > 0 && slotCount >= 0)
           {
             wxListItem item;
             item.SetId(spellSlotList->GetItemCount());
@@ -679,8 +679,7 @@ void SummaryPage::PopulateSpellData(void)
 
         for (std::vector<int>::iterator spellIter = spell_vec.begin(); spellIter != spell_vec.end(); ++spellIter)
         {
-          Pathfinder::Spell currSpell = Pathfinder::PFTable::get_spell(*spellIter);
-          wxString spellName = wxString::Format(wxT("level %d spell: %s"), currSpell.requiredClassLevel(classId), currSpell.name());
+          wxString spellName = Pathfinder::PFTable::get_spell(*spellIter).name(classId);
           spellList->AppendString(spellName);
           knownSpellsTable_.emplace(spellName, *spellIter);
         }

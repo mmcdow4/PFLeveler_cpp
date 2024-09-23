@@ -28,6 +28,10 @@
 class ClassPage : public wxPanel
 {
 
+  const int NOT_SWAP_CHOICE = 0;
+  const int SWAP_SPELL_CHOICE = 1;
+  const int SWAP_FEAT_CHOICE = 2;
+
 public:
   ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar);
   ~ClassPage() {}
@@ -43,6 +47,8 @@ public:
   void OnFinishedFeatureSelected(wxCommandEvent& evt);
   void SelectFeatureButtonPress(wxCommandEvent& evt);
   bool MakeFeatureChoice(int classIdx, int classLvl, int numChoices, std::vector<Pathfinder::ClassChoice>& choiceVec);
+  bool MakeSpellSwapChoice(int classIdx);
+  bool MakeFeatSwapChoice(int classIdx);
   void ResizeCallback(wxSizeEvent& evt);
   void MouseOverEvent(wxMouseEvent& evt);
   bool IsReadyForLevel(int classIdx, std::string& errMsg);
