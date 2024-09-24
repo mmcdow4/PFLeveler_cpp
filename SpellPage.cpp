@@ -26,7 +26,7 @@ SpellPage::SpellPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   wxStaticText* availSpellsLabel = new wxStaticText(this, wxID_ANY, wxT("Available Spells:"));
   vboxAvail->Add(availSpellsLabel, 0, wxBOTTOM, 5);
   wxString *dummyStr = NULL;
-  wxListBox* availSpellsList = new wxListBox(this, SPELL_AVAIL_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_SORT | wxLB_NEEDED_SB);
+  wxListBox* availSpellsList = new wxListBox(this, SPELL_AVAIL_SPELL_LIST_ID, wxDefaultPosition, wxDefaultSize, 0, dummyStr, wxLB_NEEDED_SB);
   vboxAvail->Add(availSpellsList, 1, wxEXPAND, 0);
 
   availSpellsList->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &SpellPage::OnSpellSelected, this);
@@ -175,10 +175,16 @@ bool SpellPage::UpdateSpellPage(int classId)
         int num_spells_available = 0;
         for (std::vector<int>::iterator spellIter = spellVec.begin(); spellIter != spellVec.end(); ++spellIter)
         {
-          if (!charPtr_->isSpellKnown(classId, *spellIter)) //You don't already know this spell
+          int spellIdx = *spellIter;
+          if (!charPtr_->isSpellKnown(classId, spellIdx)) //You don't already know this spell
           {
-            availSpellIds_[classId].push_back(*spellIter);
+            availSpellIds_[classId].push_back(spellIdx);
             num_spells_available++;
+
+            /* We already selected this class in the dropdown above, fill out the available spell list as we go */
+            wxString spellName = Pathfinder::PFTable::get_spell(*spellIter).name(classId);
+            availSpellList->AppendString(spellName);
+            availSpellsTable_.emplace(spellName, *spellIter);
           }
         }
         spellsLeft_[classId][spellLevel] = std::min(num_spells_available, num_spells_known);
@@ -193,12 +199,6 @@ bool SpellPage::UpdateSpellPage(int classId)
     wxString spellName = Pathfinder::PFTable::get_spell(*spellIter).name(classId);
     knownSpellList->AppendString(spellName);
     knownSpellsTable_.emplace(spellName, *spellIter);
-  }
-  for (std::vector<int>::iterator spellIter = availSpellIds_[classId].begin(); spellIter != availSpellIds_[classId].end(); ++spellIter)
-  {
-    wxString spellName = Pathfinder::PFTable::get_spell(*spellIter).name(classId);
-    availSpellList->AppendString(spellName);
-    availSpellsTable_.emplace(spellName, *spellIter);
   }
   
   bool spellsLeft = UpdateSpellsRemainingText();
