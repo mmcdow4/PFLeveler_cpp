@@ -24,13 +24,14 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "PFMaker", wxPoint(30, 30), wxSize(D
   file_ = new wxMenu;
 
   menubar_->Append(file_, wxT("&File"));
-  file_->Append(FILE_IMPORT_ID, wxString("Import Character"), wxString("Import a complete character PDF for levelling up"));
-  file_->Append(FILE_EXPORT_ID, wxString("Export Character"), wxString("Export a completed character to a PDF character sheet"));
+  file_->Append(FILE_IMPORT_ID, wxString("Import Character"), wxString("Import a complete character from a file"));
+  file_->Append(FILE_EXPORT_ID, wxString("Export Character"), wxString("Export a completed character to a file"));
   file_->Append(FILE_RESET_ID, wxString("New Character"), wxString("Discard the current character and start a new sheet"));
   file_->Append(FILE_EXIT_ID, wxString("Exit"), wxString("Close the window"));
 
   help_ = new wxMenu;
   menubar_->Append(help_, wxT("&Help"));
+  help_->Append(HELP_DESCRIBE_PAGE_ID, wxString("Describe Page"), wxString("Give a description of the currently selected page"));
   help_->Append(HELP_VERSION_ID, wxString("Version"), wxString("Get Current Version Number"));
 
   SetMenuBar(menubar_);
@@ -105,6 +106,45 @@ void cMain::exportCharacter(void)
   return;
 }
 
+void cMain::showPageHelp(void)
+{
+  int pageId = notebook_->GetSelection();
+
+  std::string helpMessage;
+  switch (pageId)
+  {
+    case NOTEBOOK_SUMMARY_PAGE_INDEX:
+      helpMessage = "This page is where you will populate your character's biographical information. As you make more choices on other pages, an overall summary of that information will be shown here as well.";
+      break;
+    case NOTEBOOK_RACE_PAGE_INDEX:
+      helpMessage = "This page is where you will choose your character's race, and also which extra languages you will know at start of play, if your intelligence modifier is positive. You can select a racial ability from the list to see a description in the text box below.";
+      break;
+    case NOTEBOOK_ABSCR_PAGE_INDEX:
+      helpMessage = "This page is where you will set your character's ability score values, and choose which score to increase as you gain points from class levels. There are multiple ways to set your initial values, which you can select from the dropdown menu. You can switch methods partway through or restart the same method by clicking the \"Select\" button again. Once you are finished make sure you click the \"Lock Scores\" button on the bottom right of the page.";
+      break;
+    case NOTEBOOK_CLASS_PAGE_INDEX:
+      helpMessage = "This page is where you will select your favored class(es), add class levels, and make class specific choices as you level up. The \"Class Choices\" list will indicate when you have choices to make - clicking an item in this list and then clicking the \"Make Choice\" button will cause a window to popup which will off you the options to choose. Tooltips will popup as you mouse over the options to give you more information, but if you want to back out and look around before finalizing your choice you can cancel to return to the main window, even partway through a choice with multiple steps. As you make those choices they will be recorded in the \"Class Features\" list, along with other features that don't involve a choice.";
+      break;
+    case NOTEBOOK_SKILL_PAGE_INDEX:
+      helpMessage = "This page is where you will add skill ranks. You can only subtract ranks to undo additions from your current level that haven't been finalized yet - once you finalize your choices you can't back them out.";
+      break;
+    case NOTEBOOK_SPELL_PAGE_INDEX:
+      helpMessage = "This page will show you the spells you know, and allow you to choose which spells to learn if that is relevant for your class. Spell lists are class specific in Pathfinder; for example if you are a level 1 bard and a level 1 sorcerer, you can only use your bard spell slots for spells in your bard list and vice-versa for your sorcerer spell slots.";
+      break;
+    case NOTEBOOK_FEAT_PAGE_INDEX:
+      helpMessage = "This page is where you will select which feats to take. A feat's name in red means you are missing some pre-requisites - you can mouse over to see a tooltip telling you which pre-requisites you are missing. A feat's name in grey means it is a weapon proficiency that is redundant with proficiencies granted by your class.";
+      break;
+    case NOTEBOOK_EQUIPMENT_PAGE_INDEX:
+      helpMessage = "This page is where you will buy and sell equipment. Your starting wealth will be randomly generated when you add your first level to your first class, as per table 6-1 in the core rulebook. Currency exchange values are as follows : 1 pp = 10 gp = 100 sp = 1000 cp. You can filter items by category from the dropdown menu and/or search for items by typing into the search bar - the text search will be applied only after you hit Enter, and likewise to remove the text search filter you must clear the search bar and hit Enter again. An item's name in red means you cannot afford it, an item's name in grey means you lack the relevant proficiency to use that item without a penalty, and an item's name in blue means you cannot afford that item *and* you also lack the proficiency. The \"Master Work\" checkbox is how to specify you wish to purchase a master work weapon or armor, and the price will be increased accordingly. The \"Add Money\" button will launch a popup window asking how much money you wish to add to your character, as a way to load a character later and add money earned while adventuring.";
+      break;
+    default:
+      helpMessage = "ERROR: Unknown page index";
+      break;
+  }
+
+  wxMessageBox(helpMessage, wxMessageBoxCaptionStr, wxOK | wxICON_INFORMATION | wxCENTRE | wxSTAY_ON_TOP, this);
+
+}
 
 void cMain::menuCallback(wxCommandEvent& evt)
 {
@@ -131,6 +171,9 @@ void cMain::menuCallback(wxCommandEvent& evt)
     break;
   case HELP_VERSION_ID:
     wxMessageBox("Current Version 0.2");
+    break;
+  case HELP_DESCRIBE_PAGE_ID:
+    showPageHelp();
     break;
   default:
     wxMessageBox("Unknown file selection : " + std::to_string(origId));

@@ -40,14 +40,11 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
   methodDropdown->Append("Direct Input");
   methodDropdown->Bind(wxEVT_CHOICE, &AbilityScorePage::OnAttributeModeSelected, this);
 
-  methodDropdown->Disable();
-  methodDropdown->Hide();
   hboxOverview->Add(methodDropdown);
 
   wxButton* methodSelectBtn = new wxButton(this, ABSCR_METHOD_BTN_ID, wxT("Select"));
   methodSelectBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &AbilityScorePage::OnAttributeModeSelectButtonPressed, this);
   methodSelectBtn->Disable();
-  methodSelectBtn->Hide();
   hboxOverview->Add(methodSelectBtn);
   
   modeDescWrapper_ = NULL;
@@ -314,7 +311,7 @@ AbilityScorePage::AbilityScorePage(wxNotebook* parentNotebook, Pathfinder::Chara
 
   vbox1->Add(CombatGrid, 1, wxEXPAND);
 
-  vbox1->Add(new wxButton(this, ABSCR_ATTRIBUTE_LOCK_BUTTON, "Lock Attributes"), 0, wxALIGN_RIGHT);
+  vbox1->Add(new wxButton(this, ABSCR_ATTRIBUTE_LOCK_BUTTON, "Lock Scores"), 0, wxALIGN_RIGHT);
   wxWindow::FindWindowById(ABSCR_ATTRIBUTE_LOCK_BUTTON)->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &AbilityScorePage::OnAttributesLocked, this);
   this->SetSizerAndFit(vbox1);
 }

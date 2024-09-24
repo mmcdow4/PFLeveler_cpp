@@ -54,7 +54,7 @@ FeatPage::FeatPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar) 
   featDescription->Bind(wxEVT_SIZE, &FeatPage::ResizeCallback, this);
   vboxOverall->Add(featDescription, 2, wxEXPAND | wxALL, 10);
   /* learn/unlearn buttons */
-  wxButton* learnBtn = new wxButton(this, FEAT_SELECT_BUTTON_ID, wxT("Select Feat"));
+  wxButton* learnBtn = new wxButton(this, FEAT_SELECT_BUTTON_ID, wxT("Take Feat"));
   learnBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &FeatPage::SelectFeatButtonPress, this);
   learnBtn->Disable();
   vboxOverall->Add(learnBtn, 0, wxALIGN_LEFT | wxRIGHT | wxBOTTOM, 10);

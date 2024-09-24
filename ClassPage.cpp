@@ -54,8 +54,6 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   }
 
   classDropDown->Bind(wxEVT_CHOICE, &ClassPage::OnClassSelected, this);
-  classDropDown->Disable();
-  classDropDown->Hide();
 
   wxButton* levelUpBtn = new wxButton(this, CLASS_LEVELUP_BUTTON_ID, wxT("Add Class Level"));
   levelUpBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ClassPage::OnLevelAdded, this);
@@ -81,8 +79,8 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   classDescription->Bind(wxEVT_SIZE, &ClassPage::ResizeCallback, this);
   vbox1->Add(classDescription, 1, wxEXPAND | wxUP | wxDOWN, 10);
 
-  wxStaticText* todoFeatureLabel = new wxStaticText(this, CLASS_TODO_FEATURE_LABEL_ID, wxT("Unset Class Features:"));
-  wxStaticText* selectedFeatureLabel = new wxStaticText(this, CLASS_TODO_FEATURE_LABEL_ID, wxT("Selected Class Features:"));
+  wxStaticText* todoFeatureLabel = new wxStaticText(this, CLASS_TODO_FEATURE_LABEL_ID, wxT("Class Choices:"));
+  wxStaticText* selectedFeatureLabel = new wxStaticText(this, CLASS_TODO_FEATURE_LABEL_ID, wxT("Class Features:"));
 
   /* Create a horizontal sizer to contain the two lists of class features: class features yet to choose and class features already selected */
   wxBoxSizer* hbox_features = new wxBoxSizer(wxHORIZONTAL);
@@ -113,7 +111,7 @@ ClassPage::ClassPage(wxNotebook* parentNotebook, Pathfinder::Character* currChar
   feature_description->Bind(wxEVT_SIZE, &ClassPage::ResizeCallback, this);
   vbox1->Add(feature_description, 1, wxALL | wxEXPAND, 10);
 
-  wxButton* addFeatureBtn = new wxButton(this, CLASS_FEATURE_BUTTON_ID, wxT("Choose Selected Feature"));
+  wxButton* addFeatureBtn = new wxButton(this, CLASS_FEATURE_BUTTON_ID, wxT("Make Choice"));
   addFeatureBtn->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ClassPage::SelectFeatureButtonPress, this);
   addFeatureBtn->Disable();
   addFeatureBtn->Hide();
@@ -539,6 +537,7 @@ void ClassPage::OnClassSelected(wxCommandEvent& evt)
   classText += "hit die = d" + wxString::Format(wxT("%d"), chosenClass.hitDie());
   classText += ", alignment = " + chosenClass.alignmentReq();
   classText += ", starting wealth = " + std::to_string(chosenClass.startingWealthD6()) + "d6 x 10 gp";
+  classText += ", skills per level = " + std::to_string(chosenClass.skillsPerLvl());
 
   wxTextCtrl* classDescBox = static_cast<wxTextCtrl*>(wxWindow::FindWindowById(CLASS_DESCRIPTION_ID));
   classDescBox->Clear();

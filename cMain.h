@@ -18,8 +18,8 @@
 
 #include <pf_include/Character.h>
 
-#define DEFAULT_WINDOW_SIZE_X 1000
-#define DEFAULT_WINDOW_SIZE_Y 600
+#define DEFAULT_WINDOW_SIZE_X 1350
+#define DEFAULT_WINDOW_SIZE_Y 800
 
 #define BACKGROUND_COLOR 0xE5E5E5
 /* File Menu IDs */
@@ -30,8 +30,17 @@
 
 /* Help Menu IDs */
 #define HELP_VERSION_ID 200
+#define HELP_DESCRIBE_PAGE_ID 201
 
-
+/* Notebook page indices */
+#define NOTEBOOK_SUMMARY_PAGE_INDEX 0
+#define NOTEBOOK_RACE_PAGE_INDEX 1
+#define NOTEBOOK_ABSCR_PAGE_INDEX 2
+#define NOTEBOOK_CLASS_PAGE_INDEX 3
+#define NOTEBOOK_SKILL_PAGE_INDEX 4
+#define NOTEBOOK_SPELL_PAGE_INDEX 5
+#define NOTEBOOK_FEAT_PAGE_INDEX 6
+#define NOTEBOOK_EQUIPMENT_PAGE_INDEX 7
 
 class cMain : public wxFrame
 {
@@ -65,6 +74,8 @@ private:
 
   void exportCharacter(void);
   void importCharacter(void);
+  void showPageHelp(void);
+
   Pathfinder::Character* currChar_ = NULL;
   SummaryPage* summaryPage_ = NULL;
   AbilityScorePage* abilityScorePage_ = NULL;
