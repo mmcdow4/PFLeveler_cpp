@@ -41,6 +41,8 @@ public:
   void OnLevelAdded(wxCommandEvent& evt);
   void OnFavoredClassAdded(wxCommandEvent& evt);
   void OnClassSelected(wxCommandEvent& evt);
+  void UpdateClassDescription(int classIdx);
+  void UpdateClassPage(void);
 
   void OnAbilitySelected(wxCommandEvent& evt);
   void OnUnselectedFeatureSelected(wxCommandEvent& evt);
@@ -52,7 +54,7 @@ public:
   void ResizeCallback(wxSizeEvent& evt);
   void MouseOverEvent(wxMouseEvent& evt);
   bool IsReadyForLevel(int classIdx, std::string& errMsg);
-
+  
   int ParseNameForLanguage(std::string name, int* languageIdx);
   int ParseNameForSkill(std::string name);
   int ParseNameForSpellSchool(std::string name);

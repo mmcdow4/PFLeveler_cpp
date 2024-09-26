@@ -40,11 +40,16 @@ public:
   void GrantFeats(void);
   void UpdateFeatDescription(int featIndex);
   bool CheckFeatPrereqs(int featIndex, std::string& missingPrereqs);
+
+  inline int featsRemaining(void) { return featsRemaining_; }
+  inline bool classChange(void) { return classChange_; }
+  inline bool classChange(bool val) { return (classChange_ = val); }
 private:
   Pathfinder::Character* charPtr_ = NULL;
   std::vector<int> availFeatIds_;
   std::vector<std::string> availFeatMissingPrereqs_;
   int featsRemaining_ = 0;
+  bool classChange_ = false;
   HardBreakWrapper* featDescWrapper_ = NULL;
 };
 

@@ -257,6 +257,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
     {
       racePage_->SetupBonusLanguages();
       summaryPage_->PopulateRaceData();
+      classPage_->languageChange_ = false;
     }
     equipmentPage_->UpdateEquipmentPage();
     summaryPage_->PopulateSpellData();
@@ -275,6 +276,11 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
       featPage_->GrantFeats();
       summaryPage_->PopulateFeatData();
       classPage_->grantedFeats_ = false;
+    }
+    else
+    {
+      /* Just in case this was a prereq for a feat */
+      featPage_->PopulateFeatLists();
     }
     if (classPage_->skillsChanged_)
     {
@@ -297,7 +303,15 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
   case FEAT_SELECT_BUTTON_ID:
     /* Propagate feats to the summary page */
     summaryPage_->PopulateFeatData();
-    classPage_->featsLeft_ = false;
+    if(featPage_->featsRemaining() == 0)
+    {
+      classPage_->featsLeft_ = false;
+    }
+    if (featPage_->classChange())
+    {
+      classPage_->UpdateClassPage();
+      featPage_->classChange(false);
+    }
     break;
   case EQUIPMENT_PURCHASE_BUTTON_ID:
   case EQUIPMENT_SELL_BUTTON_ID:

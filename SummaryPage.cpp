@@ -607,11 +607,11 @@ void SummaryPage::PopulateFeatData(void)
   wxListBox* featList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_FEAT_LIST_ID));
 
   featList->Clear();
-  std::vector<int> feat_vec = charPtr_->getSelectedFeats();
+  std::vector<Pathfinder::Feat> feat_vec = charPtr_->getSelectedFeats();
 
-  for (std::vector<int>::iterator featIter = feat_vec.begin(); featIter != feat_vec.end(); ++featIter)
+  for (std::vector<Pathfinder::Feat>::iterator featIter = feat_vec.begin(); featIter != feat_vec.end(); ++featIter)
   {
-    featList->AppendString(Pathfinder::PFTable::get_feat(*featIter).name());
+    featList->AppendString(featIter->fullName());
   }
 }
 

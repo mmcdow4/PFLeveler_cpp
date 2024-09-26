@@ -735,7 +735,7 @@ void AbilityScorePage::OnAttributesLocked(wxCommandEvent& evt)
     return;
   }
 
-  if (charPtr_->abilityScoresSet() == false && charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) > 0)
+  if (charPtr_->getCharacterLevel() == 0 && charPtr_->abilityModifier(Pathfinder::INTELLIGENCE) > 0)
   {
     /* We are setting the initial ability scores, so indicate that there may be more starting languages to learn */
     charPtr_->remainingBonusLanguages(charPtr_->abilityModifier(Pathfinder::INTELLIGENCE));

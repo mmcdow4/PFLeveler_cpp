@@ -81,56 +81,6 @@ void FeatPage::ResetPage(Pathfinder::Character* currChar)
   featDescWrapper_ = new HardBreakWrapper(featDesc, wxT("Description:"), GetClientSize().GetWidth()-20);
   featDesc->SetLabelText(featDescWrapper_->GetWrapped());
   this->PopulateFeatLists();
-  //wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
-  //knownListBox->Clear();
-  //wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
-  //availListBox->ClearAll();
-  //availListBox->InsertColumn(0, "Name", wxLIST_FORMAT_LEFT, 150);
-  //availListBox->InsertColumn(1, "Type", wxLIST_FORMAT_LEFT, 150);
-
-  //for (int featIdx = 0; featIdx < Pathfinder::PFTable::get_num_feats(); featIdx++) {
-  //  if (!charPtr_->isFeatSelected(featIdx) || Pathfinder::PFTable::get_feat(featIdx).multiple()) {
-  //    wxListItem listItem;
-  //    listItem.SetId(availFeatIds_.size());
-  //    listItem.SetColumn(0);
-  //    listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).name());
-  //    std::string missingPrereqs;
-  //    if (charPtr_->checkProficiency(featIdx))
-  //    {
-  //      /* This proficiency is granted by a class */
-  //      if (Pathfinder::PFTable::get_feat(featIdx).name().find("Weapon Proficiency") != std::string::npos)
-  //      {
-  //        /* A weapon proficiency - mark the feat as redundant */
-  //        listItem.SetTextColour(*wxLIGHT_GREY);
-  //      }
-  //      else
-  //      {
-  //        charPtr_->selectFeat(featIdx);
-  //        knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
-  //        continue;
-  //      }
-  //    }
-  //    else if (this->CheckFeatPrereqs(featIdx, missingPrereqs))
-  //    {
-  //      listItem.SetTextColour(*wxBLACK);
-  //    }
-  //    else
-  //    {
-  //      /* Don't have the prerequisites */
-  //      listItem.SetTextColour(*wxRED);
-  //    }
-  //    availFeatIds_.push_back(featIdx);
-  //    availListBox->InsertItem(listItem);
-  //    listItem.SetColumn(1);
-  //    listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).type());
-  //    availListBox->SetItem(listItem);
-  //    availFeatMissingPrereqs_.push_back(missingPrereqs);
-  //  }
-  //  else if (charPtr_->isFeatSelected(featIdx))
-  //  {
-  //    knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
-  //  }
-  //}
 
   static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_REMAINING_COUNTER_TEXT_ID))->SetLabel("No Feat Picks Remaining");
 
@@ -149,45 +99,7 @@ bool FeatPage::UpdateFeatPage(int classId)
     }
   }
 
-  /* Re-evaluate feat pre-requisites */
-  wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
-  wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
-  for (int idx = 0; idx < availListBox->GetItemCount(); )
-  {
-    if (charPtr_->checkProficiency(availFeatIds_[idx]))
-    {
-      /* This feat is a proficiency feat which became redundant */
-      if (Pathfinder::PFTable::get_feat(availFeatIds_[idx]).name().find("Weapon Proficiency") != std::string::npos)
-      {
-        /* A weapon proficiency - mark the feat as redundant */
-        availListBox->SetItemTextColour(idx, *wxLIGHT_GREY);
-        availFeatMissingPrereqs_[idx].clear();
-        idx++;
-      }
-      else
-      {
-        /* An armor proficiency - grant the feat */
-        charPtr_->selectFeat(availFeatIds_[idx]);
-        knownListBox->AppendString(Pathfinder::PFTable::get_feat(availFeatIds_[idx]).name());
-        availListBox->DeleteItem(idx);
-        availFeatIds_.erase(availFeatIds_.begin() + idx);
-        availFeatMissingPrereqs_.erase(availFeatMissingPrereqs_.begin() + idx);
-      }
-    }
-    else
-    {
-      if (!availFeatMissingPrereqs_[idx].empty())
-      {
-        std::string missingPrereqs;
-        if (this->CheckFeatPrereqs(availFeatIds_[idx], missingPrereqs))
-        {
-          availListBox->SetItemTextColour(idx, *wxBLACK);
-        }
-        availFeatMissingPrereqs_[idx] = missingPrereqs;
-      }
-      idx++;
-    }
-  }
+  this->PopulateFeatLists();
 
   if (featsRemaining_ > 0)
   {
@@ -212,7 +124,8 @@ void FeatPage::PopulateFeatLists(void)
   
   bool filterFeats = static_cast<wxCheckBox*>(wxWindow::FindWindowById(FEAT_FILTER_CHECKBOX_ID))->GetValue();
   for (int featIdx = 0; featIdx < Pathfinder::PFTable::get_num_feats(); featIdx++) {
-    if (!charPtr_->isFeatSelected(featIdx) || Pathfinder::PFTable::get_feat(featIdx).multiple()) {
+    Pathfinder::Feat tmpFeat = Pathfinder::PFTable::get_feat(featIdx);
+    if (!charPtr_->isFeatSelected(tmpFeat) || tmpFeat.multiple()) {
       wxListItem listItem;
       listItem.SetId(availFeatIds_.size());
       listItem.SetColumn(0);
@@ -221,15 +134,15 @@ void FeatPage::PopulateFeatLists(void)
       if (charPtr_->checkProficiency(featIdx))
       {
         /* This proficiency is granted by a class */
-        if (Pathfinder::PFTable::get_feat(featIdx).name().find("Weapon Proficiency") != std::string::npos)
+        if (tmpFeat.name().find("Weapon Proficiency") != std::string::npos)
         {
           /* A weapon proficiency - mark the feat as redundant */
           listItem.SetTextColour(*wxLIGHT_GREY);
         }
         else
         {
-          charPtr_->selectFeat(featIdx);
-          knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
+          charPtr_->selectFeat(tmpFeat);
+          knownListBox->AppendString(tmpFeat.fullName());
           continue;
         }
       }
@@ -250,15 +163,16 @@ void FeatPage::PopulateFeatLists(void)
       availFeatIds_.push_back(featIdx);
       availListBox->InsertItem(listItem);
       listItem.SetColumn(1);
-      listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).type());
+      listItem.SetText(tmpFeat.type());
       availListBox->SetItem(listItem);
       availFeatMissingPrereqs_.push_back(missingPrereqs);
     }
-    
-    if (charPtr_->isFeatSelected(featIdx))
-    {
-      knownListBox->AppendString(Pathfinder::PFTable::get_feat(featIdx).name());
-    }
+  }
+
+  std::vector<Pathfinder::Feat> featList = charPtr_->getSelectedFeats();
+  for (std::vector<Pathfinder::Feat>::iterator featIter = featList.begin(); featIter != featList.end(); ++featIter)
+  {
+    knownListBox->AppendString(featIter->fullName());
   }
 }
 
@@ -282,7 +196,7 @@ void FeatPage::OnTakenFeatSelected(wxCommandEvent& evt)
     availList->SetItemState(item, 0, wxLIST_STATE_SELECTED);
   }
 
-  UpdateFeatDescription(charPtr_->selectedFeat(featListIdx));
+  UpdateFeatDescription(charPtr_->selectedFeat(featListIdx).id());
 
   wxWindow::FindWindowById(FEAT_SELECTED_DESCRIPTION_ID)->GetParent()->Layout();
 }
@@ -290,27 +204,6 @@ void FeatPage::OnTakenFeatSelected(wxCommandEvent& evt)
 void FeatPage::GrantFeats(void)
 {
   this->PopulateFeatLists();
-  //wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
-  //wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
-  //knownListBox->Clear();
-  //std::vector<int> knownFeats = charPtr_->getSelectedFeats();
-  ///* Remove all taken feats from the available list, repopulate (FIXME: both lists)the known list in case a feat was lost */
-  //for (auto featIter = knownFeats.begin(); featIter != knownFeats.end(); ++featIter)
-  //{
-  //  knownListBox->AppendString(Pathfinder::PFTable::get_feat(*featIter).name());
-
-  //  std::vector<int>::iterator iter = std::find(availFeatIds_.begin(), availFeatIds_.end(), *featIter);
-  //  int loc = std::distance(availFeatIds_.begin(), iter);
-  //  //int loc = availListBox->FindString(Pathfinder::PFTable::get_feat(*featIter).name());
-
-  //  if (loc < static_cast<int>(availFeatIds_.size()))
-  //  {
-  //    /* Now delete from the available list */
-  //    availListBox->DeleteItem(loc);
-  //    availFeatIds_.erase(availFeatIds_.begin() + loc);
-  //    availFeatMissingPrereqs_.erase(availFeatMissingPrereqs_.begin() + loc);
-  //  }
-  //}
 }
 
 void FeatPage::ResizeCallback(wxSizeEvent& evt)
@@ -322,22 +215,6 @@ void FeatPage::ResizeCallback(wxSizeEvent& evt)
     featDescBox->GetSize(&maxWidth, NULL);
     featDescBox->Clear();
     *featDescBox << featDescWrapper_->UpdateWidth(maxWidth);
-
-    //int item = wxNOT_FOUND;
-    //int featIdx = wxNOT_FOUND;
-    //if ((item = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID))->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) != wxNOT_FOUND)
-    //{
-    //  featIdx = availFeatIds_[item];
-    //}
-    //else if ((item = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID))->GetSelection()) != wxNOT_FOUND)
-    //{
-    //  featIdx = charPtr_->selectedFeat(item);
-    //}
-
-    //if (featIdx != wxNOT_FOUND)
-    //{
-    //  UpdateFeatDescription(featIdx);
-    //}
   }
   evt.Skip();
 }
@@ -379,15 +256,71 @@ void FeatPage::SelectFeatButtonPress(wxCommandEvent& evt)
   }
 
   int featIdx = availFeatIds_[featListIdx];
+
   /* update the internal lists */
-  charPtr_->selectFeat(featIdx);
+  Pathfinder::Feat newFeat = Pathfinder::PFTable::get_feat(featIdx);
+  if (newFeat.choice() != Pathfinder::Feat::FEAT_NO_CHOICE)
+  {
+    std::vector<std::string> options = charPtr_->getFeatChoices(newFeat);
+    if (options.empty())
+    {
+      wxMessageBox("You do not meet the prerequisites for any of the potential options for this feat.");
+      return;
+    }
+    wxArrayString choiceStrings;
+    for (std::vector<std::string>::iterator strIter = options.begin(); strIter != options.end(); ++strIter)
+    {
+      choiceStrings.Add(*strIter);
+    }
+    wxSingleChoiceDialog followOnDialog(this, "Make A Choice For The New Feat", "", choiceStrings);
+    int choiceReturn = followOnDialog.ShowModal();
+    int choiceIdx = followOnDialog.GetSelection();
+    if (choiceReturn == wxID_OK)
+    {
+      newFeat.choiceString(options[choiceIdx]);
+    }
+    else
+    {
+      /* Choice declined, just exit without taking the feat*/
+      return;
+    }
+  }
+
+  charPtr_->selectFeat(newFeat);
+  if (newFeat.choice() == Pathfinder::Feat::FEAT_MERCY_CHOICE)
+  {
+    /* For the mercy feat, we need to go add the mercy choice as well */
+    std::vector<Pathfinder::ClassChoice> choiceVec = charPtr_->getClassChoices();
+    /* first get the mercy category, ugly I know... */
+    int mercyCategory = -1;
+    for (std::vector<Pathfinder::ClassChoice>::iterator choiceIter = choiceVec.begin(); choiceIter != choiceVec.end(); ++choiceIter)
+    {
+      if (choiceIter->name().find("Mercy") != std::string::npos)
+      {
+        mercyCategory = choiceIter->categoryId();
+        break;
+      }
+    }
+
+    /* Now get the full list of mercies, and look for the one we picked */
+    choiceVec = Pathfinder::PFTable::get_class(Pathfinder::PALADIN).getChoiceVec(mercyCategory);
+    for (std::vector<Pathfinder::ClassChoice>::iterator choiceIter = choiceVec.begin(); choiceIter != choiceVec.end(); ++choiceIter)
+    {
+      if (choiceIter->name().compare(newFeat.choiceString()) == 0)
+      {
+        charPtr_->makeClassChoice(*choiceIter);
+        break;
+      }
+    }
+    classChange_ = true;
+  }
 
   /* update the listboxes */
   wxListCtrl* availListBox = static_cast<wxListCtrl*>(wxWindow::FindWindowById(FEAT_AVAIL_FEAT_LIST_ID));
   wxListBox* knownListBox = static_cast<wxListBox*>(wxWindow::FindWindowById(FEAT_KNOWN_FEAT_LIST_ID));
   availListBox->SetItemState(featListIdx, 0, wxLIST_STATE_SELECTED);
   
-  knownListBox->AppendString(availListBox->GetItemText(featListIdx));
+  knownListBox->AppendString(newFeat.fullName());
   
   if (!Pathfinder::PFTable::get_feat(featIdx).multiple()) {
     availFeatIds_.erase(availFeatIds_.begin() + featListIdx);
@@ -401,7 +334,7 @@ void FeatPage::SelectFeatButtonPress(wxCommandEvent& evt)
   wxString featsRemainingString = wxString::Format(wxT("%d Feats remaining"), featsRemaining_);
   static_cast<wxStaticText*>(wxWindow::FindWindowById(FEAT_REMAINING_COUNTER_TEXT_ID))->SetLabel(featsRemainingString);
 
-  if (featsRemaining_ == 0)
+  if (featsRemaining_ == 0 || classChange_)
   {
     wxWindow::FindWindowById(FEAT_SELECT_BUTTON_ID)->Disable();
     evt.Skip();
@@ -430,7 +363,8 @@ void FeatPage::OnFilterBoxChecked(wxCommandEvent& evt)
   bool hideMissingPrereqs = static_cast<wxCheckBox*>(wxWindow::FindWindowById(FEAT_FILTER_CHECKBOX_ID))->GetValue();
 
   for (int featIdx = 0; featIdx < Pathfinder::PFTable::get_num_feats(); featIdx++) {
-    if (!charPtr_->isFeatSelected(featIdx) || Pathfinder::PFTable::get_feat(featIdx).multiple()) {
+    Pathfinder::Feat tmpFeat = Pathfinder::PFTable::get_feat(featIdx);
+    if (!charPtr_->isFeatSelected(tmpFeat) || tmpFeat.multiple()) {
       wxListItem listItem;
       listItem.SetId(availFeatIds_.size());
       listItem.SetColumn(0);
@@ -458,7 +392,7 @@ void FeatPage::OnFilterBoxChecked(wxCommandEvent& evt)
 
       availListBox->InsertItem(listItem);
       listItem.SetColumn(1);
-      listItem.SetText(Pathfinder::PFTable::get_feat(featIdx).type());
+      listItem.SetText(tmpFeat.type());
       availListBox->SetItem(listItem);
       availFeatIds_.push_back(featIdx);
       availFeatMissingPrereqs_.push_back(missingPrereqs);
@@ -488,5 +422,6 @@ bool FeatPage::CheckFeatPrereqs(int featIndex, std::string &missingPrereqs)
   {
     return true;
   }
-  return (charPtr_->checkFeatPrereqs(featIndex, missingPrereqs));
+  Pathfinder::Feat newFeat = Pathfinder::PFTable::get_feat(featIndex);
+  return (charPtr_->checkFeatPrereqs(newFeat, missingPrereqs));
 }

@@ -332,10 +332,10 @@ void SpellPage::LearnSpellButtonPress(wxCommandEvent& evt)
   if (static_cast<Pathfinder::classMarker>(classIdx) == Pathfinder::WIZARD && charPtr_->getClassLevel(classIdx) == 1)
   {
     bool arcane_school_chosen = false;
-    std::vector<int> choiceVec = charPtr_->getClassChoices();
-    for (std::vector<int>::iterator iter = choiceVec.begin(); iter != choiceVec.end(); ++iter)
+    std::vector<Pathfinder::ClassChoice> choiceVec = charPtr_->getClassChoices();
+    for (std::vector<Pathfinder::ClassChoice>::iterator iter = choiceVec.begin(); iter != choiceVec.end(); ++iter)
     {
-      if (Pathfinder::PFTable::get_class_choice(*iter).name().find("Arcane School:"))
+      if (iter->name().find("Arcane School:"))
       {
         arcane_school_chosen = true;
         break;
