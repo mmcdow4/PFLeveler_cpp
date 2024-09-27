@@ -526,6 +526,7 @@ void SummaryPage::PopulateFavoredClassData(void)
 void SummaryPage::PopulateClassLevelData(void)
 {
   wxListBox* classLevelList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_CLASS_LEVEL_LIST_ID));
+  wxListBox* classAbilityList = static_cast<wxListBox*>(wxWindow::FindWindowById(SUMMARY_ABILITY_LIST_ID));
 
   classLevelList->Clear();
   for (int classId = 0; classId < Pathfinder::NUMBER_CLASSES; classId++)
@@ -534,6 +535,17 @@ void SummaryPage::PopulateClassLevelData(void)
     if (classLvl > 0)
     {
       classLevelList->AppendString(Pathfinder::PFTable::get_class(classId).name() + " : Level " + std::to_string(classLvl));
+    }
+  }
+
+  classAbilityList->Clear();
+  std::vector<int> abilityList = charPtr_->getClassAbilities();
+  for (std::vector<int>::iterator abilityIter = abilityList.begin(); abilityIter != abilityList.end(); ++abilityIter)
+  {
+    Pathfinder::ClassAbility ability = Pathfinder::PFTable::get_class_ability(*abilityIter);
+    if (ability.spellId() == -1 && ability.featId() == -1 && ability.name().find("Class Skill") == std::string::npos)
+    {
+      classAbilityList->AppendString(ability.name());
     }
   }
 }
