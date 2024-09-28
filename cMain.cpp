@@ -170,7 +170,7 @@ void cMain::menuCallback(wxCommandEvent& evt)
     delete this;
     break;
   case HELP_VERSION_ID:
-    wxMessageBox("Current Version 0.2");
+    wxMessageBox("Current Version " + Pathfinder::versionStr);
     break;
   case HELP_DESCRIBE_PAGE_ID:
     showPageHelp();
