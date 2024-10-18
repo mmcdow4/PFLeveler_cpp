@@ -292,8 +292,7 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
     wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Disable();
     wxWindow::FindWindowById(SUMMARY_PLAYER_INPUT_ID)->Hide();
 
-    int alignmentIdx = 3 * static_cast<int>(charPtr_->geAlignment()) + static_cast<int>(charPtr_->lcAlignment());
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_ALIGNMENT_LABEL_ID))->SetLabel(wxT("Alignment: " + wxString(Pathfinder::alignmentStrings[alignmentIdx])));
+    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_ALIGNMENT_LABEL_ID))->SetLabel(wxT("Alignment: " + charPtr_->alignment()));
     wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Disable();
     wxWindow::FindWindowById(SUMMARY_ALIGNMENT_DROPDOWN_ID)->Hide();
 
@@ -558,19 +557,7 @@ void SummaryPage::PopulateRaceData(void)
 
   std::set<int> languageList = charPtr_->getKnownLanguages();
 
-  std::string languageString = "Languages: ";
-
-  for (std::set<int>::iterator iter = languageList.begin(); iter != languageList.end(); ++iter)
-  {
-    if(iter == languageList.begin())
-    {
-      languageString += Pathfinder::PFTable::get_language(*iter);
-    }
-    else
-    {
-      languageString += ", " + Pathfinder::PFTable::get_language(*iter);
-    }
-  }
+  std::string languageString = "Languages: " + charPtr_->getKnownLanguageString();
 
   wxWindow::FindWindowById(SUMMARY_LANGUAGE_LABEL_ID)->SetLabel(languageTextWrapper_->UpdateText(languageString));
   if (charPtr_->race().numFavoredClass() > 1)

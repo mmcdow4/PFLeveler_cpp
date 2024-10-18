@@ -79,6 +79,7 @@ void cMain::importCharacter(void)
 void cMain::exportCharacter(void)
 {
   std::string errMsg;
+  std::string template_path = std::filesystem::current_path().string() + "/cfg/Character Sheet Template.xlsx";
   if (currChar_ == NULL)
   {
     wxMessageBox("A character has not been created yet");
@@ -91,17 +92,33 @@ void cMain::exportCharacter(void)
   }
 
   std::string filename = "";
-  wxFileDialog choiceWindow(this, _("Save to File"), "", currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".pfr",
+  wxFileDialog* choiceWindow = new wxFileDialog(this, _("Save to File"), "", currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".pfr",
     "Pathfinder files (*.pfr)|*.pfr", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-
-  if (choiceWindow.ShowModal() != wxID_CANCEL)
+  if (choiceWindow->ShowModal() != wxID_CANCEL)
   {
-    filename = choiceWindow.GetPath();
+    filename = choiceWindow->GetPath();
+    if (!filename.empty())
+    {
+      currChar_->exportToFile(filename); // Binary file writer
+    }
   }
-  
-  if (!filename.empty())
+
+  delete choiceWindow;
+  choiceWindow = new wxFileDialog(this, _("Save to File"), "", currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".xlsx",
+    "Excel Spreadsheets (*.xlsx)|*.xlsx", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+  if (choiceWindow->ShowModal() != wxID_CANCEL)
   {
-    currChar_->exportToFile(filename);
+    filename = choiceWindow->GetPath();
+    if (!filename.empty())
+    {
+      std::string errorString;
+      currChar_->exportToXlsxFile(filename, errorString);
+      //if(currChar_->exportToXlsxFile(filename, errorString) != 0) // .xlsx writer
+      //{
+      //  wxMessageBox(errorString);
+      //}
+    }
   }
   return;
 }
