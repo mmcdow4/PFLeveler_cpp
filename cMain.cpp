@@ -25,6 +25,7 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "PFMaker", wxPoint(30, 30), wxSize(D
 
   menubar_->Append(file_, wxT("&File"));
   file_->Append(FILE_IMPORT_ID, wxString("Import Character"), wxString("Import a complete character from a file"));
+  file_->Append(FILE_IMPORT_TEST_ID, wxString("Import Test"), wxString("Test Partial .xlsx import"));
   file_->Append(FILE_EXPORT_ID, wxString("Export Character"), wxString("Export a completed character to a file"));
   file_->Append(FILE_RESET_ID, wxString("New Character"), wxString("Discard the current character and start a new sheet"));
   file_->Append(FILE_EXIT_ID, wxString("Exit"), wxString("Close the window"));
@@ -72,6 +73,56 @@ void cMain::importCharacter(void)
     Pathfinder::Race loadedRace = Pathfinder::PFTable::get_race(raceId);
     currChar_->race(loadedRace);
     ResetNotebook();
+  }
+  return;
+}
+
+void cMain::importCharacterTest(void)
+{
+  std::string filename = "";
+  wxFileDialog choiceWindow(this, "Select a .xlsx File", "", "", "Excel files(*.xlsx) | *.xlsx", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+
+  if (choiceWindow.ShowModal() != wxID_CANCEL)
+  {
+    filename = choiceWindow.GetPath();
+  }
+
+  if (!filename.empty())
+  {
+    Pathfinder::Character *tempChar = new Pathfinder::Character;
+
+    std::string errorString;
+    int status = tempChar->importFromXlsxFile(filename, errorString);
+    if (status != 0)
+    {
+      wxMessageBox("XLSX Read failed : " + errorString);
+    }
+
+    std::string levelString("");
+    for (int classIdx = 0; classIdx < Pathfinder::PFTable::get_num_classes(); classIdx++)
+    {
+      if (tempChar->getClassLevel(classIdx) != 0)
+      {
+        if (!levelString.empty())
+        {
+          levelString += ", ";
+        }
+        levelString += Pathfinder::PFTable::get_class(classIdx).name() + ": " + std::to_string(tempChar->getClassLevel(classIdx));
+      }
+    }
+    wxMessageBox(wxString::Format(wxT("Read name[%s], player[%s], deity[%s], homeland[%s], alignment[%s], race[%s], gender[%s], age[%s], height[%s], weight[%s], hair[%s], eyes[%s], languages[%s], levels[%s]"),
+      tempChar->name().c_str(), tempChar->player().c_str(), tempChar->deity().c_str(), tempChar->homeland().c_str(), tempChar->alignment().c_str(),
+      tempChar->race().raceName().c_str(), tempChar->gender().c_str(), tempChar->age().c_str(), tempChar->height().c_str(), tempChar->weight().c_str(),
+      tempChar->hair().c_str(), tempChar->eyes().c_str(), tempChar->getKnownLanguageString().c_str(), levelString.c_str()));
+
+    wxMessageBox(wxString::Format(wxT("Read HP[%d], STR[%d] total [%d], DEX[%d] total [%d], CON[%d] total [%d], INT[%d] total [%d], WIS[%d] total [%d], CHA[%d] total [%d]"),
+      tempChar->hitpoints(), tempChar->getRawAbilityScore(Pathfinder::STRENGTH), tempChar->getAbilityScore(Pathfinder::STRENGTH),
+      tempChar->getRawAbilityScore(Pathfinder::DEXTERITY), tempChar->getAbilityScore(Pathfinder::DEXTERITY),
+      tempChar->getRawAbilityScore(Pathfinder::CONSTITUTION), tempChar->getAbilityScore(Pathfinder::CONSTITUTION),
+      tempChar->getRawAbilityScore(Pathfinder::INTELLIGENCE), tempChar->getAbilityScore(Pathfinder::INTELLIGENCE),
+      tempChar->getRawAbilityScore(Pathfinder::WISDOM), tempChar->getAbilityScore(Pathfinder::WISDOM),
+      tempChar->getRawAbilityScore(Pathfinder::CHARISMA), tempChar->getAbilityScore(Pathfinder::CHARISMA)));
+    delete tempChar;
   }
   return;
 }
@@ -171,6 +222,9 @@ void cMain::menuCallback(wxCommandEvent& evt)
   {
   case FILE_IMPORT_ID :
     importCharacter();
+    break;
+  case FILE_IMPORT_TEST_ID:
+    importCharacterTest();
     break;
   case FILE_EXPORT_ID :
     exportCharacter();
