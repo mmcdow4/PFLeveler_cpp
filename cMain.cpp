@@ -89,40 +89,106 @@ void cMain::importCharacterTest(void)
 
   if (!filename.empty())
   {
-    Pathfinder::Character *tempChar = new Pathfinder::Character;
+    if (currChar_ != NULL)
+    {
+      delete currChar_;
+    }
+    currChar_ = new Pathfinder::Character;
 
     std::string errorString;
-    int status = tempChar->importFromXlsxFile(filename, errorString);
+    int status = currChar_->importFromXlsxFile(filename, errorString);
     if (status != 0)
     {
       wxMessageBox("XLSX Read failed : " + errorString);
     }
 
-    std::string levelString("");
-    for (int classIdx = 0; classIdx < Pathfinder::PFTable::get_num_classes(); classIdx++)
-    {
-      if (tempChar->getClassLevel(classIdx) != 0)
-      {
-        if (!levelString.empty())
-        {
-          levelString += ", ";
-        }
-        levelString += Pathfinder::PFTable::get_class(classIdx).name() + ": " + std::to_string(tempChar->getClassLevel(classIdx));
-      }
-    }
-    wxMessageBox(wxString::Format(wxT("Read name[%s], player[%s], deity[%s], homeland[%s], alignment[%s], race[%s], gender[%s], age[%s], height[%s], weight[%s], hair[%s], eyes[%s], languages[%s], levels[%s]"),
-      tempChar->name().c_str(), tempChar->player().c_str(), tempChar->deity().c_str(), tempChar->homeland().c_str(), tempChar->alignment().c_str(),
-      tempChar->race().raceName().c_str(), tempChar->gender().c_str(), tempChar->age().c_str(), tempChar->height().c_str(), tempChar->weight().c_str(),
-      tempChar->hair().c_str(), tempChar->eyes().c_str(), tempChar->getKnownLanguageString().c_str(), levelString.c_str()));
+    //std::string levelString("");
+    //for (int classIdx = 0; classIdx < Pathfinder::PFTable::get_num_classes(); classIdx++)
+    //{
+    //  if (tempChar->getClassLevel(classIdx) != 0)
+    //  {
+    //    if (!levelString.empty())
+    //    {
+    //      levelString += ", ";
+    //    }
+    //    levelString += Pathfinder::PFTable::get_class(classIdx).name() + ": " + std::to_string(tempChar->getClassLevel(classIdx));
+    //  }
+    //}
+    //wxMessageBox(wxString::Format(wxT("Read name[%s], player[%s], deity[%s], homeland[%s], alignment[%s], race[%s], gender[%s], age[%s], height[%s], weight[%.2f lb], hair[%s], eyes[%s], languages[%s], levels[%s], favored classes[%s]"),
+    //  tempChar->name().c_str(), tempChar->player().c_str(), tempChar->deity().c_str(), tempChar->homeland().c_str(), tempChar->alignment().c_str(),
+    //  tempChar->race().raceName().c_str(), tempChar->gender().c_str(), tempChar->age().c_str(), tempChar->height().c_str(), tempChar->weight(),
+    //  tempChar->hair().c_str(), tempChar->eyes().c_str(), tempChar->getKnownLanguageString().c_str(), levelString.c_str(), tempChar->getFavoredClassList().c_str()));
 
-    wxMessageBox(wxString::Format(wxT("Read HP[%d], STR[%d] total [%d], DEX[%d] total [%d], CON[%d] total [%d], INT[%d] total [%d], WIS[%d] total [%d], CHA[%d] total [%d]"),
-      tempChar->hitpoints(), tempChar->getRawAbilityScore(Pathfinder::STRENGTH), tempChar->getAbilityScore(Pathfinder::STRENGTH),
-      tempChar->getRawAbilityScore(Pathfinder::DEXTERITY), tempChar->getAbilityScore(Pathfinder::DEXTERITY),
-      tempChar->getRawAbilityScore(Pathfinder::CONSTITUTION), tempChar->getAbilityScore(Pathfinder::CONSTITUTION),
-      tempChar->getRawAbilityScore(Pathfinder::INTELLIGENCE), tempChar->getAbilityScore(Pathfinder::INTELLIGENCE),
-      tempChar->getRawAbilityScore(Pathfinder::WISDOM), tempChar->getAbilityScore(Pathfinder::WISDOM),
-      tempChar->getRawAbilityScore(Pathfinder::CHARISMA), tempChar->getAbilityScore(Pathfinder::CHARISMA)));
-    delete tempChar;
+    //wxMessageBox(wxString::Format(wxT("Read HP[%d], STR[%d] total [%d], DEX[%d] total [%d], CON[%d] total [%d], INT[%d] total [%d], WIS[%d] total [%d], CHA[%d] total [%d]"),
+    //  tempChar->hitpoints(), tempChar->getRawAbilityScore(Pathfinder::STRENGTH), tempChar->getAbilityScore(Pathfinder::STRENGTH),
+    //  tempChar->getRawAbilityScore(Pathfinder::DEXTERITY), tempChar->getAbilityScore(Pathfinder::DEXTERITY),
+    //  tempChar->getRawAbilityScore(Pathfinder::CONSTITUTION), tempChar->getAbilityScore(Pathfinder::CONSTITUTION),
+    //  tempChar->getRawAbilityScore(Pathfinder::INTELLIGENCE), tempChar->getAbilityScore(Pathfinder::INTELLIGENCE),
+    //  tempChar->getRawAbilityScore(Pathfinder::WISDOM), tempChar->getAbilityScore(Pathfinder::WISDOM),
+    //  tempChar->getRawAbilityScore(Pathfinder::CHARISMA), tempChar->getAbilityScore(Pathfinder::CHARISMA)));
+
+    //for (int skillIdx = 0; skillIdx < Pathfinder::NUMBER_SKILLS; skillIdx++)
+    //{
+    //  Pathfinder::skillMarker skill = static_cast<Pathfinder::skillMarker>(skillIdx);
+    //  wxMessageBox(wxString::Format(wxT("Imported skill[%s] isClassSkill[%d] rank[%d]"), Pathfinder::skillStrings[skillIdx], tempChar->isClassSkill(skill), tempChar->rawSkillRank(skill)));
+    //}
+
+    //std::unordered_map<const Pathfinder::GeneralItem, int, Pathfinder::myItemHash> equipments;
+    //std::unordered_map<const Pathfinder::Weapon, int, Pathfinder::myWeaponHash> weapons;
+    //std::unordered_map<const Pathfinder::Armor, int, Pathfinder::myArmorHash> armors;
+    //tempChar->getEquipmentList(equipments, weapons, armors);
+
+    //for (auto itemIter = equipments.begin(); itemIter != equipments.end(); ++itemIter)
+    //{
+    //  wxMessageBox(wxString::Format(wxT("Imported [%d] of item [%s]"), itemIter->second, itemIter->first.getName(tempChar->race().charSize())));
+    //}
+
+    //for (auto weaponIter = weapons.begin(); weaponIter != weapons.end(); ++weaponIter)
+    //{
+    //  wxMessageBox(wxString::Format(wxT("Imported [%d] of weapon [%s]"), weaponIter->second, weaponIter->first.getName(tempChar->race().charSize())));
+    //}
+
+    //for (auto armorIter = armors.begin(); armorIter != armors.end(); ++armorIter)
+    //{
+    //  wxMessageBox(wxString::Format(wxT("Imported [%d] of armor [%s]"), armorIter->second, armorIter->first.getName(tempChar->race().charSize())));
+    //}
+
+    //wxMessageBox(wxString::Format(wxT("Imported wealth [%s]"), tempChar->wealthString().c_str()));
+
+    //std::vector<Pathfinder::Feat> featList = tempChar->getSelectedFeats();
+    //for (std::vector<Pathfinder::Feat>::iterator featIter = featList.begin(); featIter != featList.end(); ++featIter)
+    //{
+    //  wxMessageBox(wxString::Format(wxT("Imported feat [%s]"), featIter->fullName().c_str()));
+    //}
+
+    //std::vector<int> classFeatureList = tempChar->getClassFeatures();
+    //for (std::vector<int>::iterator featureIter = classFeatureList.begin(); featureIter != classFeatureList.end(); ++featureIter)
+    //{
+    //  wxMessageBox(wxString::Format(wxT("Imported class feature [%s] : [%s]"), Pathfinder::CLASS_NAMES[Pathfinder::PFTable::get_class_feature(*featureIter).classId()], Pathfinder::PFTable::get_class_feature(*featureIter).name().c_str()));
+    //}
+
+    //std::vector<int> abilityList = tempChar->getClassAbilities();
+    //for (std::vector<int>::iterator abilityIter = abilityList.begin(); abilityIter != abilityList.end(); ++abilityIter)
+    //{
+    //  wxMessageBox(wxString::Format(wxT("Imported class ability [%s] : [%s]"), Pathfinder::CLASS_NAMES[Pathfinder::PFTable::get_class_ability(*abilityIter).classId()], Pathfinder::PFTable::get_class_ability(*abilityIter).name().c_str()));
+    //}
+
+    //std::vector<Pathfinder::ClassChoice> choiceList = tempChar->getClassChoices();
+    //for (std::vector<Pathfinder::ClassChoice>::iterator choiceIter = choiceList.begin(); choiceIter != choiceList.end(); ++choiceIter)
+    //{
+    //  wxMessageBox(wxString::Format(wxT("Imported class choice [%s] : [%s]"), Pathfinder::CLASS_NAMES[choiceIter->classId()], choiceIter->fullName().c_str()));
+    //}
+
+    //for (int classIdx = 0; classIdx < Pathfinder::NUMBER_CLASSES; classIdx++)
+    //{
+    //  std::vector<int> spellList = tempChar->getKnownSpells(classIdx);
+    //  for (int spellIter : spellList)
+    //  {
+    //    wxMessageBox(wxString::Format(wxT("Imported [%s] spell : [%s]"), Pathfinder::CLASS_NAMES[classIdx], Pathfinder::PFTable::get_spell(spellIter).name().c_str()));
+    //  }
+    //}
+    //delete tempChar;
+    ResetNotebook();
   }
   return;
 }
@@ -388,6 +454,7 @@ void cMain::OnButtonPressed(wxCommandEvent& evt)
   case EQUIPMENT_SELL_BUTTON_ID:
     abilityScorePage_->UpdateFields();
     summaryPage_->PopulateAbilityScoreData();
+    skillPage_->UpdateSkillPage();
     break;
   default:
     wxMessageBox("Unknown button ID passed up to cMain [" + std::to_string(evt.GetId()) + "]");

@@ -300,7 +300,15 @@ void SummaryPage::ResetPage(Pathfinder::Character* currChar)
     wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Disable();
     wxWindow::FindWindowById(SUMMARY_HEIGHT_INPUT_ID)->Hide();
 
-    static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_WEIGHT_LABEL_ID))->SetLabel(wxT("Weight: " + charPtr_->weight()));
+    if((static_cast<int>(charPtr_->weight()) - charPtr_->weight()) < DBL_EPSILON)
+    {
+      static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_WEIGHT_LABEL_ID))->SetLabel(wxT("Weight: " + wxString::Format("%d lb", static_cast<int>(charPtr_->weight()))));
+    }
+    else
+    {
+      static_cast<wxStaticText*>(wxWindow::FindWindowById(SUMMARY_WEIGHT_LABEL_ID))->SetLabel(wxT("Weight: " + wxString::Format("%.2f lb", charPtr_->weight())));
+    }
+
     wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Disable();
     wxWindow::FindWindowById(SUMMARY_WEIGHT_INPUT_ID)->Hide();
 
@@ -429,6 +437,16 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
     wxMessageBox("Finish filling out the character summary first.");
     return;
   }
+  double weight_val = 0.0;
+  try
+  {
+    weight_val = std::stod(std::string(weight.mb_str()));
+  }
+  catch (const std::invalid_argument& e)
+  {
+    wxMessageBox("Weight must only be a numerical value (in pounds)");
+    return;
+  }
 
   /* Convert the non-string items */
   Pathfinder::GE_Alignment ge = static_cast<Pathfinder::GE_Alignment>(alignmentIdx % 3);
@@ -439,7 +457,7 @@ void SummaryPage::OnCharLocked(wxCommandEvent& evt)
   charPtr_->player(std::string(playerName.mb_str()));
   charPtr_->setAlignment(ge, lc);
   charPtr_->height(std::string(height.mb_str()));
-  charPtr_->weight(std::string(weight.mb_str()));
+  charPtr_->weight(weight_val);
   charPtr_->hair(std::string(hair.mb_str()));
   charPtr_->eyes(std::string(eyes.mb_str()));
   charPtr_->deity(std::string(deity.mb_str()));

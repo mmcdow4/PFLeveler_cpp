@@ -192,13 +192,27 @@ void EquipmentPage::UpdateEquipmentPage()
   long item = -1;
   while ((item = listBox->GetNextItem(item)) != wxNOT_FOUND) {
      int item_val = Pathfinder::string_to_currency(listBox->GetItemText(item, PRICE_COLUMN).ToStdString());
-     if (item_val <= wealthVal)
+     bool canAfford = (charPtr_ == NULL || charPtr_->wealthCp() >= item_val);
+     bool proficient = (charPtr_ == NULL || charPtr_->checkProficiency(equipMap_[availListIds_[item]]));
+     if (canAfford && proficient)
      {
+       /* Can afford and are proficient -> black text*/
        listBox->SetItemTextColour(item, *wxBLACK);
+     }
+     else if(!canAfford && proficient)
+     {
+       /* Can't afford but are proficient -> red text*/
+       listBox->SetItemTextColour(item, *wxRED);
+     }
+     else if (canAfford)
+     {
+       /* Can afford but not proficient -> grey text */
+       listBox->SetItemTextColour(item, *wxLIGHT_GREY);
      }
      else
      {
-       listBox->SetItemTextColour(item, *wxRED);
+       /* Can't afford and not proficient -> blue text */
+       listBox->SetItemTextColour(item, *wxBLUE);
      }
   }
 }
@@ -719,11 +733,9 @@ void EquipmentPage::PurchaseItemButtonPress(wxCommandEvent& evt)
 
   this->UpdateEquipmentPage();
   this->myLayout();
-  if (itemPtr->getCategory() == Pathfinder::ARMOR)
-  {
-    /* May need to update the AC values on other pages */
-    evt.Skip();
-  }
+  
+  /* May need to update the AC, armor penalty, or weight penalty values on other pages */
+  evt.Skip();
 }
 
 void EquipmentPage::SellItemButtonPress(wxCommandEvent& evt)
@@ -763,6 +775,7 @@ void EquipmentPage::SellItemButtonPress(wxCommandEvent& evt)
   else
   {
     Pathfinder::GeneralItem item(*std::reinterpret_pointer_cast<const Pathfinder::GeneralItem>(itemPtr));
+    count = charPtr_->removeItem(item);
     itemPtr = std::reinterpret_pointer_cast<const Pathfinder::Equipment>(std::make_shared<const Pathfinder::GeneralItem>(item));
   }
 
@@ -798,11 +811,8 @@ void EquipmentPage::SellItemButtonPress(wxCommandEvent& evt)
   this->UpdateEquipmentPage();
   this->myLayout();
 
-  if (itemPtr->getCategory() == Pathfinder::ARMOR)
-  {
-    /* May need to update the AC values on other pages */
-    evt.Skip();
-  }
+  /* May need to update the AC, armor penalty, or weight penalty values on other pages */
+  evt.Skip();
 }
 
 void EquipmentPage::AddMoneyButtonPress(wxCommandEvent& evt)

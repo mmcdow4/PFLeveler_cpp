@@ -279,7 +279,7 @@ bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
     errMsg ="Ability scores are not finalized yet.";
     return false;
   }
-  else if (charPtr_->remainingBonusLanguages() > 0)
+  else if (classIdx == -10 && charPtr_->remainingBonusLanguages() > 0)
   {
     errMsg = "You must finish learning bonus starting languages.";
     return false;
@@ -345,6 +345,7 @@ bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
 
   return true;
 }
+
 void ClassPage::OnLevelAdded(wxCommandEvent& evt)
 {
 
@@ -475,12 +476,12 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
     int bonus_selection = choiceWindow.ShowModal();
     if (bonus_selection == wxID_YES)
     {
-      charPtr_->incrementHitPoints(1);
+      charPtr_->addFavoredClassHPBonus();
     }
     else if (bonus_selection == wxID_NO)
     {
       /* bonus skill rank */
-      charPtr_->addSkillPoints(1);
+      charPtr_->addFavoredClassSkillBonus();
       skillsLocked_ = false;
     }
   }
