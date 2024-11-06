@@ -279,7 +279,7 @@ bool ClassPage::IsReadyForLevel(int classIdx, std::string &errMsg)
     errMsg ="Ability scores are not finalized yet.";
     return false;
   }
-  else if (classIdx == -10 && charPtr_->remainingBonusLanguages() > 0)
+  else if ((classIdx == -10 || (charPtr_->getCharacterLevel() > 0)) && charPtr_->remainingBonusLanguages() > 0)
   {
     errMsg = "You must finish learning bonus starting languages.";
     return false;
@@ -490,6 +490,11 @@ void ClassPage::OnLevelAdded(wxCommandEvent& evt)
   spellsLeft_ = true;
   featsLeft_ = (Pathfinder::PFTable::get_class(classIdx).levelItem(classLevel, Pathfinder::NEW_FEAT) > 0);
 
+  if (charPtr_->getClassLevel(classIdx) == 1)
+  {
+    /* Merge this class' proficiencies with those already had */
+    charPtr_->addProficiencies(classIdx);
+  }
   evt.Skip();
 }
 

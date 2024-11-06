@@ -24,7 +24,6 @@
 #define BACKGROUND_COLOR 0xE5E5E5
 /* File Menu IDs */
 #define FILE_IMPORT_ID 100
-#define FILE_IMPORT_TEST_ID 104
 #define FILE_EXPORT_ID 101
 #define FILE_RESET_ID 102
 #define FILE_EXIT_ID 103

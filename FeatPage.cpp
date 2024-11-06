@@ -123,6 +123,7 @@ void FeatPage::PopulateFeatLists(void)
   availFeatMissingPrereqs_.clear();
   
   bool filterFeats = static_cast<wxCheckBox*>(wxWindow::FindWindowById(FEAT_FILTER_CHECKBOX_ID))->GetValue();
+  bool proficiencyChange = false;
   for (int featIdx = 0; featIdx < Pathfinder::PFTable::get_num_feats(); featIdx++) {
     Pathfinder::Feat tmpFeat = Pathfinder::PFTable::get_feat(featIdx);
     if (!charPtr_->isFeatSelected(tmpFeat) || tmpFeat.multiple()) {
@@ -141,6 +142,7 @@ void FeatPage::PopulateFeatLists(void)
         }
         else
         {
+          proficiencyChange = true;
           charPtr_->selectFeat(tmpFeat);
           knownListBox->AppendString(tmpFeat.fullName());
           continue;
@@ -167,6 +169,12 @@ void FeatPage::PopulateFeatLists(void)
       availListBox->SetItem(listItem);
       availFeatMissingPrereqs_.push_back(missingPrereqs);
     }
+  }
+
+  if (proficiencyChange)
+  {
+    /* update the proficiency string */
+    charPtr_->addProficiencies(-1);
   }
 
   std::vector<Pathfinder::Feat> featList = charPtr_->getSelectedFeats();
@@ -287,6 +295,12 @@ void FeatPage::SelectFeatButtonPress(wxCommandEvent& evt)
   }
 
   charPtr_->selectFeat(newFeat);
+  if (newFeat.name().find("Proficiency") != std::string::npos)
+  {
+    /* update the proficiency string */
+    charPtr_->addProficiencies(-1);
+  }
+
   if (newFeat.choice() == Pathfinder::Feat::FEAT_MERCY_CHOICE)
   {
     /* For the mercy feat, we need to go add the mercy choice as well */

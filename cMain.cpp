@@ -24,9 +24,8 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "PFMaker", wxPoint(30, 30), wxSize(D
   file_ = new wxMenu;
 
   menubar_->Append(file_, wxT("&File"));
-  file_->Append(FILE_IMPORT_ID, wxString("Import Character"), wxString("Import a complete character from a file"));
-  file_->Append(FILE_IMPORT_TEST_ID, wxString("Import Test"), wxString("Test Partial .xlsx import"));
-  file_->Append(FILE_EXPORT_ID, wxString("Export Character"), wxString("Export a completed character to a file"));
+  file_->Append(FILE_IMPORT_ID, wxString("Import Character"), wxString("Import a character from a file"));
+  file_->Append(FILE_EXPORT_ID, wxString("Export Character"), wxString("Export a character to a file"));
   file_->Append(FILE_RESET_ID, wxString("New Character"), wxString("Discard the current character and start a new sheet"));
   file_->Append(FILE_EXIT_ID, wxString("Exit"), wxString("Close the window"));
 
@@ -54,32 +53,6 @@ cMain::cMain() : wxFrame(nullptr, wxID_ANY, "PFMaker", wxPoint(30, 30), wxSize(D
 void cMain::importCharacter(void)
 {
   std::string filename = "";
-  wxFileDialog choiceWindow(this, "Select a .pfr File", "", "", "Pathfinder files(*.pfr) | *.pfr", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-
-  if (choiceWindow.ShowModal() != wxID_CANCEL)
-  {
-    filename = choiceWindow.GetPath();
-  }
-
-  if (!filename.empty())
-  {
-    if (currChar_ != NULL)
-    {
-      delete currChar_;
-    }
-    currChar_ = new Pathfinder::Character;
-
-    int raceId = currChar_->importFromFile(filename);
-    Pathfinder::Race loadedRace = Pathfinder::PFTable::get_race(raceId);
-    currChar_->race(loadedRace);
-    ResetNotebook();
-  }
-  return;
-}
-
-void cMain::importCharacterTest(void)
-{
-  std::string filename = "";
   wxFileDialog choiceWindow(this, "Select a .xlsx File", "", "", "Excel files(*.xlsx) | *.xlsx", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
   if (choiceWindow.ShowModal() != wxID_CANCEL)
@@ -95,99 +68,12 @@ void cMain::importCharacterTest(void)
     }
     currChar_ = new Pathfinder::Character;
 
-    std::string errorString;
+    std::string errorString = "";
     int status = currChar_->importFromXlsxFile(filename, errorString);
     if (status != 0)
     {
-      wxMessageBox("XLSX Read failed : " + errorString);
+      wxMessageBox("Error while importing character : " + errorString);
     }
-
-    //std::string levelString("");
-    //for (int classIdx = 0; classIdx < Pathfinder::PFTable::get_num_classes(); classIdx++)
-    //{
-    //  if (tempChar->getClassLevel(classIdx) != 0)
-    //  {
-    //    if (!levelString.empty())
-    //    {
-    //      levelString += ", ";
-    //    }
-    //    levelString += Pathfinder::PFTable::get_class(classIdx).name() + ": " + std::to_string(tempChar->getClassLevel(classIdx));
-    //  }
-    //}
-    //wxMessageBox(wxString::Format(wxT("Read name[%s], player[%s], deity[%s], homeland[%s], alignment[%s], race[%s], gender[%s], age[%s], height[%s], weight[%.2f lb], hair[%s], eyes[%s], languages[%s], levels[%s], favored classes[%s]"),
-    //  tempChar->name().c_str(), tempChar->player().c_str(), tempChar->deity().c_str(), tempChar->homeland().c_str(), tempChar->alignment().c_str(),
-    //  tempChar->race().raceName().c_str(), tempChar->gender().c_str(), tempChar->age().c_str(), tempChar->height().c_str(), tempChar->weight(),
-    //  tempChar->hair().c_str(), tempChar->eyes().c_str(), tempChar->getKnownLanguageString().c_str(), levelString.c_str(), tempChar->getFavoredClassList().c_str()));
-
-    //wxMessageBox(wxString::Format(wxT("Read HP[%d], STR[%d] total [%d], DEX[%d] total [%d], CON[%d] total [%d], INT[%d] total [%d], WIS[%d] total [%d], CHA[%d] total [%d]"),
-    //  tempChar->hitpoints(), tempChar->getRawAbilityScore(Pathfinder::STRENGTH), tempChar->getAbilityScore(Pathfinder::STRENGTH),
-    //  tempChar->getRawAbilityScore(Pathfinder::DEXTERITY), tempChar->getAbilityScore(Pathfinder::DEXTERITY),
-    //  tempChar->getRawAbilityScore(Pathfinder::CONSTITUTION), tempChar->getAbilityScore(Pathfinder::CONSTITUTION),
-    //  tempChar->getRawAbilityScore(Pathfinder::INTELLIGENCE), tempChar->getAbilityScore(Pathfinder::INTELLIGENCE),
-    //  tempChar->getRawAbilityScore(Pathfinder::WISDOM), tempChar->getAbilityScore(Pathfinder::WISDOM),
-    //  tempChar->getRawAbilityScore(Pathfinder::CHARISMA), tempChar->getAbilityScore(Pathfinder::CHARISMA)));
-
-    //for (int skillIdx = 0; skillIdx < Pathfinder::NUMBER_SKILLS; skillIdx++)
-    //{
-    //  Pathfinder::skillMarker skill = static_cast<Pathfinder::skillMarker>(skillIdx);
-    //  wxMessageBox(wxString::Format(wxT("Imported skill[%s] isClassSkill[%d] rank[%d]"), Pathfinder::skillStrings[skillIdx], tempChar->isClassSkill(skill), tempChar->rawSkillRank(skill)));
-    //}
-
-    //std::unordered_map<const Pathfinder::GeneralItem, int, Pathfinder::myItemHash> equipments;
-    //std::unordered_map<const Pathfinder::Weapon, int, Pathfinder::myWeaponHash> weapons;
-    //std::unordered_map<const Pathfinder::Armor, int, Pathfinder::myArmorHash> armors;
-    //tempChar->getEquipmentList(equipments, weapons, armors);
-
-    //for (auto itemIter = equipments.begin(); itemIter != equipments.end(); ++itemIter)
-    //{
-    //  wxMessageBox(wxString::Format(wxT("Imported [%d] of item [%s]"), itemIter->second, itemIter->first.getName(tempChar->race().charSize())));
-    //}
-
-    //for (auto weaponIter = weapons.begin(); weaponIter != weapons.end(); ++weaponIter)
-    //{
-    //  wxMessageBox(wxString::Format(wxT("Imported [%d] of weapon [%s]"), weaponIter->second, weaponIter->first.getName(tempChar->race().charSize())));
-    //}
-
-    //for (auto armorIter = armors.begin(); armorIter != armors.end(); ++armorIter)
-    //{
-    //  wxMessageBox(wxString::Format(wxT("Imported [%d] of armor [%s]"), armorIter->second, armorIter->first.getName(tempChar->race().charSize())));
-    //}
-
-    //wxMessageBox(wxString::Format(wxT("Imported wealth [%s]"), tempChar->wealthString().c_str()));
-
-    //std::vector<Pathfinder::Feat> featList = tempChar->getSelectedFeats();
-    //for (std::vector<Pathfinder::Feat>::iterator featIter = featList.begin(); featIter != featList.end(); ++featIter)
-    //{
-    //  wxMessageBox(wxString::Format(wxT("Imported feat [%s]"), featIter->fullName().c_str()));
-    //}
-
-    //std::vector<int> classFeatureList = tempChar->getClassFeatures();
-    //for (std::vector<int>::iterator featureIter = classFeatureList.begin(); featureIter != classFeatureList.end(); ++featureIter)
-    //{
-    //  wxMessageBox(wxString::Format(wxT("Imported class feature [%s] : [%s]"), Pathfinder::CLASS_NAMES[Pathfinder::PFTable::get_class_feature(*featureIter).classId()], Pathfinder::PFTable::get_class_feature(*featureIter).name().c_str()));
-    //}
-
-    //std::vector<int> abilityList = tempChar->getClassAbilities();
-    //for (std::vector<int>::iterator abilityIter = abilityList.begin(); abilityIter != abilityList.end(); ++abilityIter)
-    //{
-    //  wxMessageBox(wxString::Format(wxT("Imported class ability [%s] : [%s]"), Pathfinder::CLASS_NAMES[Pathfinder::PFTable::get_class_ability(*abilityIter).classId()], Pathfinder::PFTable::get_class_ability(*abilityIter).name().c_str()));
-    //}
-
-    //std::vector<Pathfinder::ClassChoice> choiceList = tempChar->getClassChoices();
-    //for (std::vector<Pathfinder::ClassChoice>::iterator choiceIter = choiceList.begin(); choiceIter != choiceList.end(); ++choiceIter)
-    //{
-    //  wxMessageBox(wxString::Format(wxT("Imported class choice [%s] : [%s]"), Pathfinder::CLASS_NAMES[choiceIter->classId()], choiceIter->fullName().c_str()));
-    //}
-
-    //for (int classIdx = 0; classIdx < Pathfinder::NUMBER_CLASSES; classIdx++)
-    //{
-    //  std::vector<int> spellList = tempChar->getKnownSpells(classIdx);
-    //  for (int spellIter : spellList)
-    //  {
-    //    wxMessageBox(wxString::Format(wxT("Imported [%s] spell : [%s]"), Pathfinder::CLASS_NAMES[classIdx], Pathfinder::PFTable::get_spell(spellIter).name().c_str()));
-    //  }
-    //}
-    //delete tempChar;
     ResetNotebook();
   }
   return;
@@ -196,7 +82,6 @@ void cMain::importCharacterTest(void)
 void cMain::exportCharacter(void)
 {
   std::string errMsg;
-  std::string template_path = std::filesystem::current_path().string() + "/cfg/Character Sheet Template.xlsx";
   if (currChar_ == NULL)
   {
     wxMessageBox("A character has not been created yet");
@@ -209,19 +94,7 @@ void cMain::exportCharacter(void)
   }
 
   std::string filename = "";
-  wxFileDialog* choiceWindow = new wxFileDialog(this, _("Save to File"), "", currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".pfr",
-    "Pathfinder files (*.pfr)|*.pfr", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
-  if (choiceWindow->ShowModal() != wxID_CANCEL)
-  {
-    filename = choiceWindow->GetPath();
-    if (!filename.empty())
-    {
-      currChar_->exportToFile(filename); // Binary file writer
-    }
-  }
-
-  delete choiceWindow;
-  choiceWindow = new wxFileDialog(this, _("Save to File"), "", currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".xlsx",
+  wxFileDialog* choiceWindow = new wxFileDialog(this, _("Save to File"), "", currChar_->name() + "_" + std::to_string(currChar_->getCharacterLevel()) + ".xlsx",
     "Excel Spreadsheets (*.xlsx)|*.xlsx", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
   if (choiceWindow->ShowModal() != wxID_CANCEL)
@@ -230,11 +103,11 @@ void cMain::exportCharacter(void)
     if (!filename.empty())
     {
       std::string errorString;
-      currChar_->exportToXlsxFile(filename, errorString);
-      //if(currChar_->exportToXlsxFile(filename, errorString) != 0) // .xlsx writer
-      //{
-      //  wxMessageBox(errorString);
-      //}
+      int status = currChar_->exportToXlsxFile(filename, errorString);
+      if(status != 0)
+      {
+        wxMessageBox("Error while exporting character : " + errorString);
+      }
     }
   }
   return;
@@ -288,9 +161,6 @@ void cMain::menuCallback(wxCommandEvent& evt)
   {
   case FILE_IMPORT_ID :
     importCharacter();
-    break;
-  case FILE_IMPORT_TEST_ID:
-    importCharacterTest();
     break;
   case FILE_EXPORT_ID :
     exportCharacter();
